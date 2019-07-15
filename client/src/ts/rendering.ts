@@ -4,6 +4,8 @@ import * as THREE from "three";
 
 class Player {
   public position: THREE.Vector3;
+  public yaw: number = 0;
+  public pitch: number = 0;
 
   constructor(x: number, y: number, z: number) {
     this.position = new THREE.Vector3(x, y, z);
@@ -117,7 +119,7 @@ light.position.z = 1;
 // floor.rotation.x = (Math.PI / 2) * -1;
 
 camera.position.set(0, 0, 1);
-camera.rotateX(Math.PI / 2);
+//camera.rotateX(Math.PI / 2);
 // camera.lookAt(floor.position);
 
 scene.add(floor);
@@ -129,8 +131,11 @@ renderer.domElement.addEventListener('click', () => {
 
 renderer.domElement.addEventListener('mousemove', (e) => {
   let x = e.movementX;
+  let y = e.movementY;
 
-  camera.rotateY(-x / 1000);
+  localPlayer.yaw += -x / 1000;
+  localPlayer.pitch += -y / 1000;
+  localPlayer.pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, localPlayer.pitch))
 });
 
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
@@ -154,19 +159,31 @@ let animate = () => {
   let dif = 16.6666666; // estimate
   if (lastRenderTime !== null) dif = now - lastRenderTime;
 
+  /*
   var lookAtVector = new THREE.Vector3(0, 0, -1);
     lookAtVector.applyQuaternion(camera.quaternion);
+    */
 
-  if (inputState.forwards) {
-    
-    //console.log(lookAtVector);
 
-    
-  }
-
-  
-
+  let xAxis = new THREE.Vector3(1, 0, 0);
+  let yAxis = new THREE.Vector3(0, 1, 0);
   let zAxis = new THREE.Vector3(0, 0, 1);
+
+  let defaultJackshit = new THREE.Vector3(0, 1, 0);
+  defaultJackshit.applyAxisAngle(zAxis, localPlayer.yaw);
+
+  camera.rotation.x = 0;
+  camera.rotation.y = 0;
+  camera.rotation.z = 0;
+  camera.rotateOnWorldAxis(xAxis, Math.PI/2);
+  camera.rotateOnWorldAxis(xAxis, localPlayer.pitch);
+  camera.rotateOnWorldAxis(zAxis, localPlayer.yaw);
+
+  var lookAtVector = new THREE.Vector3(0, 0, -1);
+  lookAtVector.applyQuaternion(camera.quaternion);
+
+  lookAtVector.setZ(0);
+  lookAtVector.normalize();
 
   if (inputState.forwards) {
     localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
