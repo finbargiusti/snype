@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/finbargiusti/snype#readme",
   "dependencies": {
+    "parcel": "^1.12.3",
     "rollup": "^1.17.0",
     "rollup-plugin-typescript2": "^0.22.0",
     "serve-static": "^1.14.1",

@@ -8,11 +8,84 @@ class Player {
   constructor(x: number, y: number, z: number) {
     this.position = new THREE.Vector3(x, y, z);
   }
+
+  getHeadPosition() {
+    let pos = this.position.clone();
+    pos.z += 0.9;
+
+    return pos;
+  }
 }
 
 let bob = new Player(0, 0, 0);
-
 let localPlayer = bob;
+
+
+
+
+
+
+
+let playerSpeed = 2.5; // Units per second
+
+function setCameraToLocalPlayer() {
+  if (!localPlayer) return;
+
+  let headPos = localPlayer.getHeadPosition();
+  camera.position.x = headPos.x;
+  camera.position.y = headPos.y;
+  camera.position.z = headPos.z;
+}
+
+let inputState = {
+  forwards: false,
+  backwards: false,
+  left: false,
+  right: false
+};
+
+window.addEventListener('keydown', (e) => {
+  let keyCode = e.keyCode;
+  console.log(keyCode);
+
+  switch (keyCode) {
+    case 87: {
+      inputState.forwards = true;
+    }; break;
+    case 83: {
+      inputState.backwards = true;
+    }; break;
+    case 65: {
+      inputState.left = true;
+    }; break;
+    case 68: {
+      inputState.right = true;
+    }; break;
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  let keyCode = e.keyCode;
+
+  switch (keyCode) {
+    case 87: {
+      inputState.forwards = false;
+    }; break;
+    case 83: {
+      inputState.backwards = false;
+    }; break;
+    case 65: {
+      inputState.left = false;
+    }; break;
+    case 68: {
+      inputState.right = false;
+    }; break;
+  }
+});
+
+
+
+
 
 const FOV = 75;
 
@@ -29,7 +102,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 let floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(10, 10, 10, 10),
+  new THREE.PlaneGeometry(100, 100, 100, 100),
 
   new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
 );
@@ -47,8 +120,30 @@ camera.rotateX(Math.PI / 2);
 scene.add(floor);
 scene.add(light);
 
+let lastRenderTime = null;
 let animate = () => {
-  requestAnimationFrame(animate);
+  let now = performance.now();
+  let dif = 16.6666666; // estimate
+  if (lastRenderTime !== null) dif = now - lastRenderTime;
+
+  if (inputState.forwards) {
+    localPlayer.position.y += playerSpeed * (dif / 1000);
+  }
+  if (inputState.backwards) {
+    localPlayer.position.y -= playerSpeed * (dif / 1000);
+  }
+  if (inputState.left) {
+    localPlayer.position.x -= playerSpeed * (dif / 1000);
+  }
+  if (inputState.right) {
+    localPlayer.position.x += playerSpeed * (dif / 1000);
+  }
+
+  setCameraToLocalPlayer();
+
   renderer.render(scene, camera);
+
+  requestAnimationFrame(animate);
+  lastRenderTime = now;
 };
 animate();
