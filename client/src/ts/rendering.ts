@@ -119,13 +119,30 @@ let renderer = new THREE.WebGLRenderer();
 const composer = new EffectComposer(renderer);
 
 renderer.setSize(window.innerWidth, window.innerHeight);
+4;
+
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 
 document.body.appendChild(renderer.domElement);
 
+let sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(0.3, 30, 30),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+sphere.castShadow = true; //default is false
+sphere.receiveShadow = true; //default
+
+sphere.position.set(0, 0, 1.1);
+
 let cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshLambertMaterial({})
+  new THREE.MeshStandardMaterial({ color: 0x00ff00 })
 );
+
+cube.castShadow = true; //default is false
+cube.receiveShadow = true; //default
 
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100, 100, 100),
@@ -133,11 +150,14 @@ let floor = new THREE.Mesh(
   new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: true })
 );
 
-let light = new THREE.PointLight(0xffffff, 100, 100000, 1);
+floor.receiveShadow = true;
 
-light.position.z = 1;
-light.position.x = 1;
-light.position.y = 1;
+var spotLight = new THREE.SpotLight(0xffffff);
+spotLight.position.set(0, 30, 20);
+spotLight.castShadow = true;
+scene.add(spotLight);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
 // floor.rotation.x = (Math.PI / 2) * -1;
 
@@ -146,8 +166,8 @@ camera.position.set(0, 0, 1);
 // camera.lookAt(floor.position);
 
 scene.add(floor);
-scene.add(light);
 scene.add(cube);
+scene.add(sphere);
 
 renderer.domElement.addEventListener("click", () => {
   renderer.domElement.requestPointerLock();
