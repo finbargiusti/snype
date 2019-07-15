@@ -1,4 +1,10 @@
 import * as THREE from "three";
+import {
+  BloomEffect,
+  EffectComposer,
+  EffectPass,
+  RenderPass
+} from "postprocessing";
 
 // CONFIG
 
@@ -20,12 +26,6 @@ class Player {
 let bob = new Player(0, 0, 0);
 let localPlayer = bob;
 
-
-
-
-
-
-
 let playerSpeed = 2.5; // Units per second
 
 function setCameraToLocalPlayer() {
@@ -44,51 +44,65 @@ let inputState = {
   right: false
 };
 
-window.addEventListener('keydown', (e) => {
+window.addEventListener("keydown", e => {
   let keyCode = e.keyCode;
   console.log(keyCode);
 
   switch (keyCode) {
-    case 87: {
-      inputState.forwards = true;
-    }; break;
-    case 83: {
-      inputState.backwards = true;
-    }; break;
-    case 65: {
-      inputState.left = true;
-    }; break;
-    case 68: {
-      inputState.right = true;
-    }; break;
-    case 37: {
-      camera.rotateY(0.03)
-    }; break;
+    case 87:
+      {
+        inputState.forwards = true;
+      }
+      break;
+    case 83:
+      {
+        inputState.backwards = true;
+      }
+      break;
+    case 65:
+      {
+        inputState.left = true;
+      }
+      break;
+    case 68:
+      {
+        inputState.right = true;
+      }
+      break;
+    case 37:
+      {
+        camera.rotateY(0.03);
+      }
+      break;
   }
 });
 
-window.addEventListener('keyup', (e) => {
+window.addEventListener("keyup", e => {
   let keyCode = e.keyCode;
 
   switch (keyCode) {
-    case 87: {
-      inputState.forwards = false;
-    }; break;
-    case 83: {
-      inputState.backwards = false;
-    }; break;
-    case 65: {
-      inputState.left = false;
-    }; break;
-    case 68: {
-      inputState.right = false;
-    }; break;
+    case 87:
+      {
+        inputState.forwards = false;
+      }
+      break;
+    case 83:
+      {
+        inputState.backwards = false;
+      }
+      break;
+    case 65:
+      {
+        inputState.left = false;
+      }
+      break;
+    case 68:
+      {
+        inputState.right = false;
+      }
+      break;
   }
 });
-
-
-
-
 
 const FOV = 75;
 
@@ -100,14 +114,21 @@ let camera = new THREE.PerspectiveCamera(
 
 let renderer = new THREE.WebGLRenderer();
 
+const composer = new EffectComposer(renderer);
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
 
+let cube = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshLambertMaterial({})
+);
+
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100, 100, 100),
 
-  new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true })
+  new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: true })
 );
 
 let light = new THREE.PointLight(0xffffff, 100, 100000, 1);
@@ -122,31 +143,43 @@ camera.rotateX(Math.PI / 2);
 
 scene.add(floor);
 scene.add(light);
+scene.add(cube);
 
-renderer.domElement.addEventListener('click', () => {
-  renderer.domElement.requestPointerLock(); 
+renderer.domElement.addEventListener("click", () => {
+  renderer.domElement.requestPointerLock();
 });
 
-renderer.domElement.addEventListener('mousemove', (e) => {
+renderer.domElement.addEventListener("mousemove", e => {
   let x = e.movementX;
 
   camera.rotateY(-x / 1000);
 });
 
-document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener("pointerlockchange", lockChangeAlert, false);
 
 let pointerLocked = false;
 function lockChangeAlert() {
   if (document.pointerLockElement === renderer.domElement) {
-    console.log('The pointer lock status is now locked');
+    console.log("The pointer lock status is now locked");
     pointerLocked = true;
     //document.addEventListener("mousemove", updatePosition, false);
   } else {
-    console.log('The pointer lock status is now unlocked');
+    console.log("The pointer lock status is now unlocked");
     pointerLocked = false;
     //document.removeEventListener("mousemove", updatePosition, false);
   }
 }
+
+const effectPass = new EffectPass(
+  camera,
+  new BloomEffect({ distinction: 0.2 })
+);
+effectPass.renderToScreen = true;
+
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(effectPass);
+
+composer.setSize(window.innerWidth, window.innerHeight);
 
 let lastRenderTime = null;
 let animate = () => {
@@ -155,41 +188,44 @@ let animate = () => {
   if (lastRenderTime !== null) dif = now - lastRenderTime;
 
   var lookAtVector = new THREE.Vector3(0, 0, -1);
-    lookAtVector.applyQuaternion(camera.quaternion);
+  lookAtVector.applyQuaternion(camera.quaternion);
 
   if (inputState.forwards) {
-    
     //console.log(lookAtVector);
-
-    
   }
-
-  
 
   let zAxis = new THREE.Vector3(0, 0, 1);
 
   if (inputState.forwards) {
-    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
+    localPlayer.position.add(
+      lookAtVector.multiplyScalar(playerSpeed * (dif / 1000))
+    );
   }
   if (inputState.backwards) {
     lookAtVector.applyAxisAngle(zAxis, Math.PI);
 
-    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
+    localPlayer.position.add(
+      lookAtVector.multiplyScalar(playerSpeed * (dif / 1000))
+    );
   }
   if (inputState.left) {
     lookAtVector.applyAxisAngle(zAxis, Math.PI / 2);
 
-    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
+    localPlayer.position.add(
+      lookAtVector.multiplyScalar(playerSpeed * (dif / 1000))
+    );
   }
   if (inputState.right) {
-    lookAtVector.applyAxisAngle(zAxis, Math.PI * 3/2);
+    lookAtVector.applyAxisAngle(zAxis, (Math.PI * 3) / 2);
 
-    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
+    localPlayer.position.add(
+      lookAtVector.multiplyScalar(playerSpeed * (dif / 1000))
+    );
   }
 
   setCameraToLocalPlayer();
 
-  renderer.render(scene, camera);
+  composer.render();
 
   requestAnimationFrame(animate);
   lastRenderTime = now;
