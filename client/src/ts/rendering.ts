@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {
   BloomEffect,
+  SSAOEffect,
   EffectComposer,
   EffectPass,
   RenderPass
@@ -53,23 +54,33 @@ window.addEventListener("keydown", e => {
   console.log(keyCode);
 
   switch (keyCode) {
-    case 87: {
-      inputState.forwards = true;
-    }; break;
-    case 83: {
-      inputState.backwards = true;
-    }; break;
-    case 65: {
-      inputState.left = true;
-    }; break;
-    case 68: {
-      inputState.right = true;
-    }; break;
-    case 32: {
-      if (localPlayer.position.z === 0) {
-        localPlayer.velocity.z = 5;
+    case 87:
+      {
+        inputState.forwards = true;
       }
-    }; break;
+      break;
+    case 83:
+      {
+        inputState.backwards = true;
+      }
+      break;
+    case 65:
+      {
+        inputState.left = true;
+      }
+      break;
+    case 68:
+      {
+        inputState.right = true;
+      }
+      break;
+    case 32:
+      {
+        if (localPlayer.position.z === 0) {
+          localPlayer.velocity.z = 5;
+        }
+      }
+      break;
   }
 });
 
@@ -116,23 +127,23 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 4;
 
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 document.body.appendChild(renderer.domElement);
 
 let sphere = new THREE.Mesh(
   new THREE.SphereGeometry(0.3, 30, 30),
-  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  new THREE.MeshPhongMaterial({ color: 0xff0000 })
 );
 
 sphere.castShadow = true; //default is false
-sphere.receiveShadow = true; //default
+sphere.receiveShadow = false; //default
 
 sphere.position.set(0, 0, 1.1);
 
 let cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+  new THREE.MeshPhongMaterial({ color: 0x00ff00 })
 );
 
 cube.castShadow = true; //default is false
@@ -141,14 +152,16 @@ cube.receiveShadow = true; //default
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100, 100, 100),
 
-  new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: true })
+  new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: false })
 );
 
 floor.receiveShadow = true;
 
-var spotLight = new THREE.SpotLight(0xffffff);
-spotLight.position.set(0, 30, 20);
+var spotLight = new THREE.DirectionalLight(0xffffff, 0.6);
+spotLight.position.set(40, 40, 50);
 spotLight.castShadow = true;
+spotLight.shadow.mapSize.width = 1000;
+spotLight.shadow.mapSize.height = 1000;
 scene.add(spotLight);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
@@ -167,7 +180,7 @@ renderer.domElement.addEventListener("click", () => {
   renderer.domElement.requestPointerLock();
 });
 
-renderer.domElement.addEventListener('mousemove', (e) => {
+renderer.domElement.addEventListener("mousemove", e => {
   if (pointerLocked === false) return;
 
   let x = e.movementX;
@@ -196,16 +209,16 @@ function lockChangeAlert() {
   }
 }
 
-
 let grav = new THREE.Vector3(0, 0, -10);
 
-const effectPass = new EffectPass(
-  camera,
-  new BloomEffect({ distinction: 0.2 })
-);
+const effectPass = new EffectPass(camera, new BloomEffect({ distinction: 1 }));
 effectPass.renderToScreen = true;
 
+// const ambientPass = new EffectPass(camera, new SSAOEffect(camera, new THREE.Texture(0x000000), ));
+// ambientPass.renderToScreen = true;
+
 composer.addPass(new RenderPass(scene, camera));
+// composer.addPass(ambientPass);
 composer.addPass(effectPass);
 
 composer.setSize(window.innerWidth, window.innerHeight);
@@ -257,11 +270,15 @@ let animate = () => {
   movementVec.normalize();
   movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
-  localPlayer.position.add(movementVec.multiplyScalar(playerSpeed * (dif / 1000)));
+  localPlayer.position.add(
+    movementVec.multiplyScalar(playerSpeed * (dif / 1000))
+  );
 
-  localPlayer.position.add(localPlayer.velocity.clone().multiplyScalar(dif / 1000));
+  localPlayer.position.add(
+    localPlayer.velocity.clone().multiplyScalar(dif / 1000)
+  );
 
-  if (localPlayer.position.z >= 0) 
+  if (localPlayer.position.z >= 0)
     localPlayer.velocity.add(grav.clone().multiplyScalar(dif / 1000));
 
   if (localPlayer.position.z < 0) localPlayer.position.z = 0;
