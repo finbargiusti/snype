@@ -1,0 +1,19 @@
+{
+  "name": "snype",
+  "version": "0.0.1",
+  "description": "--- Snype is a work in progress sniper game where two random anonymous players can test their aiming skill online.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finbargiusti/snype.git"
+  },
+  "author": "finbargiusti,vanilagy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/finbargiusti/snype/issues"
+  },
+  "homepage": "https://github.com/finbargiusti/snype#readme"
+}
