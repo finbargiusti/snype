@@ -123,6 +123,31 @@ camera.rotateX(Math.PI / 2);
 scene.add(floor);
 scene.add(light);
 
+renderer.domElement.addEventListener('click', () => {
+  renderer.domElement.requestPointerLock(); 
+});
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+  let x = e.movementX;
+
+  camera.rotateY(-x / 1000);
+});
+
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+
+let pointerLocked = false;
+function lockChangeAlert() {
+  if (document.pointerLockElement === renderer.domElement) {
+    console.log('The pointer lock status is now locked');
+    pointerLocked = true;
+    //document.addEventListener("mousemove", updatePosition, false);
+  } else {
+    console.log('The pointer lock status is now unlocked');
+    pointerLocked = false;
+    //document.removeEventListener("mousemove", updatePosition, false);
+  }
+}
+
 let lastRenderTime = null;
 let animate = () => {
   let now = performance.now();
@@ -138,6 +163,8 @@ let animate = () => {
 
     
   }
+
+  
 
   let zAxis = new THREE.Vector3(0, 0, 1);
 
