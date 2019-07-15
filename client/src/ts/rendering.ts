@@ -61,6 +61,9 @@ window.addEventListener('keydown', (e) => {
     case 68: {
       inputState.right = true;
     }; break;
+    case 37: {
+      camera.rotateY(0.03)
+    }; break;
   }
 });
 
@@ -126,17 +129,35 @@ let animate = () => {
   let dif = 16.6666666; // estimate
   if (lastRenderTime !== null) dif = now - lastRenderTime;
 
+  var lookAtVector = new THREE.Vector3(0, 0, -1);
+    lookAtVector.applyQuaternion(camera.quaternion);
+
   if (inputState.forwards) {
-    localPlayer.position.y += playerSpeed * (dif / 1000);
+    
+    //console.log(lookAtVector);
+
+    
+  }
+
+  let zAxis = new THREE.Vector3(0, 0, 1);
+
+  if (inputState.forwards) {
+    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
   }
   if (inputState.backwards) {
-    localPlayer.position.y -= playerSpeed * (dif / 1000);
+    lookAtVector.applyAxisAngle(zAxis, Math.PI);
+
+    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
   }
   if (inputState.left) {
-    localPlayer.position.x -= playerSpeed * (dif / 1000);
+    lookAtVector.applyAxisAngle(zAxis, Math.PI / 2);
+
+    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
   }
   if (inputState.right) {
-    localPlayer.position.x += playerSpeed * (dif / 1000);
+    lookAtVector.applyAxisAngle(zAxis, Math.PI * 3/2);
+
+    localPlayer.position.add(lookAtVector.multiplyScalar(playerSpeed * (dif / 1000)));
   }
 
   setCameraToLocalPlayer();
