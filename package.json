@@ -20,6 +20,7 @@
   "dependencies": {
     "rollup": "^1.17.0",
     "rollup-plugin-typescript2": "^0.22.0",
+    "three": "^0.106.2",
     "typescript": "^3.5.3"
   }
 }
