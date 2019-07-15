@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "rollup -c -w"
+    "watch": "rollup -c -w",
+    "server": "node server/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/finbargiusti/snype.git"
+    "url": "https://github.com/finbargiusti/snype.git"
   },
   "author": "finbargiusti,vanilagy",
   "license": "MIT",
@@ -20,7 +21,9 @@
   "dependencies": {
     "rollup": "^1.17.0",
     "rollup-plugin-typescript2": "^0.22.0",
+    "serve-static": "^1.14.1",
     "three": "^0.106.2",
-    "typescript": "^3.5.3"
+    "typescript": "^3.5.3",
+    "ws": "^7.1.0"
   }
 }
