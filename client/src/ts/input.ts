@@ -1,4 +1,4 @@
-import { localPlayer } from "./player";
+import { localPlayer, isGrounded } from "./player";
 import { mainCanvas } from "./rendering";
 
 export let inputState = {
@@ -34,8 +34,8 @@ window.addEventListener("keydown", e => {
       }
       break;
     case 32:
-      {
-        if (localPlayer.position.z === 0) {
+    {
+        if (isGrounded()) {
           localPlayer.velocity.z = 5;
         }
       }

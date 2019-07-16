@@ -3,6 +3,7 @@ import { xAxis, zAxis, camera } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState } from "./input";
 import { send } from "./net";
+import { getNearestDistance } from "./collision";
 
 class Player {
   public position: THREE.Vector3;
@@ -23,7 +24,7 @@ class Player {
   }
 }
 
-let bob = new Player(0, 0, 0);
+let bob = new Player(0, -5, 0);
 export let localPlayer = bob;
 
 let playerSpeed = 2.5; // Units per seconta
@@ -44,6 +45,7 @@ export function setCameraToLocalPlayer() {
   camera.rotateOnWorldAxis(zAxis, localPlayer.yaw);
 }
 
+let lastDist = Infinity;
 export function updateLocalPlayerMovement(dif: number) {
   let movementVec = new THREE.Vector3(0, 0, 0);
   if (inputState.forwards) {
@@ -61,16 +63,43 @@ export function updateLocalPlayerMovement(dif: number) {
   movementVec.normalize();
   movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
-  localPlayer.position.add(
-    movementVec.multiplyScalar(playerSpeed * (dif / 1000))
+  let posCopy = localPlayer.position.clone();
+  posCopy.add(
+    movementVec.clone().multiplyScalar(playerSpeed * (dif / 1000))
   );
 
+  let ting = getNearestDistance(posCopy);
+  if (ting && ting.distance <= 0.2) {
+    console.log(ting, ting.face.normal);
+
+    let point = ting.point;
+    //point.sub(new THREE.Vector3(0, 0, 0.3));
+    point.add(ting.face.normal.clone().multiplyScalar(0.2));
+
+    posCopy.copy(point);
+  }
+
+  localPlayer.position.copy(posCopy);
+  
+  /*
   localPlayer.position.add(
     localPlayer.velocity.clone().multiplyScalar(dif / 1000)
-  );
+  );*/
 
-  if (localPlayer.position.z >= 0)
-    localPlayer.velocity.add(GRAVITY.clone().multiplyScalar(dif / 1000));
+  let yes = new THREE.Vector3(0, 0, -1);
+  let floorIntersection = getNearestDistance(posCopy, yes);
+  if (floorIntersection) {
+    let downward = -floorIntersection.distance;
+    if (downward >= localPlayer.velocity.z * dif / 1000) {
+      localPlayer.position.z += downward; // Put him on the floor
+    } else {
+      localPlayer.position.z += localPlayer.velocity.z * dif / 1000;
+      localPlayer.velocity.add(GRAVITY.clone().multiplyScalar(dif / 1000));
+    }
+  } else {
+    localPlayer.position.z += localPlayer.velocity.z * dif / 1000;
+      localPlayer.velocity.add(GRAVITY.clone().multiplyScalar(dif / 1000));
+  }
 
   if (localPlayer.position.z < 0) localPlayer.position.z = 0;
 
@@ -82,4 +111,11 @@ export function updateLocalPlayerMovement(dif: number) {
       yaw: localPlayer.yaw
     })
   );
+  if (localPlayer.position.z < 0) localPlayer.position.z = 0; // Don't glitch through the ground, hack.
+}
+
+export function isGrounded() {
+  let yes = new THREE.Vector3(0, 0, -1);
+  let floorIntersection = getNearestDistance(localPlayer.position, yes);
+  return floorIntersection && floorIntersection.distance === 0;
 }

@@ -10,6 +10,7 @@ import { updateLocalPlayerMovement, setCameraToLocalPlayer } from "./player";
 import { initCanvasListeners } from "./input";
 import { socket } from "./net";
 var MTLLoader = require("three-mtl-loader");
+import { checkCollision } from "./collision";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
@@ -21,7 +22,8 @@ const FOV = 70;
 export let scene = new THREE.Scene();
 export let camera = new THREE.PerspectiveCamera(
   FOV,
-  window.innerWidth / window.innerHeight
+  window.innerWidth / window.innerHeight,
+  0.01
 );
 
 let renderer = new THREE.WebGLRenderer();
@@ -38,6 +40,7 @@ document.body.appendChild(renderer.domElement);
 export let mainCanvas = renderer.domElement;
 initCanvasListeners();
 
+/*
 let sphere = new THREE.Mesh(
   new THREE.SphereGeometry(0.3, 30, 30),
   new THREE.MeshPhongMaterial({ color: 0xff0000 })
@@ -48,13 +51,47 @@ Math.PI / 2;
 Math.PI / 2;
 Math.PI / 2;
 Math.PI / 2;
+
+sphere.castShadow = true; //default is false
+sphere.receiveShadow = false; //default
+
+sphere.position.set(0, 0, 1.1);*/
+
 let cube = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshPhongMaterial({ color: 0x00ff00 })
+  new THREE.MeshPhongMaterial({ color: 0x96CDCD })
 );
-
+cube.position.z += 0;
 cube.castShadow = true; //default is false
 cube.receiveShadow = true; //default
+
+let cube2 = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 2),
+  new THREE.MeshPhongMaterial({ color: 0xff3333 })
+);
+cube2.position.z += 0;
+cube2.position.y += 2.5;
+cube2.castShadow = true; //default is false
+cube2.receiveShadow = true; //default
+
+let cube3 = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 3),
+  new THREE.MeshPhongMaterial({ color: 0x33ff33 })
+);
+cube3.position.z += 0;
+cube3.position.y += 5;
+cube3.castShadow = true; //default is false
+cube3.receiveShadow = true; //default
+
+let cube4 = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 5, 1.5),
+  new THREE.MeshPhongMaterial({ color: 0x33ffff })
+);
+cube4.position.z += 0;
+cube4.position.x += 2;
+cube4.castShadow = true; //default is false
+cube4.receiveShadow = true; //default
+cube4.rotateX(Math.atan(1.5 / 5));
 
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100, 100, 100),
@@ -67,10 +104,10 @@ floor.receiveShadow = true;
 var spotLight = new THREE.DirectionalLight(0xffffff, 0.6);
 spotLight.position.set(40, 40, 50);
 spotLight.castShadow = true;
-spotLight.shadow.camera.left = -50;
-spotLight.shadow.camera.right = 50;
-spotLight.shadow.camera.top = 50;
-spotLight.shadow.camera.bottom = -50;
+spotLight.shadow.camera.left = -20;
+spotLight.shadow.camera.right = 20;
+spotLight.shadow.camera.bottom = -20;
+spotLight.shadow.camera.top = 20;
 spotLight.shadow.mapSize.width = 5000;
 spotLight.shadow.mapSize.height = 5000;
 scene.add(spotLight);
@@ -120,9 +157,12 @@ camera.position.set(0, 0, 1);
 
 scene.add(floor);
 scene.add(cube);
-scene.add(sphere);
+scene.add(cube2);
+scene.add(cube3);
+scene.add(cube4);
+//scene.add(sphere);
 
-const effectPass = new EffectPass(camera, new BloomEffect({ distinction: 1 }));
+const effectPass = new EffectPass(camera, new BloomEffect({ distinction: 10000 }));
 effectPass.renderToScreen = true;
 
 // const ambientPass = new EffectPass(camera, new SSAOEffect(camera, new THREE.Texture(0x000000), ));
@@ -146,6 +186,7 @@ let animate = () => {
 
   updateLocalPlayerMovement(dif);
   setCameraToLocalPlayer();
+  checkCollision();
 
   composer.render();
 
