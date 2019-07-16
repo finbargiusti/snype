@@ -70,35 +70,37 @@ window.addEventListener("keyup", e => {
   }
 });
 
-mainCanvas.addEventListener("click", () => {
-  mainCanvas.requestPointerLock();
-});
-
-mainCanvas.addEventListener("mousemove", e => {
-  if (pointerLocked === false) return;
-
-  let x = e.movementX;
-  let y = e.movementY;
-
-  localPlayer.yaw += -x / 1000;
-  localPlayer.pitch += -y / 1000;
-  localPlayer.pitch = Math.max(
-    -Math.PI / 2,
-    Math.min(Math.PI / 2, localPlayer.pitch)
-  );
-});
-
-document.addEventListener("pointerlockchange", lockChangeAlert, false);
-
-let pointerLocked = false;
-function lockChangeAlert() {
-  if (document.pointerLockElement === mainCanvas) {
-    console.log("The pointer lock status is now locked");
-    pointerLocked = true;
-    //document.addEventListener("mousemove", updatePosition, false);
-  } else {
-    console.log("The pointer lock status is now unlocked");
-    pointerLocked = false;
-    //document.removeEventListener("mousemove", updatePosition, false);
+export function initCanvasListeners() {
+  mainCanvas.addEventListener("click", () => {
+    mainCanvas.requestPointerLock();
+  });
+  
+  mainCanvas.addEventListener("mousemove", e => {
+    if (pointerLocked === false) return;
+  
+    let x = e.movementX;
+    let y = e.movementY;
+  
+    localPlayer.yaw += -x / 1000;
+    localPlayer.pitch += -y / 1000;
+    localPlayer.pitch = Math.max(
+      -Math.PI / 2,
+      Math.min(Math.PI / 2, localPlayer.pitch)
+    );
+  });
+  
+  document.addEventListener("pointerlockchange", lockChangeAlert, false);
+  
+  let pointerLocked = false;
+  function lockChangeAlert() {
+    if (document.pointerLockElement === mainCanvas) {
+      console.log("The pointer lock status is now locked");
+      pointerLocked = true;
+      //document.addEventListener("mousemove", updatePosition, false);
+    } else {
+      console.log("The pointer lock status is now unlocked");
+      pointerLocked = false;
+      //document.removeEventListener("mousemove", updatePosition, false);
+    }
   }
 }

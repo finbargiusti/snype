@@ -7,6 +7,7 @@ import {
   RenderPass
 } from "postprocessing";
 import { updateLocalPlayerMovement, setCameraToLocalPlayer } from "./player";
+import { initCanvasListeners } from "./input";
 
 // CONFIG
 
@@ -30,6 +31,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 document.body.appendChild(renderer.domElement);
 export let mainCanvas = renderer.domElement;
+initCanvasListeners();
 
 let sphere = new THREE.Mesh(
   new THREE.SphereGeometry(0.3, 30, 30),
