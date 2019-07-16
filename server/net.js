@@ -1,6 +1,7 @@
 const http = require("http");
 const serveStatic = require("serve-static");
 const url = require("url");
+const ws = require("ws");
 
 const serve = serveStatic(__dirname + "/../client/dist", {
   setHeaders(res) {
@@ -29,6 +30,19 @@ function createHTTPServer() {
     }
   });
 
+  let socketServer = new ws.Server({ server: httpServer });
+  let sockets = [];
+
+  socketServer.on("connection", socket => {
+    sockets.push(socket);
+    socket.on("message", msg => {
+      sockets.forEach(sendSocket => {
+        if (socket !== sendSocket) {
+          sendSocket.send(msg);
+        }
+      });
+    });
+  });
   //(httpServer);
 
   console.log("HTTP server created and listening on port " + PORT);

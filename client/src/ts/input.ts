@@ -7,39 +7,39 @@ export let inputState = {
   left: false,
   right: false
 };
-  
+
 window.addEventListener("keydown", e => {
   let keyCode = e.keyCode;
   console.log(keyCode);
 
   switch (keyCode) {
     case 87:
-    {
+      {
         inputState.forwards = true;
-    }
-    break;
+      }
+      break;
     case 83:
-    {
+      {
         inputState.backwards = true;
-    }
-    break;
+      }
+      break;
     case 65:
-    {
+      {
         inputState.left = true;
-    }
-    break;
+      }
+      break;
     case 68:
-    {
+      {
         inputState.right = true;
-    }
-    break;
+      }
+      break;
     case 32:
-    {
+      {
         if (localPlayer.position.z === 0) {
-        localPlayer.velocity.z = 5;
+          localPlayer.velocity.z = 5;
         }
-    }
-    break;
+      }
+      break;
   }
 });
 
@@ -48,25 +48,25 @@ window.addEventListener("keyup", e => {
 
   switch (keyCode) {
     case 87:
-    {
+      {
         inputState.forwards = false;
-    }
-    break;
+      }
+      break;
     case 83:
-    {
+      {
         inputState.backwards = false;
-    }
-    break;
+      }
+      break;
     case 65:
-    {
+      {
         inputState.left = false;
-    }
-    break;
+      }
+      break;
     case 68:
-    {
+      {
         inputState.right = false;
-    }
-    break;
+      }
+      break;
   }
 });
 
@@ -74,13 +74,13 @@ export function initCanvasListeners() {
   mainCanvas.addEventListener("click", () => {
     mainCanvas.requestPointerLock();
   });
-  
+
   mainCanvas.addEventListener("mousemove", e => {
     if (pointerLocked === false) return;
-  
+
     let x = e.movementX;
     let y = e.movementY;
-  
+
     localPlayer.yaw += -x / 1000;
     localPlayer.pitch += -y / 1000;
     localPlayer.pitch = Math.max(
@@ -88,9 +88,9 @@ export function initCanvasListeners() {
       Math.min(Math.PI / 2, localPlayer.pitch)
     );
   });
-  
+
   document.addEventListener("pointerlockchange", lockChangeAlert, false);
-  
+
   let pointerLocked = false;
   function lockChangeAlert() {
     if (document.pointerLockElement === mainCanvas) {

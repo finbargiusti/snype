@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { xAxis, zAxis, camera } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState } from "./input";
+import { send } from "./net";
 
 class Player {
   public position: THREE.Vector3;
@@ -16,7 +17,7 @@ class Player {
 
   getHeadPosition() {
     let pos = this.position.clone();
-    pos.z += 0.9;
+    pos.z += 1.65;
 
     return pos;
   }
@@ -25,7 +26,7 @@ class Player {
 let bob = new Player(0, 0, 0);
 export let localPlayer = bob;
 
-let playerSpeed = 2.5; // Units per second
+let playerSpeed = 2.5; // Units per seconta
 
 export function setCameraToLocalPlayer() {
   if (!localPlayer) return;
@@ -72,4 +73,13 @@ export function updateLocalPlayerMovement(dif: number) {
     localPlayer.velocity.add(GRAVITY.clone().multiplyScalar(dif / 1000));
 
   if (localPlayer.position.z < 0) localPlayer.position.z = 0;
+
+  send(
+    JSON.stringify({
+      x: localPlayer.position.x,
+      y: localPlayer.position.y,
+      z: localPlayer.position.z,
+      yaw: localPlayer.yaw
+    })
+  );
 }
