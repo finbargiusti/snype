@@ -93,6 +93,18 @@ cube4.castShadow = true; //default is false
 cube4.receiveShadow = true; //default
 cube4.rotateX(Math.atan(1.5 / 5));
 
+let cube5 = new THREE.Mesh(
+  new THREE.BoxGeometry(0.5, 10, 0.5),
+  new THREE.MeshPhongMaterial({ color: 0x33ff44 })
+);
+cube5.position.z += 1;
+cube5.position.x -= 3;
+cube5.position.y += 2;
+cube5.castShadow = true; //default is false
+cube5.receiveShadow = true; //default
+cube5.rotateZ(Math.PI / 2);
+cube5.rotateX(Math.atan(1.5 / 5) / 2);
+
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100, 100, 100),
 
@@ -125,7 +137,7 @@ mtlLoader.load(url, function(materials) {
 
   var objLoader = new THREE.OBJLoader();
   objLoader.setMaterials(materials);
-  objLoader.load("../media/dennis-high.obj", function(object) {
+  objLoader.load("../media/dennis.obj", function(object) {
     object.position.set(0, 1, 1);
     object.castShadow = true;
     object.rotateX(Math.PI / 2);
@@ -160,6 +172,7 @@ scene.add(cube);
 scene.add(cube2);
 scene.add(cube3);
 scene.add(cube4);
+scene.add(cube5);
 //scene.add(sphere);
 
 const effectPass = new EffectPass(camera, new BloomEffect({ distinction: 10000 }));

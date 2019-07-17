@@ -16,7 +16,7 @@ export function getNearestDistance(point: THREE.Vector3, direcOverride?: THREE.V
         direc.applyAxisAngle(zAxis, i * Math.PI/4); // one vector every 45°
         if (direcOverride) direc = direcOverride;
 
-        let ray = new THREE.Raycaster(point, direc, 0, 1);
+        let ray = new THREE.Raycaster(point, direc, 0, 20);
 
         let intersections = ray.intersectObjects(scene.children);
         for (let j = 0; j < intersections.length; j++) {
