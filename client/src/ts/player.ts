@@ -117,5 +117,6 @@ export function updateLocalPlayerMovement(dif: number) {
 export function isGrounded() {
   let yes = new THREE.Vector3(0, 0, -1);
   let floorIntersection = getNearestDistance(localPlayer.position, yes);
+
   return floorIntersection && floorIntersection.distance === 0;
 }
