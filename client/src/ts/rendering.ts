@@ -12,6 +12,7 @@ import { socket } from "./net";
 import { loadMap } from "./map-load";
 var MTLLoader = require("three-mtl-loader");
 import { checkCollision } from "./collision";
+import { parse } from "./smfparser";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
@@ -136,17 +137,17 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 let eye;
 
 var mtlLoader = new MTLLoader();
-var url = "../media/eye.mtl";
+var url = "../static/eye.mtl";
 mtlLoader.load(url, function(materials) {
   materials.preload();
 
   var objLoader = new THREE.OBJLoader();
   objLoader.setMaterials(materials);
-  objLoader.load("../media/dennis.obj", function(object) {
+  objLoader.load("../static/dennis.obj", function(object) {
     object.position.set(0, 1.8, 1);
     object.castShadow = true;
     object.rotateX(Math.PI / 2);
-    object.scale.set(0.001, 0.001, 0.001);
+    object.scale.set(0.01, 0.01, 0.01);
     eye = object;
     scene.add(object);
     object.traverse(function(child) {
@@ -168,14 +169,17 @@ socket.addEventListener("message", e => {
   eye.rotateOnWorldAxis(zAxis, jsonData.yaw + Math.PI / 2);
 });
 
-fetch("/level1.json")
+fetch("/static/level1.smf")
   .then(response => {
-    return response.json();
+    return response.text();
   })
   .then(result => {
-    loadMap(result, scene);
+    let bruh = parse(result);
+    console.log(bruh);
+    loadMap(bruh, scene);
   });
 
+import level1 from "../level1.smf";
 camera.position.set(0, 0, 1);
 //camera.rotateX(Math.PI / 2);
 // camera.lookAt(floor.position);
