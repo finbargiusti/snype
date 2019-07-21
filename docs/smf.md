@@ -2,16 +2,18 @@
 
 ## Table of Contents
 
-* [File Header](#file-header)
-* [Metadata](#metadata)
-	- [Embedded Options](#embedded-options)
-* [Objects](#objects)
-	- [Spawn Point](#spawn-point)
-	- [Wall](#wall)
-	- [Box](#box)
-	- [Optional Flags](#optional-flags)
-* [Comments](#comments)
-* [Example File](#example-file)
+- [SMF (Snype Map File) Documentation](#smf-snype-map-file-documentation)
+	- [Table of Contents](#table-of-contents)
+	- [File Header](#file-header)
+	- [Metadata](#metadata)
+		- [Embedded options](#embedded-options)
+	- [Objects](#objects)
+		- [Spawn Point](#spawn-point)
+		- [Wall](#wall)
+		- [Box](#box)
+		- [Option Flags](#option-flags)
+	- [Comments](#comments)
+	- [Example File](#example-file)
 
 ## File Header
 
@@ -40,10 +42,9 @@ wallHeight: 4
 
 These are the different options you can embed into the metadata. The only required field is the name of the map. The rest of the options have defaults which are listed. You are permitted to add any other non listed metadata such as author and date here, they will be parsed and can later be targeted, but will serve no actual use to snype.
 
-
-* `name`: The name of the map (**Required**)
-* `wallHeight`: The height of the walls (**Default: 4**)
-* `objectColor`: Default color of non-wall objects on the map (**Default: 0x2a2a2a**)
+- `name`: The name of the map (**Required**)
+- `wallHeight`: The height of the walls (**Default: 4**)
+- `objectColor`: Default color of non-wall objects on the map (**Default: 0x2a2a2a**)
 
 ## Objects
 
@@ -76,6 +77,7 @@ Wall position:x position:y size:x size:y
 ```
 
 Example:
+
 ```
 Wall 0 0 15 1
 ```
@@ -105,7 +107,8 @@ Optionally, you can add an option (or multiple) to an object with the following 
 ```
 
 Options:
-* `color` (hex) Overrides global object color.
+
+- `color` (hex) Overrides global object color.
 
 Example with option:
 
@@ -128,89 +131,24 @@ This is an example file that actually works for a very basic level "Level 1":
 ```
 #! v1
 
+// My level by Finbar Giusti 2019 lelelelelel
+
 ---
 
 
 name: "Level 1"
-author: "Finbar Giusti"
-wallHeight: 5
+maxPlayers: 1
+wallHeight: 4
 objectColor: 0x000000
+pvpEnabled: true
 
 
 ---
 
 // Spawns
-Spawn 5 2 0
-Spawn 14 3 0
-Spawn 2 10 0#! v1
-
----
-
-
-name: "Level 1"
-author: "Finbar Giusti"
-wallHeight: 5
-objectColor: 0x000000
-
-
----
-
-// Spawns#! v1
-
----
-
-
-name: "Level 1"
-author: "Finbar Giusti"
-wallHeight: 5
-objectColor: 0x000000
-
-
----
-
-// Spawns
-Spawn 5 2 0
+Spawn 5 2 2
 Spawn 14 3 0
 Spawn 2 10 0
-Spawn 11 10 0
-
-// Walls
-Wall 0 0 15 1
-Wall 0 0 1 15
-Wall 15 0 1 15
-Wall 0 15 15 1
-
-// Boxes
-Box 2 3 0 3 1 2
-Box 2 4 0 1 1 2
-Box 10 2 0 3 1 2
-Box 12 4 0 1 1 2
-Box 9 5 0 4 1 2
-Box 10 4 0 1 1 1 --color 0xffff00
-Box 5 9 0 2 1 2
-Box 3 10 0 4 1 2
-Box 13 9 0 1 3 2
-Spawn 5 2 0
-Spawn 14 3 0
-Spawn 2 10 0
-Spawn 11 10 0
-
-// Walls
-Wall 0 0 15 1
-Wall 0 0 1 15
-Wall 15 0 1 15
-Wall 0 15 15 1
-
-// Boxes
-Box 2 3 0 3 1 2
-Box 2 4 0 1 1 2
-Box 10 2 0 3 1 2
-Box 12 4 0 1 1 2
-Box 9 5 0 4 1 2
-Box 10 4 0 1 1 1 --color 0xffff00
-Box 5 9 0 2 1 2
-Box 3 10 0 4 1 2
-Box 13 9 0 1 3 2
 Spawn 11 10 0
 
 // Walls
@@ -230,5 +168,3 @@ Box 5 9 0 2 1 2
 Box 3 10 0 4 1 2
 Box 13 9 0 1 3 2
 ```
-
-
