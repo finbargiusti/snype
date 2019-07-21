@@ -6,12 +6,11 @@ import {
   EffectPass,
   RenderPass
 } from "postprocessing";
-import { updateLocalPlayerMovement, setCameraToLocalPlayer } from "./player";
+import { updateLocalPlayerMovement, setCameraToLocalPlayer, createLocalPlayer, getLocalPlayer } from "./player";
 import { initCanvasListeners } from "./input";
 import { socket } from "./net";
 import { loadMap } from "./map-load";
 var MTLLoader = require("three-mtl-loader");
-import { checkCollision } from "./collision";
 import { parse } from "./smfparser";
 
 var OBJLoader = require("three-obj-loader");
@@ -28,6 +27,7 @@ export let camera = new THREE.PerspectiveCamera(
   0.01
 );
 
+createLocalPlayer();
 let renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById("root") as HTMLCanvasElement
 });
@@ -149,24 +149,13 @@ mtlLoader.load(url, function(materials) {
     object.rotateX(Math.PI / 2);
     object.scale.set(0.01, 0.01, 0.01);
     eye = object;
-    scene.add(object);
+    //scene.add(object);
     object.traverse(function(child) {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
       }
     });
   });
-});
-
-socket.addEventListener("message", e => {
-  let jsonData = JSON.parse(e.data);
-  eye.position.x = jsonData.x;
-  eye.position.y = jsonData.y;
-  eye.position.z = jsonData.z;
-  eye.rotation.z = 0;
-  eye.rotation.x = Math.PI / 2;
-  eye.rotation.y = 0;
-  eye.rotateOnWorldAxis(zAxis, jsonData.yaw + Math.PI / 2);
 });
 
 fetch("/static/level1.smf")
@@ -179,7 +168,6 @@ fetch("/static/level1.smf")
     loadMap(bruh, scene);
   });
 
-import level1 from "../level1.smf";
 camera.position.set(0, 0, 1);
 //camera.rotateX(Math.PI / 2);
 // camera.lookAt(floor.position);
@@ -218,9 +206,10 @@ let animate = () => {
   let dif = 16.6666666; // estimate
   if (lastRenderTime !== null) dif = now - lastRenderTime;
 
-  updateLocalPlayerMovement(dif);
-  setCameraToLocalPlayer();
-  checkCollision();
+  if (getLocalPlayer()) {
+    updateLocalPlayerMovement(dif);
+    setCameraToLocalPlayer();
+  }
 
   composer.render();
 

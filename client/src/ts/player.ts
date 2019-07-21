@@ -2,18 +2,37 @@ import * as THREE from "three";
 import { xAxis, zAxis, camera, scene } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState } from "./input";
-import { send } from "./net";
+import { socketSend } from "./net";
 import { getNearestDistance } from "./collision";
 
+export let players = new Map<string, Player>();
+
+function createPlayerObject3D() {
+  let sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 32, 32),
+    new THREE.MeshPhongMaterial({color: 0x00ffff})
+  );
+  sphere.castShadow = true;
+  sphere.receiveShadow = true;
+
+  return sphere;
+}
+
 class Player {
+  public id: string;
   public position: THREE.Vector3;
   public velocity: THREE.Vector3;
   public yaw: number = 0;
   public pitch: number = 0;
+  public object3D: THREE.Object3D;
 
-  constructor(x: number, y: number, z: number) {
-    this.position = new THREE.Vector3(x, y, z);
+  constructor(obj: any) {
+    this.id = obj.id;
+    this.position = new THREE.Vector3(0, 0, 0);
     this.velocity = new THREE.Vector3(0, 0, 0);
+
+    this.object3D = createPlayerObject3D();
+    scene.add(this.object3D);
   }
 
   getHeadPosition() {
@@ -22,10 +41,39 @@ class Player {
 
     return pos;
   }
+
+  update(obj: any) {
+    if (obj.position) {
+      this.position.set(obj.position.x, obj.position.y, obj.position.z);
+      this.object3D.position.copy(this.getHeadPosition());
+    }
+    if (obj.velocity) {
+      this.velocity.set(obj.velocity.x, obj.velocity.y, obj.velocity.z);
+    }
+    if (obj.yaw) this.yaw = obj.yaw;
+    if (obj.pitch) this.pitch = obj.pitch;
+  }
+
+  remove() {
+    scene.remove(this.object3D);
+  }
 }
 
-let bob = new Player(0, -5, 0);
-export let localPlayer = bob;
+export let localPlayerId = Math.random().toString();
+export let localPlayer = null;
+
+export function createLocalPlayer() {
+  localPlayer = new Player({
+    id: localPlayerId,
+  });
+  localPlayer.object3D.visible = false; // Don't render any of the local player, because that'd be stupid.
+
+  players.set(localPlayerId, localPlayer);
+}
+
+export function getLocalPlayer() {
+  return localPlayer;
+}
 
 let playerSpeed = 3.5; // Units per seconta
 
@@ -45,7 +93,6 @@ export function setCameraToLocalPlayer() {
   camera.rotateOnWorldAxis(zAxis, localPlayer.yaw);
 }
 
-let lastDist = Infinity;
 export function updateLocalPlayerMovement(dif: number) {
   let movementVec = new THREE.Vector3(0, 0, 0);
   if (inputState.forwards) {
@@ -63,6 +110,7 @@ export function updateLocalPlayerMovement(dif: number) {
   movementVec.normalize();
   movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
+  let velocCopy = localPlayer.velocity.clone();
   let posCopy = localPlayer.position.clone();
   posCopy.add(
     movementVec.clone().multiplyScalar(playerSpeed * (dif / 1000))
@@ -89,7 +137,6 @@ export function updateLocalPlayerMovement(dif: number) {
       }
     }
 
-
     // Cheaky-ass workaround
     if (ting.face.normal.z > ting.face.normal.x && ting.face.normal.z > ting.face.normal.y) break preventer;
 
@@ -98,36 +145,27 @@ export function updateLocalPlayerMovement(dif: number) {
     posCopy.copy(point);
   }
 
-  localPlayer.position.copy(posCopy);
-  
-  /*
-  localPlayer.position.add(
-    localPlayer.velocity.clone().multiplyScalar(dif / 1000)
-  );*/
-
- 
-
   let yes = new THREE.Vector3(0, 0, -1);
-  let anotherPoint = localPlayer.position.clone();
+  let anotherPoint = posCopy.clone();
   anotherPoint.z += 0.05;
   let floorIntersection = getNearestDistance(anotherPoint, yes);
   outer:
   if (floorIntersection) {
-    let whereWouldIBeWithGravity = localPlayer.position.z + localPlayer.velocity.z * dif / 1000;
+    let whereWouldIBeWithGravity = posCopy.z + velocCopy.z * dif / 1000;
 
     if (floorIntersection.point.z >= whereWouldIBeWithGravity) {
-      localPlayer.position.z = floorIntersection.point.z;
-      localPlayer.velocity.z = 0;
+      posCopy.z = floorIntersection.point.z;
+      velocCopy.z = 0;
     } else {
-      localPlayer.position.z += localPlayer.velocity.z * dif / 1000;
-      localPlayer.velocity.add(GRAVITY.clone().multiplyScalar(dif / 1000));
+      posCopy.z += velocCopy.z * dif / 1000;
+      velocCopy.add(GRAVITY.clone().multiplyScalar(dif / 1000));
     }
   } else {
-    localPlayer.position.z += localPlayer.velocity.z * dif / 1000;
-    localPlayer.velocity.add(GRAVITY.clone().multiplyScalar(dif / 1000));
+    posCopy.z += velocCopy.z * dif / 1000;
+    velocCopy.add(GRAVITY.clone().multiplyScalar(dif / 1000));
   }
 
-  let thing = localPlayer.position.clone();
+  let thing = posCopy.clone();
   thing.z += allowedStepHeight;
   let downRay = new THREE.Raycaster(thing, new THREE.Vector3(0, 0, -1), 0, allowedStepHeight);
   let intersections = downRay.intersectObjects(scene.children);
@@ -135,24 +173,21 @@ export function updateLocalPlayerMovement(dif: number) {
   if (closest) {
     let dist = allowedStepHeight - closest.distance;
     if (dist <= allowedStepHeight) {
-      localPlayer.position.z = closest.point.z;
-      localPlayer.velocity.z = 0;
+      posCopy.z = closest.point.z;
+      velocCopy.z = 0;
     }
   }
 
- 
+  if (posCopy.z < 0) posCopy.z = 0; // Don't glitch through the ground, hack.
 
-  if (localPlayer.position.z < 0) localPlayer.position.z = 0; // Don't glitch through the ground, hack.
+  localPlayer.update({
+    position: {x: posCopy.x, y: posCopy.y, z: posCopy.z},
+    velocity: {x: velocCopy.x, y: velocCopy.y, z: velocCopy.z},
+  });
 
-
-  send(
-    JSON.stringify({
-      x: localPlayer.position.x,
-      y: localPlayer.position.y,
-      z: localPlayer.position.z,
-      yaw: localPlayer.yaw
-    })
-  );
+  socketSend("updatePosition", {
+    position: {x: posCopy.x, y: posCopy.y, z: posCopy.z}
+  });
 }
 
 export function isGrounded() {
@@ -162,4 +197,26 @@ export function isGrounded() {
   let floorIntersection = getNearestDistance(point, yes);
 
   return floorIntersection && floorIntersection.distance <= 0.055;
+}
+
+export function updatePlayer(obj: any) {
+  let player = players.get(obj.id);
+  if (!player) return;
+
+  player.update(obj);
+}
+
+export function addPlayer(obj: any) {
+  let newPlayer = new Player({id: obj.id});
+  players.set(obj.id, newPlayer);
+  updatePlayer(obj);
+}
+
+export function removePlayer(obj: any) {
+  let player = players.get(obj.id);
+  if (player) {
+    player.remove();
+
+    players.delete(player.id);
+  }
 }
