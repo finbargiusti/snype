@@ -35,9 +35,10 @@ export const parse = (file: string) => {
   // Verify and Acquire version
 
   let fileVersion: string;
-  if (lines[0].startsWith("#! ")) {
-    if (SUPPORTED_VERSIONS.includes(lines[0].slice(3))) {
-      fileVersion = lines[0].slice(3);
+  let firstLine = lines[0].trim();
+  if (firstLine.startsWith("#! ")) {
+    if (SUPPORTED_VERSIONS.includes(firstLine.slice(3))) {
+      fileVersion = firstLine.slice(3);
     } else {
       throw new Error("SMF Version not supported");
     }
@@ -57,8 +58,9 @@ export const parse = (file: string) => {
 
   for (let i = 1; i < lines.length; ++i) {
     let line = lines[i];
+    line = line.trim();
 
-    if (!line.trim()) {
+    if (!line) {
       continue;
     }
 

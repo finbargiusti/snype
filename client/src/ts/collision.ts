@@ -1,10 +1,5 @@
 import * as THREE from "three";
-import { localPlayer } from "./player";
 import { scene, zAxis } from "./rendering";
-
-export function checkCollision() {
-    let direc = new THREE.Vector3(0, 1, 0);
-}
 
 export function getNearestDistance(point: THREE.Vector3, direcOverride?: THREE.Vector3) {
     let closest: THREE.Intersection = null;
