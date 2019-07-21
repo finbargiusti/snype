@@ -118,16 +118,16 @@ let floor = new THREE.Mesh(
 
 floor.receiveShadow = true;
 
-var spotLight = new THREE.DirectionalLight(0xffffff, 1);
-spotLight.position.set(40, 40, 50);
-spotLight.castShadow = true;
-spotLight.shadow.camera.left = -20;
-spotLight.shadow.camera.right = 20;
-spotLight.shadow.camera.bottom = -20;
-spotLight.shadow.camera.top = 20;
-spotLight.shadow.mapSize.width = 5000;
-spotLight.shadow.mapSize.height = 5000;
-scene.add(spotLight);
+var sunlight = new THREE.DirectionalLight(0xffffff, 1);
+sunlight.position.set(40, 40, 50);
+sunlight.castShadow = true;
+sunlight.shadow.camera.left = -20;
+sunlight.shadow.camera.right = 20;
+sunlight.shadow.camera.bottom = -20;
+sunlight.shadow.camera.top = 20;
+sunlight.shadow.mapSize.width = 5000;
+sunlight.shadow.mapSize.height = 5000;
+scene.add(sunlight);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
@@ -142,7 +142,7 @@ mtlLoader.load(url, function(materials) {
 
   var objLoader = new THREE.OBJLoader();
   objLoader.setMaterials(materials);
-  objLoader.load("../media/eye.obj", function(object) {
+  objLoader.load("../media/dennis.obj", function(object) {
     object.position.set(0, 1.8, 1);
     object.castShadow = true;
     object.rotateX(Math.PI / 2);
