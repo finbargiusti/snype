@@ -1,15 +1,12 @@
 #! v1
 
-// My level by Finbar Giusti 2019 lelelelelel
-
 ---
 
 
 name: "Level 1"
-maxPlayers: 1
-wallHeight: 4
+author: "Finbar Giusti"
+wallHeight: 5
 objectColor: 0x000000
-pvpEnabled: true
 
 
 ---

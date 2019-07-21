@@ -34,14 +34,14 @@ export let loadMap = (data, scene) => {
             new THREE.BoxGeometry(
               object.size.x,
               object.size.y,
-              data.metadata.wallHeight
+              data.metadata.wallHeight || 4
             ),
             wallMaterial
           );
           wallMesh.position.set(
             object.position.x + object.size.x / 2,
             object.position.y + object.size.y / 2,
-            data.metadata.wallHeight / 2
+            (data.metadata.wallHeight || 4) / 2
           );
           wallMesh.receiveShadow = true;
           wallMesh.castShadow = true;
