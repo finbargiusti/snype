@@ -9,6 +9,7 @@ import {
 import { updateLocalPlayerMovement, setCameraToLocalPlayer } from "./player";
 import { initCanvasListeners } from "./input";
 import { socket } from "./net";
+import { loadMap } from "./map-load";
 var MTLLoader = require("three-mtl-loader");
 import { checkCollision } from "./collision";
 
@@ -26,12 +27,16 @@ export let camera = new THREE.PerspectiveCamera(
   0.01
 );
 
-let renderer = new THREE.WebGLRenderer();
+let renderer = new THREE.WebGLRenderer({
+  canvas: document.getElementById("root") as HTMLCanvasElement
+});
 
 const composer = new EffectComposer(renderer);
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 4;
+
+renderer.setClearColor(0x7ec0ee);
 
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -57,53 +62,53 @@ sphere.receiveShadow = false; //default
 
 sphere.position.set(0, 0, 1.1);*/
 
-let cube = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshPhongMaterial({ color: 0x96CDCD })
-);
-cube.position.z += 0;
-cube.castShadow = true; //default is false
-cube.receiveShadow = true; //default
+// let cube = new THREE.Mesh(
+//   new THREE.BoxGeometry(1, 1, 1),
+//   new THREE.MeshPhongMaterial({ color: 0x96CDCD })
+// );
+// cube.position.z += 0;
+// cube.castShadow = true; //default is false
+// cube.receiveShadow = true; //default
 
-let cube2 = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 2),
-  new THREE.MeshPhongMaterial({ color: 0xff3333 })
-);
-cube2.position.z += 0;
-cube2.position.y += 2.5;
-cube2.castShadow = true; //default is false
-cube2.receiveShadow = true; //default
+// let cube2 = new THREE.Mesh(
+//   new THREE.BoxGeometry(1, 1, 2),
+//   new THREE.MeshPhongMaterial({ color: 0xff3333 })
+// );
+// cube2.position.z += 0;
+// cube2.position.y += 2.5;
+// cube2.castShadow = true; //default is false
+// cube2.receiveShadow = true; //default
 
-let cube3 = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 1, 3),
-  new THREE.MeshPhongMaterial({ color: 0x33ff33 })
-);
-cube3.position.z += 0;
-cube3.position.y += 5;
-cube3.castShadow = true; //default is false
-cube3.receiveShadow = true; //default
+// let cube3 = new THREE.Mesh(
+//   new THREE.BoxGeometry(1, 1, 3),
+//   new THREE.MeshPhongMaterial({ color: 0x33ff33 })
+// );
+// cube3.position.z += 0;
+// cube3.position.y += 5;
+// cube3.castShadow = true; //default is false
+// cube3.receiveShadow = true; //default
 
-let cube4 = new THREE.Mesh(
-  new THREE.BoxGeometry(1, 5, 1.5),
-  new THREE.MeshPhongMaterial({ color: 0x33ffff })
-);
-cube4.position.z += 0;
-cube4.position.x += 2;
-cube4.castShadow = true; //default is false
-cube4.receiveShadow = true; //default
-cube4.rotateX(Math.atan(1.5 / 5));
+// let cube4 = new THREE.Mesh(
+//   new THREE.BoxGeometry(1, 5, 1.5),
+//   new THREE.MeshPhongMaterial({ color: 0x33ffff })
+// );
+// cube4.position.z += 0;
+// cube4.position.x += 2;
+// cube4.castShadow = true; //default is false
+// cube4.receiveShadow = true; //default
+// cube4.rotateX(Math.atan(1.5 / 5));
 
-let cube5 = new THREE.Mesh(
-  new THREE.BoxGeometry(0.5, 10, 0.5),
-  new THREE.MeshPhongMaterial({ color: 0x33ff44 })
-);
-cube5.position.z += 1;
-cube5.position.x -= 3;
-cube5.position.y += 2;
-cube5.castShadow = true; //default is false
-cube5.receiveShadow = true; //default
-cube5.rotateZ(Math.PI / 2);
-cube5.rotateX(Math.atan(1.5 / 5) / 2);
+// let cube5 = new THREE.Mesh(
+//   new THREE.BoxGeometry(0.5, 10, 0.5),
+//   new THREE.MeshPhongMaterial({ color: 0x33ff44 })
+// );
+// cube5.position.z += 1;
+// cube5.position.x -= 3;
+// cube5.position.y += 2;
+// cube5.castShadow = true; //default is false
+// cube5.receiveShadow = true; //default
+// cube5.rotateZ(Math.PI / 2);
+// cube5.rotateX(Math.atan(1.5 / 5) / 2);
 
 let floor = new THREE.Mesh(
   new THREE.PlaneGeometry(100, 100, 100, 100),
@@ -113,7 +118,7 @@ let floor = new THREE.Mesh(
 
 floor.receiveShadow = true;
 
-var spotLight = new THREE.DirectionalLight(0xffffff, 0.6);
+var spotLight = new THREE.DirectionalLight(0xffffff, 1);
 spotLight.position.set(40, 40, 50);
 spotLight.castShadow = true;
 spotLight.shadow.camera.left = -20;
@@ -137,11 +142,11 @@ mtlLoader.load(url, function(materials) {
 
   var objLoader = new THREE.OBJLoader();
   objLoader.setMaterials(materials);
-  objLoader.load("../media/dennis.obj", function(object) {
-    object.position.set(0, 1, 1);
+  objLoader.load("../media/eye.obj", function(object) {
+    object.position.set(0, 1.8, 1);
     object.castShadow = true;
     object.rotateX(Math.PI / 2);
-    object.scale.set(0.01, 0.01, 0.01);
+    object.scale.set(0.001, 0.001, 0.001);
     eye = object;
     scene.add(object);
     object.traverse(function(child) {
@@ -163,19 +168,30 @@ socket.addEventListener("message", e => {
   eye.rotateOnWorldAxis(zAxis, jsonData.yaw + Math.PI / 2);
 });
 
+fetch("/level1.json")
+  .then(response => {
+    return response.json();
+  })
+  .then(result => {
+    loadMap(result, scene);
+  });
+
 camera.position.set(0, 0, 1);
 //camera.rotateX(Math.PI / 2);
 // camera.lookAt(floor.position);
 
 scene.add(floor);
-scene.add(cube);
-scene.add(cube2);
-scene.add(cube3);
-scene.add(cube4);
-scene.add(cube5);
+// scene.add(cube);
+// scene.add(cube2);
+// scene.add(cube3);
+// scene.add(cube4);
+// scene.add(cube5);
 //scene.add(sphere);
 
-const effectPass = new EffectPass(camera, new BloomEffect({ distinction: 10000 }));
+const effectPass = new EffectPass(
+  camera,
+  new BloomEffect({ distinction: 10000 })
+);
 effectPass.renderToScreen = true;
 
 // const ambientPass = new EffectPass(camera, new SSAOEffect(camera, new THREE.Texture(0x000000), ));
@@ -192,6 +208,7 @@ export let yAxis = new THREE.Vector3(0, 1, 0);
 export let zAxis = new THREE.Vector3(0, 0, 1);
 
 let lastRenderTime = null;
+
 let animate = () => {
   let now = performance.now();
   let dif = 16.6666666; // estimate

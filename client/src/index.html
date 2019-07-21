@@ -7,12 +7,21 @@
   </head>
   <body>
     <script src="./ts/index.ts" defer></script>
+    <canvas id="root"></canvas>
+    <img src="media/crosshair.png" id="crosshair" />
   </body>
   <style>
     body {
       margin: 0px;
       padding: 0px;
       overflow: hidden;
+    }
+    #crosshair {
+      width: 60px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
     }
   </style>
 </html>
