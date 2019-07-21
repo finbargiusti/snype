@@ -131,22 +131,19 @@ This is an example file that actually works for a very basic level "Level 1":
 ```
 #! v1
 
-// My level by Finbar Giusti 2019 lelelelelel
-
 ---
 
 
 name: "Level 1"
-maxPlayers: 1
-wallHeight: 4
+author: "Finbar Giusti"
+wallHeight: 5
 objectColor: 0x000000
-pvpEnabled: true
 
 
 ---
 
 // Spawns
-Spawn 5 2 2
+Spawn 5 2 0
 Spawn 14 3 0
 Spawn 2 10 0
 Spawn 11 10 0
