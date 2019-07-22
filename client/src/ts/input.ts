@@ -5,12 +5,14 @@ export let inputState = {
     forwards: false,
     backwards: false,
     left: false,
-    right: false
+    right: false,
+    shift: false
 };
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
-    //console.log(keyCode);
+    console.log(keyCode);
+    
 
     switch (keyCode) {
         case 87:
@@ -21,6 +23,8 @@ window.addEventListener("keydown", e => {
         case 83:
             {
                 inputState.backwards = true;
+
+                
             }
             break;
         case 65:
@@ -40,6 +44,9 @@ window.addEventListener("keydown", e => {
                 }
             }
             break;
+        case 16: { // shift
+            inputState.shift = true; 
+        }; break;
     }
 });
 
@@ -67,6 +74,9 @@ window.addEventListener("keyup", e => {
                 inputState.right = false;
             }
             break;
+        case 16: { // shift
+            inputState.shift = false; 
+        }; break;
     }
 });
 
