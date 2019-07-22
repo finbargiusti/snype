@@ -23,7 +23,7 @@ async function loadLevel(url: any) {
 }
 
 async function init() {
-    await loadLevel("/static/level1.smf");
+    await loadLevel("/static/ascent.smf");
 }
 
-init();   
+init();

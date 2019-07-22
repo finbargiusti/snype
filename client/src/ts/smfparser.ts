@@ -16,7 +16,7 @@ const literalParse = (string: string) => {
 };
 
 const parseOptions = (items: string[]) => {
-    let options = {};
+    let options: any = {};
 
     items.forEach((string, i) => {
         if (string.startsWith("--")) {
@@ -50,7 +50,7 @@ export const parse = (file: string) => {
 
     let metadata_counter = 0;
 
-    let metadata = {};
+    let metadata: any = {};
 
     let spawnPoints = [];
 

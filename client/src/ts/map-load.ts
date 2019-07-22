@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { localPlayer } from "./player";
+import { Vector3 } from "three";
 
 export class Map {
     public rawData: any;
@@ -93,6 +94,142 @@ export class Map {
                         this.colliders.push(wallMesh);
                     }
                     break;
+                case "ramp":
+                    {
+                        let geometry = new THREE.Geometry();
+
+                        let v3 = THREE.Vector3;
+
+                        geometry.vertices.push(
+                            new v3(
+                                object.position.x,
+                                object.position.y,
+                                object.position.z
+                            ),
+                            new v3(
+                                object.position.x + object.size.x,
+                                object.position.y,
+                                object.position.z
+                            ),
+                            new v3(
+                                object.position.x,
+                                object.position.y + object.size.y,
+                                object.position.z
+                            ),
+                            new v3(
+                                object.position.x + object.size.x,
+                                object.position.y + object.size.y,
+                                object.position.z
+                            ),
+                            new v3(
+                                object.position.x,
+                                object.position.y,
+                                object.position.z + object.size.z
+                            ),
+                            new v3(
+                                object.position.x + object.size.x,
+                                object.position.y,
+                                object.position.z + object.size.z
+                            ),
+                            new v3(
+                                object.position.x,
+                                object.position.y + object.size.y,
+                                object.position.z + object.size.z
+                            ),
+                            new v3(
+                                object.position.x + object.size.x,
+                                object.position.y + object.size.y,
+                                object.position.z + object.size.z
+                            )
+                        );
+
+                        let f3 = THREE.Face3;
+
+                        geometry.faces.push(new f3(2, 1, 0), new f3(3, 1, 2));
+
+                        switch (object.orientation) {
+                            case "-x":
+                                {
+                                    geometry.faces.push(
+                                        new f3(1, 6, 4),
+                                        new f3(3, 6, 1),
+                                        new f3(1, 4, 0),
+                                        new f3(2, 6, 3),
+                                        new f3(0, 4, 6),
+                                        new f3(2, 0, 6)
+                                    );
+                                }
+                                break;
+                            case "+x":
+                                {
+                                    geometry.faces.push(
+                                        new f3(0, 5, 2),
+                                        new f3(5, 7, 2),
+                                        new f3(1, 5, 0),
+                                        new f3(3, 2, 7),
+                                        new f3(1, 3, 7),
+                                        new f3(1, 7, 5)
+                                    );
+                                }
+                                break;
+                            case "-y":
+                                {
+                                    geometry.faces.push(
+                                        new f3(4, 5, 2),
+                                        new f3(5, 3, 2),
+                                        new f3(5, 1, 3),
+                                        new f3(2, 0, 4),
+                                        new f3(5, 4, 0),
+                                        new f3(0, 1, 5)
+                                    );
+                                }
+                                break;
+                            case "+y":
+                                {
+                                    geometry.faces.push(
+                                        new f3(1, 6, 0),
+                                        new f3(1, 7, 6),
+                                        new f3(1, 3, 7),
+                                        new f3(2, 0, 6),
+                                        new f3(3, 2, 6),
+                                        new f3(3, 6, 7)
+                                    );
+                                }
+                                break;
+                        }
+
+                        geometry.computeBoundingBox();
+                        geometry.computeFaceNormals();
+                        geometry.computeVertexNormals();
+
+                        let rampMesh = new THREE.Mesh(
+                            geometry,
+                            new THREE.MeshLambertMaterial({
+                                color:
+                                    object.options.color ||
+                                    data.metadata.objectColor ||
+                                    0x2a2a2a
+                            })
+                        );
+
+                        rampMesh.traverse(child => {
+                            if (child instanceof THREE.Mesh) {
+                                child.geometry.computeFaceNormals();
+                                child.geometry.computeVertexNormals();
+                                child.geometry.computeBoundingBox();
+
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+
+                        rampMesh.castShadow = true;
+                        rampMesh.receiveShadow = true;
+
+                        this.drawableObjects.push(rampMesh);
+                        this.colliders.push(rampMesh);
+                    }
+                    break;
             }
         });
     }
@@ -100,7 +237,7 @@ export class Map {
     buildScene() {
         // TODO: Add lights and floor
 
-        this.drawableObjects.forEach((obj) => {
+        this.drawableObjects.forEach(obj => {
             this.scene.add(obj);
         });
 
@@ -111,7 +248,7 @@ export class Map {
             minY = -1,
             maxY = 1;
 
-        this.objects.forEach((obj) => {
+        this.objects.forEach(obj => {
             if (obj.type !== "wall") return;
 
             minX = Math.min(minX, obj.position.x);
@@ -126,7 +263,7 @@ export class Map {
         );
         floor.position.x = (maxX - minX) / 2;
         floor.position.y = (maxY - minY) / 2;
-        
+
         floor.receiveShadow = true;
         this.scene.add(floor);
         this.colliders.push(floor);
