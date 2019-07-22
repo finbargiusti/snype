@@ -10,7 +10,7 @@ export let inputState = {
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
-    console.log(keyCode);
+    //console.log(keyCode);
 
     switch (keyCode) {
         case 87:

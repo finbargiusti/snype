@@ -8,16 +8,23 @@ import {
 
 const WEBSOCKET_URL = "ws://" + location.host;
 
-export let socket = new WebSocket(WEBSOCKET_URL);
-export let handlers = {};
+export function openSocket() {
+    socket = new WebSocket(WEBSOCKET_URL);
 
-socket.addEventListener("open", () => {
+    socket.addEventListener("open", socketOnOpen);
+    socket.addEventListener("message", socketOnMessage);
+}
+
+export let socket: WebSocket = null;
+export let handlers: { [command: string]: Function } = {};
+
+function socketOnOpen() {
     socketSend("connect", {
         playerId: localPlayerId
     });
-});
+}
 
-socket.addEventListener("message", e => {
+function socketOnMessage(e: MessageEvent) {
     let msg = e.data;
     let json = JSON.parse(msg);
 
@@ -27,7 +34,7 @@ socket.addEventListener("message", e => {
     } else {
         console.warn("Received unhandled command: " + json.command);
     }
-});
+}
 
 export let socketSend = (command: string, data: any) => {
     if (socket.readyState !== 1) return;
@@ -39,16 +46,18 @@ export let socketSend = (command: string, data: any) => {
     );
 };
 
-handlers["addPlayer"] = function(data) {
+let crappyCode = 5;
+
+handlers["addPlayer"] = function(data: any) {
     let player = players.get(data.id);
     if (player) updatePlayer(data);
     else addPlayer(data);
 };
 
-handlers["updatePlayer"] = function(data) {
+handlers["updatePlayer"] = function(data: any) {
     updatePlayer(data);
 };
 
-handlers["removePlayer"] = function(data) {
+handlers["removePlayer"] = function(data: any) {
     removePlayer(data);
 };

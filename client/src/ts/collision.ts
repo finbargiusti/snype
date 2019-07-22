@@ -1,10 +1,14 @@
 import * as THREE from "three";
 import { scene, zAxis } from "./rendering";
+import { gameState } from "./game_state";
 
 export function getNearestDistance(
     point: THREE.Vector3,
     direcOverride?: THREE.Vector3
 ) {
+    let { currentMap } = gameState;
+    if (!currentMap) return;
+
     let closest: THREE.Intersection = null;
 
     for (let i = 0; i < 8; i++) {
@@ -16,7 +20,7 @@ export function getNearestDistance(
 
         let ray = new THREE.Raycaster(point, direc, 0, 20);
 
-        let intersections = ray.intersectObjects(scene.children);
+        let intersections = ray.intersectObjects(currentMap.colliders);
         for (let j = 0; j < intersections.length; j++) {
             let intersection = intersections[j];
 

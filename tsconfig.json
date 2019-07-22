@@ -9,5 +9,5 @@
     "strict": true,
     "strictNullChecks": false
   },
-  "include": ["client/ts/**/*"]
+  "include": ["client/src/ts/**/*"]
 }

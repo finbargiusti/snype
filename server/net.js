@@ -4,35 +4,35 @@ const url = require("url");
 const ws = require("ws");
 
 const serve = serveStatic(__dirname + "/../client/dist", {
-  setHeaders(res) {
-    // For now. Caching is evil!
-    res.setHeader("Cache-Control", "no-cache");
-  }
+    setHeaders(res) {
+        // For now. Caching is evil!
+        res.setHeader("Cache-Control", "no-cache");
+    }
 });
 
 const PORT = 20003;
 function createHTTPServer() {
-  let httpServer = http.createServer();
-  httpServer.listen(PORT);
+    let httpServer = http.createServer();
+    httpServer.listen(PORT);
 
-  httpServer.on("request", (request, response) => {
-    let urlObj = url.parse(request.url, { parseQueryString: true });
+    httpServer.on("request", (request, response) => {
+        let urlObj = url.parse(request.url, { parseQueryString: true });
 
-    response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Origin", "*");
 
-    if (false) {
-      // Don't question me
-    } else {
-      serve(request, response, () => {
-        response.writeHead(404);
-        response.end("404");
-      });
-    }
-  });
+        if (false) {
+            // Don't question me
+        } else {
+            serve(request, response, () => {
+                response.writeHead(404);
+                response.end("404");
+            });
+        }
+    });
 
-  console.log("HTTP server created and listening on port " + PORT);
+    console.log("HTTP server created and listening on port " + PORT);
 
-  createWebSocketServer(httpServer);
+    createWebSocketServer(httpServer);
 }
 
 let sockets = new Set();
@@ -41,138 +41,138 @@ let players = new Set();
 let socketPlayerAssociation = new WeakMap();
 
 function createWebSocketServer(httpServer) {
-  let socketServer = new ws.Server({ server: httpServer });
+    let socketServer = new ws.Server({ server: httpServer });
 
-  socketServer.on("connection", (socket) => {
-    console.log("Socket connected.");
+    socketServer.on("connection", socket => {
+        console.log("Socket connected.");
 
-    sockets.add(socket);
+        sockets.add(socket);
 
-    socket.on("message", (msg) => {
-      let json;
+        socket.on("message", msg => {
+            let json;
 
-      try {
-        json = JSON.parse(msg);
-      } catch(e) {
-        console.error("JSON parse error: ", e);
-        return;
-      }
+            try {
+                json = JSON.parse(msg);
+            } catch (e) {
+                console.error("JSON parse error: ", e);
+                return;
+            }
 
-      if (!json.command) {
-        console.error("Socket message needs a command!");
-        return;
-      }
+            if (!json.command) {
+                console.error("Socket message needs a command!");
+                return;
+            }
 
-      let handler = socketMessageHandlers[json.command];
-      if (handler) {
-        handler(socket, json.data);
-      } else {
-        console.warn("Received unhandled command: " + json.command);
-      }
-    });
-
-    socket.on("close", () => {
-      console.log("Socket disconnected.");
-      close();
-    });
-
-    socket.on("error", (e) => {
-      console.log("Socket error.", e);
-      close();
-    });
-    
-    // Catch the deep error
-    socket._socket.on("error", (e) => {
-      //console.log("Socket deep error.", e);
-      close();
-    });
-
-    function close() {
-      sockets.delete(socket);
-
-      let player = socketPlayerAssociation.get(socket);
-      if (player) {
-        players.delete(player);
-
-        sockets.forEach((socket2) => {
-          socketSend(socket2, "removePlayer", {
-            id: player.id
-          });
+            let handler = socketMessageHandlers[json.command];
+            if (handler) {
+                handler(socket, json.data);
+            } else {
+                console.warn("Received unhandled command: " + json.command);
+            }
         });
-      }
-    }
-  });
 
-  console.log("Fired up the WS server.");
+        socket.on("close", () => {
+            console.log("Socket disconnected.");
+            close();
+        });
+
+        socket.on("error", e => {
+            console.log("Socket error.", e);
+            close();
+        });
+
+        // Catch the deep error
+        socket._socket.on("error", e => {
+            //console.log("Socket deep error.", e);
+            close();
+        });
+
+        function close() {
+            sockets.delete(socket);
+
+            let player = socketPlayerAssociation.get(socket);
+            if (player) {
+                players.delete(player);
+
+                sockets.forEach(socket2 => {
+                    socketSend(socket2, "removePlayer", {
+                        id: player.id
+                    });
+                });
+            }
+        }
+    });
+
+    console.log("Fired up the WS server.");
 }
 
 socketMessageHandlers["connect"] = function(socket, data) {
-  let newPlayer = new Player(data.playerId);
-  newPlayer.socket = socket;
-  newPlayer.init();
+    let newPlayer = new Player(data.playerId);
+    newPlayer.socket = socket;
+    newPlayer.init();
 
-  players.add(newPlayer);
-  socketPlayerAssociation.set(socket, newPlayer); 
+    players.add(newPlayer);
+    socketPlayerAssociation.set(socket, newPlayer);
 
-  players.forEach((playa) => {
-    socketSend(socket, "addPlayer", formatPlayer(playa));
-  });
+    players.forEach(playa => {
+        socketSend(socket, "addPlayer", formatPlayer(playa));
+    });
 };
 
 class Player {
-  constructor(id) {
-    this.id = id;
-    this.socket = null;
-    this.position = {x: 0, y: 0, z: 0};
-  }
+    constructor(id) {
+        this.id = id;
+        this.socket = null;
+        this.position = { x: 5, y: 5, z: 0 };
+    }
 
-  init() {
-    // Something.
+    init() {
+        // Something.
 
-    this.broadcastAll();
-  }
+        this.broadcastAll();
+    }
 
-  broadcastAll() {
-    sockets.forEach((socket2) => {
-      if (this.socket === socket2) return;
+    broadcastAll() {
+        sockets.forEach(socket2 => {
+            if (this.socket === socket2) return;
 
-      socketSend(socket2, "addPlayer", formatPlayer(this));
-    });
-  }
+            socketSend(socket2, "addPlayer", formatPlayer(this));
+        });
+    }
 }
 
 function socketSend(socket, command, data) {
-  if (socket.readyState !== 1) return;
+    if (socket.readyState !== 1) return;
 
-  socket.send(JSON.stringify({command, data}));
+    socket.send(JSON.stringify({ command, data }));
 }
 
 function formatPlayer(obj) {
-  let result = {};
+    let result = {};
 
-  if (obj.id) result.id = obj.id;
-  if (obj.position) result.position = obj.position;
+    if (obj.id) result.id = obj.id;
+    if (obj.position) result.position = obj.position;
 
-  return result;
+    return result;
 }
 
 socketMessageHandlers["updatePosition"] = function(socket, data) {
-  let player = socketPlayerAssociation.get(socket);
-  if (!player) {
-    console.error("You are big gay.");
-    return;
-  }
+    let player = socketPlayerAssociation.get(socket);
+    if (!player) {
+        console.error("You are big gay.");
+        return;
+    }
 
-  player.position.x = data.position.x;
-  player.position.y = data.position.y;
-  player.position.z = data.position.z;
+    player.position.x = data.position.x;
+    player.position.y = data.position.y;
+    player.position.z = data.position.z;
 
-  let playerUpdateData = {id: player.id, position: player.position};
-  sockets.forEach((socket2) => {
-    if (socket === socket2) return;
+    let playerUpdateData = { id: player.id, position: player.position };
+    sockets.forEach(socket2 => {
+        if (socket === socket2) return;
 
-    socketSend(socket2, "updatePlayer", playerUpdateData);
-  });
+        socketSend(socket2, "updatePlayer", playerUpdateData);
+    });
 };
 
 exports.createHTTPServer = createHTTPServer;

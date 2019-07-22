@@ -1,9 +1,10 @@
 import * as THREE from "three";
-import { xAxis, zAxis, camera, scene } from "./rendering";
+import { xAxis, zAxis, camera } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState } from "./input";
 import { socketSend } from "./net";
 import { getNearestDistance } from "./collision";
+import { gameState } from "./game_state";
 
 export let players = new Map<string, Player>();
 
@@ -27,12 +28,14 @@ class Player {
     public object3D: THREE.Object3D;
 
     constructor(obj: any) {
+        let { currentMap } = gameState;
+
         this.id = obj.id;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
 
         this.object3D = createPlayerObject3D();
-        scene.add(this.object3D);
+        currentMap.scene.add(this.object3D);
     }
 
     getHeadPosition() {
@@ -55,12 +58,14 @@ class Player {
     }
 
     remove() {
+        let { currentMap } = gameState;
+
         scene.remove(this.object3D);
     }
 }
 
 export let localPlayerId = Math.random().toString();
-export let localPlayer = null;
+export let localPlayer: Player = null;
 
 export function createLocalPlayer() {
     localPlayer = new Player({
@@ -94,6 +99,8 @@ export function setCameraToLocalPlayer() {
 }
 
 export function updateLocalPlayerMovement(dif: number) {
+    let { currentMap } = gameState;
+
     let movementVec = new THREE.Vector3(0, 0, 0);
     if (inputState.forwards) {
         movementVec.y += 1;
@@ -178,7 +185,7 @@ export function updateLocalPlayerMovement(dif: number) {
         0,
         allowedStepHeight
     );
-    let intersections = downRay.intersectObjects(scene.children);
+    let intersections = downRay.intersectObjects(currentMap.scene.children);
     let closest = intersections[0]; // Name differently?
     if (closest) {
         let dist = allowedStepHeight - closest.distance;

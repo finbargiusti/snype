@@ -17,6 +17,7 @@ import { socket } from "./net";
 import { loadMap } from "./map-load";
 var MTLLoader = require("three-mtl-loader");
 import { parse } from "./smfparser";
+import { gameState } from "./game_state";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
@@ -32,7 +33,6 @@ export let camera = new THREE.PerspectiveCamera(
     0.01
 );
 
-createLocalPlayer();
 let renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById("root") as HTMLCanvasElement
 });
@@ -51,139 +51,7 @@ document.body.appendChild(renderer.domElement);
 export let mainCanvas = renderer.domElement;
 initCanvasListeners();
 
-/*
-let sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(0.3, 30, 30),
-  new THREE.MeshPhongMaterial({ color: 0xff0000 })
-);
-Math.PI / 2;
-Math.PI / 2;
-Math.PI / 2;
-Math.PI / 2;
-Math.PI / 2;
-Math.PI / 2;
-
-sphere.castShadow = true; //default is false
-sphere.receiveShadow = false; //default
-
-sphere.position.set(0, 0, 1.1);*/
-
-// let cube = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 1, 1),
-//   new THREE.MeshPhongMaterial({ color: 0x96CDCD })
-// );
-// cube.position.z += 0;
-// cube.castShadow = true; //default is false
-// cube.receiveShadow = true; //default
-
-// let cube2 = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 1, 2),
-//   new THREE.MeshPhongMaterial({ color: 0xff3333 })
-// );
-// cube2.position.z += 0;
-// cube2.position.y += 2.5;
-// cube2.castShadow = true; //default is false
-// cube2.receiveShadow = true; //default
-
-// let cube3 = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 1, 3),
-//   new THREE.MeshPhongMaterial({ color: 0x33ff33 })
-// );
-// cube3.position.z += 0;
-// cube3.position.y += 5;
-// cube3.castShadow = true; //default is false
-// cube3.receiveShadow = true; //default
-
-// let cube4 = new THREE.Mesh(
-//   new THREE.BoxGeometry(1, 5, 1.5),
-//   new THREE.MeshPhongMaterial({ color: 0x33ffff })
-// );
-// cube4.position.z += 0;
-// cube4.position.x += 2;
-// cube4.castShadow = true; //default is false
-// cube4.receiveShadow = true; //default
-// cube4.rotateX(Math.atan(1.5 / 5));
-
-// let cube5 = new THREE.Mesh(
-//   new THREE.BoxGeometry(0.5, 10, 0.5),
-//   new THREE.MeshPhongMaterial({ color: 0x33ff44 })
-// );
-// cube5.position.z += 1;
-// cube5.position.x -= 3;
-// cube5.position.y += 2;
-// cube5.castShadow = true; //default is false
-// cube5.receiveShadow = true; //default
-// cube5.rotateZ(Math.PI / 2);
-// cube5.rotateX(Math.atan(1.5 / 5) / 2);
-
-let floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(100, 100, 100, 100),
-
-    new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: false })
-);
-
-floor.receiveShadow = true;
-
-var sunlight = new THREE.DirectionalLight(0xffffff, 1);
-sunlight.position.set(40, 40, 50);
-sunlight.castShadow = true;
-sunlight.shadow.camera.left = -20;
-sunlight.shadow.camera.right = 20;
-sunlight.shadow.camera.bottom = -20;
-sunlight.shadow.camera.top = 20;
-sunlight.shadow.mapSize.width = 1000;
-sunlight.shadow.mapSize.height = 1000;
-scene.add(sunlight);
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-
-// floor.rotation.x = (Math.PI / 2) * -1;
-
-let eye;
-
-var mtlLoader = new MTLLoader();
-var url = "../static/eye.mtl";
-mtlLoader.load(url, function(materials) {
-    materials.preload();
-
-    var objLoader = new THREE.OBJLoader();
-    objLoader.setMaterials(materials);
-    objLoader.load("../static/dennis.obj", function(object) {
-        object.position.set(0, 1.8, 1);
-        object.castShadow = true;
-        object.rotateX(Math.PI / 2);
-        object.scale.set(0.01, 0.01, 0.01);
-        eye = object;
-        //scene.add(object);
-        object.traverse(function(child) {
-            if (child instanceof THREE.Mesh) {
-                child.castShadow = true;
-            }
-        });
-    });
-});
-
-fetch("/static/level1.smf")
-    .then(response => {
-        return response.text();
-    })
-    .then(result => {
-        let bruh = parse(result);
-        console.log(bruh);
-        loadMap(bruh, scene);
-    });
-
 camera.position.set(0, 0, 1);
-//camera.rotateX(Math.PI / 2);
-// camera.lookAt(floor.position);
-
-scene.add(floor);
-// scene.add(cube);
-// scene.add(cube2);
-// scene.add(cube3);
-// scene.add(cube4);
-// scene.add(cube5);
-//scene.add(sphere);
 
 const effectPass = new EffectPass(
     camera,
@@ -194,7 +62,8 @@ effectPass.renderToScreen = true;
 // const ambientPass = new EffectPass(camera, new SSAOEffect(camera, new THREE.Texture(0x000000), ));
 // ambientPass.renderToScreen = true;
 
-composer.addPass(new RenderPass(scene, camera));
+let renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
 // composer.addPass(ambientPass);
 composer.addPass(effectPass);
 
@@ -204,9 +73,14 @@ export let xAxis = new THREE.Vector3(1, 0, 0);
 export let yAxis = new THREE.Vector3(0, 1, 0);
 export let zAxis = new THREE.Vector3(0, 0, 1);
 
-let lastRenderTime = null;
+let lastRenderTime: number = null;
 
 let animate = () => {
+    let currentMap = gameState.currentMap;
+    if (currentMap) {
+        renderPass.scene = currentMap.scene;
+    }
+    
     let now = performance.now();
     let dif = 16.6666666; // estimate
     if (lastRenderTime !== null) dif = now - lastRenderTime;
