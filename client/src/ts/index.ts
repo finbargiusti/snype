@@ -1,7 +1,7 @@
 import "./rendering";
 import "./net";
 import { parse } from "./smfparser";
-import { Map } from "./map-load";
+import { SnypeMap } from "./snype_map";
 import { gameState } from "./game_state";
 import { createLocalPlayer } from "./player";
 import { openSocket } from "./net";
@@ -13,7 +13,7 @@ async function loadLevel(url: any) {
     let rawSMFData = parse(text);
     console.log(rawSMFData);
 
-    let newMap = new Map(rawSMFData);
+    let newMap = new SnypeMap(rawSMFData);
     console.log(newMap);
 
     gameState.currentMap = newMap;

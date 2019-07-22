@@ -1,18 +1,20 @@
-import { getLocalPlayer, isGrounded } from "./player";
 import { mainCanvas } from "./rendering";
 
 export let inputState = {
+    pointerLocked: false,
     forwards: false,
     backwards: false,
     left: false,
     right: false,
-    shift: false
+    shift: false,
+    spacebar: false
 };
+
+export let inputEventDispatcher = new EventTarget();
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
-    console.log(keyCode);
-    
+    console.log(keyCode);    
 
     switch (keyCode) {
         case 87:
@@ -22,9 +24,7 @@ window.addEventListener("keydown", e => {
             break;
         case 83:
             {
-                inputState.backwards = true;
-
-                
+                inputState.backwards = true;                
             }
             break;
         case 65:
@@ -39,9 +39,7 @@ window.addEventListener("keydown", e => {
             break;
         case 32:
             {
-                if (isGrounded()) {
-                    getLocalPlayer().velocity.z = 5;
-                }
+                inputState.spacebar = true;
             }
             break;
         case 16: { // shift
@@ -74,6 +72,11 @@ window.addEventListener("keyup", e => {
                 inputState.right = false;
             }
             break;
+        case 32:
+            {
+                inputState.spacebar = false;
+            }
+            break;
         case 16: { // shift
             inputState.shift = false; 
         }; break;
@@ -86,32 +89,19 @@ export function initCanvasListeners() {
     });
 
     mainCanvas.addEventListener("mousemove", e => {
-        if (pointerLocked === false) return;
-
-        let x = e.movementX;
-        let y = e.movementY;
-
-        let localPlayer = getLocalPlayer();
-
-        localPlayer.yaw += -x / 1000;
-        localPlayer.pitch += -y / 1000;
-        localPlayer.pitch = Math.max(
-            -Math.PI / 2,
-            Math.min(Math.PI / 2, localPlayer.pitch)
-        );
+        inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
     });
 
     document.addEventListener("pointerlockchange", lockChangeAlert, false);
 
-    let pointerLocked = false;
     function lockChangeAlert() {
         if (document.pointerLockElement === mainCanvas) {
-            console.log("The pointer lock status is now locked");
-            pointerLocked = true;
+            //console.log("The pointer lock status is now locked");
+            inputState.pointerLocked = true;
             //document.addEventListener("mousemove", updatePosition, false);
         } else {
-            console.log("The pointer lock status is now unlocked");
-            pointerLocked = false;
+            //console.log("The pointer lock status is now unlocked");
+            inputState.pointerLocked = false;
             //document.removeEventListener("mousemove", updatePosition, false);
         }
     }

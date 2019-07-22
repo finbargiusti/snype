@@ -1,8 +1,6 @@
 import * as THREE from "three";
-import { localPlayer } from "./player";
-import { Vector3 } from "three";
 
-export class Map {
+export class SnypeMap {
     public rawData: any;
     public metadata: any;
     public spawnPoints: any[];
@@ -206,7 +204,7 @@ export class Map {
 
                         let rampMesh = new THREE.Mesh(
                             geometry,
-                            new THREE.MeshLambertMaterial({
+                            new THREE.MeshPhongMaterial({
                                 color:
                                     object.options.color ||
                                     data.metadata.objectColor ||
@@ -250,7 +248,7 @@ export class Map {
 
         let floor = new THREE.Mesh(
             new THREE.PlaneGeometry(maxX - minX, maxY - minY, 1, 1),
-            new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: false })
+            new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: false })
         );
         floor.position.x = (maxX - minX) / 2;
         floor.position.y = (maxY - minY) / 2;

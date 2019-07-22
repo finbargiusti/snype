@@ -1,10 +1,4 @@
-import {
-    localPlayerId,
-    players,
-    updatePlayer,
-    addPlayer,
-    removePlayer
-} from "./player";
+import { gameState } from "./game_state";
 
 const WEBSOCKET_URL = "ws://" + location.host;
 
@@ -19,8 +13,11 @@ export let socket: WebSocket = null;
 export let handlers: { [command: string]: Function } = {};
 
 function socketOnOpen() {
+    let { localPlayer } = gameState;
+    if (!localPlayer) return;
+
     socketSend("connect", {
-        playerId: localPlayerId
+        playerId: localPlayer.id
     });
 }
 
@@ -44,20 +41,4 @@ export let socketSend = (command: string, data: any) => {
             data
         })
     );
-};
-
-let crappyCode = 5;
-
-handlers["addPlayer"] = function(data: any) {
-    let player = players.get(data.id);
-    if (player) updatePlayer(data);
-    else addPlayer(data);
-};
-
-handlers["updatePlayer"] = function(data: any) {
-    updatePlayer(data);
-};
-
-handlers["removePlayer"] = function(data: any) {
-    removePlayer(data);
 };

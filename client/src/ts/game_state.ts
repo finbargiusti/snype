@@ -1,5 +1,7 @@
-import { Map } from "./map-load";
+import { SnypeMap } from "./snype_map";
+import { Player } from "./player";
 
 export const gameState = {
-    currentMap: <Map>null
+    currentMap: <SnypeMap>null,
+    localPlayer: <Player>null
 };
