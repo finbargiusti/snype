@@ -131,8 +131,8 @@ sunlight.shadow.camera.left = -20;
 sunlight.shadow.camera.right = 20;
 sunlight.shadow.camera.bottom = -20;
 sunlight.shadow.camera.top = 20;
-sunlight.shadow.mapSize.width = 5000;
-sunlight.shadow.mapSize.height = 5000;
+sunlight.shadow.mapSize.width = 1000;
+sunlight.shadow.mapSize.height = 1000;
 scene.add(sunlight);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
