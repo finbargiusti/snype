@@ -60,7 +60,7 @@ class Player {
     remove() {
         let { currentMap } = gameState;
 
-        scene.remove(this.object3D);
+        currentMap.scene.remove(this.object3D);
     }
 }
 
@@ -80,7 +80,8 @@ export function getLocalPlayer() {
     return localPlayer;
 }
 
-let playerSpeed = 3.5; // Units per seconta
+let playerSpeed = 3; // Units per seconta
+let playerSpeedSprinting = 6;
 
 export function setCameraToLocalPlayer() {
     if (!localPlayer) return;
@@ -119,7 +120,8 @@ export function updateLocalPlayerMovement(dif: number) {
 
     let velocCopy = localPlayer.velocity.clone();
     let posCopy = localPlayer.position.clone();
-    posCopy.add(movementVec.clone().multiplyScalar(playerSpeed * (dif / 1000)));
+    let actualSpeed = (inputState.shift)? playerSpeedSprinting : playerSpeed; // Determine speed based on sprinting status
+    posCopy.add(movementVec.clone().multiplyScalar(actualSpeed * (dif / 1000)));
 
     let allowedStepHeight = 0.3;
 
@@ -185,7 +187,7 @@ export function updateLocalPlayerMovement(dif: number) {
         0,
         allowedStepHeight
     );
-    let intersections = downRay.intersectObjects(currentMap.scene.children);
+    let intersections = downRay.intersectObjects(currentMap.colliders);
     let closest = intersections[0]; // Name differently?
     if (closest) {
         let dist = allowedStepHeight - closest.distance;
