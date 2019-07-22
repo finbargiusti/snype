@@ -20,6 +20,7 @@
   "homepage": "https://github.com/finbargiusti/snype#readme",
   "dependencies": {
     "parcel": "^1.12.3",
+    "parcel-plugin-static-files-copy": "^2.1.2",
     "postprocessing": "^6.5.1",
     "rollup": "^1.17.0",
     "rollup-plugin-typescript2": "^0.22.0",
@@ -30,8 +31,9 @@
     "typescript": "^3.5.3",
     "ws": "^7.1.0"
   },
-  "assetsPath": "client/src/static",
-  "devDependencies": {
-    "parcel-plugin-asset-copier": "^1.0.0"
-  }
+  "staticFiles": {
+    "staticPath": "client/src/static",
+    "watcherGlob": "**/*"
+  },
+  "devDependencies": {}
 }
