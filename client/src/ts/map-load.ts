@@ -199,8 +199,10 @@ export class Map {
                         }
 
                         geometry.computeBoundingBox();
+                        geometry.computeBoundingSphere();
                         geometry.computeFaceNormals();
-                        geometry.computeVertexNormals();
+                        // Commented out based on: https://gamedev.stackexchange.com/questions/93031/three-js-lighting-not-calculating-correctly-on-three-geometry-objects
+                        // geometry.computeVertexNormals();
 
                         let rampMesh = new THREE.Mesh(
                             geometry,
@@ -211,17 +213,6 @@ export class Map {
                                     0x2a2a2a
                             })
                         );
-
-                        rampMesh.traverse(child => {
-                            if (child instanceof THREE.Mesh) {
-                                child.geometry.computeFaceNormals();
-                                child.geometry.computeVertexNormals();
-                                child.geometry.computeBoundingBox();
-
-                                child.castShadow = true;
-                                child.receiveShadow = true;
-                            }
-                        });
 
                         rampMesh.castShadow = true;
                         rampMesh.receiveShadow = true;
