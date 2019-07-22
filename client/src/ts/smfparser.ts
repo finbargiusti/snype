@@ -84,7 +84,7 @@ export const parse = (file: string) => {
 
         if (metadata_counter === 2) {
             const items = line.split(" ");
-            let obj = null;
+            let obj: any = null;
 
             switch (items[0]) {
                 case "Spawn":
@@ -133,9 +133,28 @@ export const parse = (file: string) => {
                         objects.push(obj);
                     }
                     break;
+                case "Ramp":
+                    {
+                        obj = {
+                            type: "ramp",
+                            position: {
+                                x: lp(items[1]),
+                                y: lp(items[2]),
+                                z: lp(items[3])
+                            },
+                            size: {
+                                x: lp(items[4]),
+                                y: lp(items[5]),
+                                z: lp(items[6])
+                            },
+                            orientation: lp(items[7])
+                        };
+                        objects.push(obj);
+                    }
+                    break;
             }
 
-            obj["options"] = parseOptions(items);
+            obj.options = parseOptions(items);
         }
     }
 
