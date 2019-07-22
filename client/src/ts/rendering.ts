@@ -1,12 +1,17 @@
 import * as THREE from "three";
 import {
-  BloomEffect,
-  SSAOEffect,
-  EffectComposer,
-  EffectPass,
-  RenderPass
+    BloomEffect,
+    SSAOEffect,
+    EffectComposer,
+    EffectPass,
+    RenderPass
 } from "postprocessing";
-import { updateLocalPlayerMovement, setCameraToLocalPlayer, createLocalPlayer, getLocalPlayer } from "./player";
+import {
+    updateLocalPlayerMovement,
+    setCameraToLocalPlayer,
+    createLocalPlayer,
+    getLocalPlayer
+} from "./player";
 import { initCanvasListeners } from "./input";
 import { socket } from "./net";
 import { loadMap } from "./map-load";
@@ -22,14 +27,14 @@ const FOV = 70;
 
 export let scene = new THREE.Scene();
 export let camera = new THREE.PerspectiveCamera(
-  FOV,
-  window.innerWidth / window.innerHeight,
-  0.01
+    FOV,
+    window.innerWidth / window.innerHeight,
+    0.01
 );
 
 createLocalPlayer();
 let renderer = new THREE.WebGLRenderer({
-  canvas: document.getElementById("root") as HTMLCanvasElement
+    canvas: document.getElementById("root") as HTMLCanvasElement
 });
 
 const composer = new EffectComposer(renderer);
@@ -112,9 +117,9 @@ sphere.position.set(0, 0, 1.1);*/
 // cube5.rotateX(Math.atan(1.5 / 5) / 2);
 
 let floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(100, 100, 100, 100),
+    new THREE.PlaneGeometry(100, 100, 100, 100),
 
-  new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: false })
+    new THREE.MeshLambertMaterial({ color: 0xffffff, wireframe: false })
 );
 
 floor.receiveShadow = true;
@@ -139,34 +144,34 @@ let eye;
 var mtlLoader = new MTLLoader();
 var url = "../static/eye.mtl";
 mtlLoader.load(url, function(materials) {
-  materials.preload();
+    materials.preload();
 
-  var objLoader = new THREE.OBJLoader();
-  objLoader.setMaterials(materials);
-  objLoader.load("../static/dennis.obj", function(object) {
-    object.position.set(0, 1.8, 1);
-    object.castShadow = true;
-    object.rotateX(Math.PI / 2);
-    object.scale.set(0.01, 0.01, 0.01);
-    eye = object;
-    //scene.add(object);
-    object.traverse(function(child) {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-      }
+    var objLoader = new THREE.OBJLoader();
+    objLoader.setMaterials(materials);
+    objLoader.load("../static/dennis.obj", function(object) {
+        object.position.set(0, 1.8, 1);
+        object.castShadow = true;
+        object.rotateX(Math.PI / 2);
+        object.scale.set(0.01, 0.01, 0.01);
+        eye = object;
+        //scene.add(object);
+        object.traverse(function(child) {
+            if (child instanceof THREE.Mesh) {
+                child.castShadow = true;
+            }
+        });
     });
-  });
 });
 
 fetch("/static/level1.smf")
-  .then(response => {
-    return response.text();
-  })
-  .then(result => {
-    let bruh = parse(result);
-    console.log(bruh);
-    loadMap(bruh, scene);
-  });
+    .then(response => {
+        return response.text();
+    })
+    .then(result => {
+        let bruh = parse(result);
+        console.log(bruh);
+        loadMap(bruh, scene);
+    });
 
 camera.position.set(0, 0, 1);
 //camera.rotateX(Math.PI / 2);
@@ -181,8 +186,8 @@ scene.add(floor);
 //scene.add(sphere);
 
 const effectPass = new EffectPass(
-  camera,
-  new BloomEffect({ distinction: 10000 })
+    camera,
+    new BloomEffect({ distinction: 10000 })
 );
 effectPass.renderToScreen = true;
 
@@ -202,18 +207,18 @@ export let zAxis = new THREE.Vector3(0, 0, 1);
 let lastRenderTime = null;
 
 let animate = () => {
-  let now = performance.now();
-  let dif = 16.6666666; // estimate
-  if (lastRenderTime !== null) dif = now - lastRenderTime;
+    let now = performance.now();
+    let dif = 16.6666666; // estimate
+    if (lastRenderTime !== null) dif = now - lastRenderTime;
 
-  if (getLocalPlayer()) {
-    updateLocalPlayerMovement(dif);
-    setCameraToLocalPlayer();
-  }
+    if (getLocalPlayer()) {
+        updateLocalPlayerMovement(dif);
+        setCameraToLocalPlayer();
+    }
 
-  composer.render();
+    composer.render();
 
-  requestAnimationFrame(animate);
-  lastRenderTime = now;
+    requestAnimationFrame(animate);
+    lastRenderTime = now;
 };
 animate();

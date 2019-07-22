@@ -1,14 +1,17 @@
 import * as THREE from "three";
 import { scene, zAxis } from "./rendering";
 
-export function getNearestDistance(point: THREE.Vector3, direcOverride?: THREE.Vector3) {
+export function getNearestDistance(
+    point: THREE.Vector3,
+    direcOverride?: THREE.Vector3
+) {
     let closest: THREE.Intersection = null;
 
     for (let i = 0; i < 8; i++) {
         if (i % 2) continue; // AYEEEE
 
         let direc = new THREE.Vector3(0, 1, 0);
-        direc.applyAxisAngle(zAxis, i * Math.PI/4); // one vector every 45°
+        direc.applyAxisAngle(zAxis, (i * Math.PI) / 4); // one vector every 45°
         if (direcOverride) direc = direcOverride;
 
         let ray = new THREE.Raycaster(point, direc, 0, 20);
