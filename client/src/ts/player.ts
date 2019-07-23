@@ -10,6 +10,17 @@ import { SnypeMap } from "./map";
 
 export let players = new Map<string, Player>();
 
+export function getNonLocalPlayerHitboxes() {
+    let { localPlayer } = gameState;
+    let arr: THREE.Object3D[] = [];
+
+    players.forEach((a) => {
+        if (a !== localPlayer) arr.push(a.hitbox);
+    });
+
+    return arr;
+}
+
 function createPlayerObject3D() {
     let sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.4, 32, 32),
@@ -28,6 +39,7 @@ export class Player {
     public yaw: number = 0;
     public pitch: number = 0;
     public object3D: THREE.Object3D;
+    public hitbox: THREE.Object3D;
     public weapon: WeaponInstance;
     public currentMap: SnypeMap;
 
@@ -42,6 +54,14 @@ export class Player {
 
         this.object3D = createPlayerObject3D();
         currentMap.scene.add(this.object3D);
+
+        let hitboxGeometry = new THREE.BoxBufferGeometry(0.8, 0.8, 0.8);
+        hitboxGeometry.computeBoundingBox();
+        hitboxGeometry.computeBoundingSphere();
+        let hitboxMaterial = new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe: true, alphaTest: 0, visible: false}); // Rendering only for debug
+        this.hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+        
+        currentMap.scene.add(this.hitbox);
     }
 
     getHeadPosition() {
@@ -64,6 +84,7 @@ export class Player {
         if (obj.position) {
             this.position.set(obj.position.x, obj.position.y, obj.position.z);
             this.object3D.position.copy(this.getHeadPosition());
+            this.hitbox.position.copy(this.getHeadPosition());
         }
         if (obj.velocity) {
             this.velocity.set(obj.velocity.x, obj.velocity.y, obj.velocity.z);

@@ -1,4 +1,4 @@
-import { Player } from "./player";
+import { Player, getNonLocalPlayerHitboxes, players } from "./player";
 import * as THREE from "three";
 import { gameState } from "./game_state";
 import { socketSend, handlers } from "./net";
@@ -149,9 +149,13 @@ export class Projectile {
         let travelled = this.direction.clone().multiplyScalar(this.options.speed * timeDif / 1000);
 
         let first: THREE.Intersection = null;
+        let hitboxes: THREE.Object3D[];
         if (this.shouldCheckCollision) {
+            hitboxes = getNonLocalPlayerHitboxes();
+            // Ah. Super dirty. Creating an array every time, seriously? Disgustang!!
+            let allColliders = [...currentMap.colliders, ...hitboxes];
             let ray = new THREE.Raycaster(this.lastEndPoint, this.direction, 0.01, travelled.length() * 1.01);
-            let intersections = ray.intersectObjects(currentMap.colliders);
+            let intersections = ray.intersectObjects(allColliders);
             first = intersections[0];
         }
 
@@ -160,6 +164,20 @@ export class Projectile {
             this.lastEndPoint = newEndPoint;
 
             this.shouldRemove = true; // It's gonna remove it next frame.
+
+            let player: Player = null;
+            players.forEach((a) => {
+                if (a.hitbox === first.object) {
+                    player = a;
+                }
+            });
+            if (player) {
+                // We shot a player!
+
+                socketSend("playerHit", {
+                    id: player.id
+                });
+            }
 
             socketSend("removeProjectile", {
                 id: this.id

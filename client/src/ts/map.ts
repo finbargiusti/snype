@@ -62,6 +62,8 @@ export class SnypeMap {
                                     0x2a2a2a
                             })
                         );
+                        boxMesh.geometry.computeBoundingBox();
+                        boxMesh.geometry.computeBoundingSphere();
                         boxMesh.position.set(
                             object.position.x + object.size.x / 2,
                             object.position.y + object.size.y / 2,
@@ -84,6 +86,8 @@ export class SnypeMap {
                             ),
                             wallMaterial
                         );
+                        wallMesh.geometry.computeBoundingBox();
+                        wallMesh.geometry.computeBoundingSphere();
                         wallMesh.position.set(
                             object.position.x + object.size.x / 2,
                             object.position.y + object.size.y / 2,

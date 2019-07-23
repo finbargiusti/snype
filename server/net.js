@@ -40,6 +40,16 @@ let socketMessageHandlers = {};
 let players = new Set();
 let socketPlayerAssociation = new WeakMap();
 
+function getPlayerById(id) {
+    let player = null;
+
+    players.forEach((a) => {
+        if (a.id === id) player = a;
+    });
+
+    return player;
+}
+
 function createWebSocketServer(httpServer) {
     let socketServer = new ws.Server({ server: httpServer });
 
@@ -193,6 +203,15 @@ socketMessageHandlers["removeProjectile"] = function(socket, data) {
 
         socketSend(socket2, "removeProjectile", data);
     });
+};
+
+socketMessageHandlers["playerHit"] = function(socket, data) {
+    let player = getPlayerById(data.id);
+    if (player) {
+        // We assume here they didn't shoot themselves.
+        // Just tell the player they've been hit.
+        socketSend(player.socket, "hit", {});
+    }
 };
 
 exports.createHTTPServer = createHTTPServer;
