@@ -170,7 +170,7 @@ export class Projectile {
         }
 
         let lineStart = this.lastEndPoint.clone();
-        let timeFrag = 1 / 50;
+        let timeFrag = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and timeFrag is 1/2, then the projectile is 2.5 units long.
         if (this.lifetime < timeFrag * 1000) {
             lineStart = this.origin;
         } else {
