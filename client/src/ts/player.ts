@@ -5,6 +5,8 @@ import { inputState } from "./input";
 import { socketSend, handlers } from "./net";
 import { getNearestDistance } from "./collision";
 import { gameState } from "./game_state";
+import { Weapon, WeaponInstance, ASSAULT_RIFLE, SHOTGUN, SNIPER, SMG } from "./weapon";
+import { SnypeMap } from "./map";
 
 export let players = new Map<string, Player>();
 
@@ -26,13 +28,17 @@ export class Player {
     public yaw: number = 0;
     public pitch: number = 0;
     public object3D: THREE.Object3D;
+    public weapon: WeaponInstance;
+    public currentMap: SnypeMap;
 
     constructor(obj: any) {
         let { currentMap } = gameState;
+        this.currentMap = currentMap;
 
         this.id = obj.id;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
+        this.weapon = new WeaponInstance(ASSAULT_RIFLE, this);
 
         this.object3D = createPlayerObject3D();
         currentMap.scene.add(this.object3D);
@@ -43,6 +49,15 @@ export class Player {
         pos.z += 1.65;
 
         return pos;
+    }
+
+    getOrientationVector() {
+        // Optimize this, it doesn't need to be recalculated every time, only when yaw and pitch are updated.
+        let vec = new THREE.Vector3(0, 1, 0);
+        vec.applyAxisAngle(xAxis, this.pitch);
+        vec.applyAxisAngle(zAxis, this.yaw);
+
+        return vec; // It's normalized!
     }
 
     update(obj: any) {
@@ -136,5 +151,13 @@ export function removePlayer(obj: any) {
         player.remove();
 
         players.delete(player.id);
+    }
+}
+
+export function useWeapon() {
+    let { localPlayer } = gameState;
+
+    if (inputState.primaryMb === true) {
+        localPlayer.weapon.shoot();
     }
 }

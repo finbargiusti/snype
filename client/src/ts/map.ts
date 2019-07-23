@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { Projectile } from "./weapon";
+import { socketSend } from "./net";
 
 export class SnypeMap {
     public rawData: any;
@@ -8,6 +10,7 @@ export class SnypeMap {
 
     public scene: THREE.Scene;
     public drawableObjects: any[];
+    public projectiles: Projectile[];
     public colliders: any[];
 
     constructor(data: any) {
@@ -19,6 +22,7 @@ export class SnypeMap {
         // THREE.js stuff
         this.scene = new THREE.Scene();
         this.drawableObjects = [];
+        this.projectiles = [];
         this.colliders = [];
 
         this.loadRawSMFData(data);
@@ -271,5 +275,21 @@ export class SnypeMap {
 
         this.scene.add(sunlight);
         this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    }
+
+    addProjectile(proj: Projectile) {
+        this.projectiles.push(proj);
+        this.scene.add(proj.object3D);
+    }
+
+    update(timeDif: number) {
+        for (let projectile of this.projectiles) {
+            if (projectile.shouldRemove) {
+                this.scene.remove(projectile.object3D);
+                this.projectiles.splice(this.projectiles.indexOf(projectile), 1);
+            }
+
+            projectile.update(timeDif);
+        }
     }
 }

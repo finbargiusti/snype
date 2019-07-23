@@ -7,14 +7,15 @@ export let inputState = {
     left: false,
     right: false,
     shift: false,
-    spacebar: false
+    spacebar: false,
+    primaryMb: false
 };
 
 export let inputEventDispatcher = new EventTarget();
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
-    console.log(keyCode);    
+    //console.log(keyCode);    
 
     switch (keyCode) {
         case 87:
@@ -80,6 +81,18 @@ window.addEventListener("keyup", e => {
         case 16: { // shift
             inputState.shift = false; 
         }; break;
+    }
+});
+
+window.addEventListener('mousedown', (e) => {
+    if (e.button === 0) {
+        inputState.primaryMb = true;
+    }
+});
+
+window.addEventListener('mouseup', (e) => {
+    if (e.button === 0) {
+        inputState.primaryMb = false;
     }
 });
 

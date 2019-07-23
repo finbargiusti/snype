@@ -8,7 +8,7 @@ import {
     RenderPass
 } from "postprocessing";*/
 import {
-    setCameraToLocalPlayer,
+    setCameraToLocalPlayer, useWeapon,
 } from "./player";
 import { initCanvasListeners } from "./input";
 import { gameState } from "./game_state";
@@ -54,16 +54,18 @@ window.addEventListener('resize', () => {
 let lastRenderTime: number = null;
 let render = () => {    
     let now = performance.now();
-    let dif = 1000 / 60; // estimate for first frame
-    if (lastRenderTime !== null) dif = now - lastRenderTime;
+    let timeDif = 1000 / 60; // estimate for first frame
+    if (lastRenderTime !== null) timeDif = now - lastRenderTime;
 
     if (gameState.localPlayer) {
-        updateLocalPlayerMovement(dif);
+        updateLocalPlayerMovement(timeDif);
         setCameraToLocalPlayer();
+        useWeapon();
     }
 
     let currentMap = gameState.currentMap;
     if (currentMap) {
+        currentMap.update(timeDif);
         renderer.render(currentMap.scene, camera);
     }
 

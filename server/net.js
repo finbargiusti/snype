@@ -175,4 +175,24 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
     });
 };
 
+socketMessageHandlers["createProjectile"] = function(socket, data) {
+    // Simple relay to all other players.
+
+    sockets.forEach((socket2) => {
+        if (socket === socket2) return;
+
+        socketSend(socket2, "createProjectile", data);
+    });
+};
+
+socketMessageHandlers["removeProjectile"] = function(socket, data) {
+    // Simple relay to all other players.
+
+    sockets.forEach((socket2) => {
+        if (socket === socket2) return;
+
+        socketSend(socket2, "removeProjectile", data);
+    });
+};
+
 exports.createHTTPServer = createHTTPServer;
