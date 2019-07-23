@@ -1,4 +1,4 @@
-import { SnypeMap } from "./snype_map";
+import { SnypeMap } from "./map";
 import { Player } from "./player";
 
 export const gameState = {

@@ -1,7 +1,7 @@
 import "./rendering";
 import "./net";
 import { parse } from "./smfparser";
-import { SnypeMap } from "./snype_map";
+import { SnypeMap } from "./map";
 import { gameState } from "./game_state";
 import { createLocalPlayer } from "./player";
 import { openSocket } from "./net";
