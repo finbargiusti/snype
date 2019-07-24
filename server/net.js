@@ -123,6 +123,11 @@ socketMessageHandlers["connect"] = function(socket, data) {
 
     players.add(newPlayer);
     socketPlayerAssociation.set(socket, newPlayer);
+
+    players.forEach(playa => {
+        if (playa === newPlayer) return;
+        socketSend(socket, "addPlayer", formatPlayer(playa));
+    });
 };
 
 class Player {

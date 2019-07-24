@@ -86,6 +86,12 @@ export const parse = (file: string) => {
             const items = line.split(" ");
             let obj: any = null;
 
+            for (let j = 0; j < items.length; j++) {
+                if (!items[j].trim()) {
+                    items.splice(j--, 1);
+                }
+            }
+
             switch (items[0]) {
                 case "Spawn":
                     {
