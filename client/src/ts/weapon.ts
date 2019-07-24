@@ -148,7 +148,7 @@ interface ProjectileOptions {
     damage: number;
 }
 
-let ping = new Howl({ src: "/static/ping.aiff", volume: 10 });
+let ping = new Howl({ src: ["/static/ping.wav"], volume: 0.4 });
 
 export class Projectile {
     public options: ProjectileOptions;
