@@ -47,19 +47,23 @@ export class WeaponInstance {
             let origin = this.wielder.getHeadPosition();
             origin.z -= 0.2;
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
-                let direction = new THREE.Vector3(0, 1, 0);
-                let yawInaccuracy =
-                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
-                let pitchInaccuracy =
-                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
-                direction.applyAxisAngle(
-                    xAxis,
-                    pitchInaccuracy + this.wielder.pitch
-                );
-                direction.applyAxisAngle(
-                    zAxis,
-                    yawInaccuracy + this.wielder.yaw
-                );
+				let direction = new THREE.Vector3(0, 1, 0);
+				let perp = new THREE.Vector3(1, 0, 0);
+				let raw = new THREE.Vector3(0, 1, 0);
+
+				// Left and right inaccuracy
+				let yawInaccuracy = (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
+
+				direction.applyAxisAngle(zAxis, this.wielder.yaw + yawInaccuracy);
+				perp.applyAxisAngle(zAxis, this.wielder.yaw);
+				raw.applyAxisAngle(zAxis, this.wielder.yaw);
+
+				direction.applyAxisAngle(perp, this.wielder.pitch);
+				raw.applyAxisAngle(perp, this.wielder.pitch);
+
+				// Rotate around in a circle
+				let theta = Math.random() * Math.PI*2;
+				direction.applyAxisAngle(raw, theta);	
 
                 let proj = new Projectile(
                     this.weapon.spec.projectileOptions,
