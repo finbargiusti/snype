@@ -1,7 +1,5 @@
 import * as THREE from "three";
 import { Projectile } from "./weapon";
-import { socketSend } from "./net";
-import { renderer } from "./rendering";
 
 export class SnypeMap {
     public rawData: any;
