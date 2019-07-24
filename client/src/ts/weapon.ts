@@ -138,7 +138,10 @@ export class Projectile {
     }
 
     update(timeDif: number) {
-        let { currentMap } = gameState;
+		let { currentMap } = gameState;
+		
+		// GC shit
+		this.object3D.geometry.dispose();
 
         this.lifetime += timeDif;
         if (this.lifetime >= MAX_PROJECTILE_LIFETIME) {
@@ -223,6 +226,7 @@ handlers["removeProjectile"] = function(data: any) {
     if (index !== -1) {
         let proj = currentMap.projectiles[index];
         currentMap.scene.remove(proj.object3D);
-        currentMap.projectiles.splice(index, 1);
+		currentMap.projectiles.splice(index, 1);
+		proj.object3D.geometry.dispose();
     }
 };

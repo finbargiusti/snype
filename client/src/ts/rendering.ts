@@ -32,7 +32,7 @@ export let camera = new THREE.PerspectiveCamera(
     0.01
 );
 
-let renderer = new THREE.WebGLRenderer({
+export let renderer = new THREE.WebGLRenderer({
     canvas: mainCanvas
 });
 

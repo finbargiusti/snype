@@ -50,7 +50,7 @@ export class Player {
         this.id = obj.id;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
-        this.weapon = new WeaponInstance(ASSAULT_RIFLE, this);
+        this.weapon = new WeaponInstance(SMG, this);
 
         this.object3D = createPlayerObject3D();
         currentMap.scene.add(this.object3D);
