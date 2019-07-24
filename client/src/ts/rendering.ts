@@ -7,12 +7,11 @@ import {
     EffectPass,
     RenderPass
 } from "postprocessing";*/
-import {
-    setCameraToLocalPlayer, useWeapon,
-} from "./player";
+import { setCameraToLocalPlayer, useWeapon } from "./player";
 import { initCanvasListeners } from "./input";
 import { gameState } from "./game_state";
 import { updateLocalPlayerMovement } from "./movement";
+import { Howl, Howler } from "howler";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
@@ -23,7 +22,7 @@ export let xAxis = new THREE.Vector3(1, 0, 0);
 export let yAxis = new THREE.Vector3(0, 1, 0);
 export let zAxis = new THREE.Vector3(0, 0, 1);
 
-export let mainCanvas = document.querySelector('#root') as HTMLCanvasElement;
+export let mainCanvas = document.querySelector("#root") as HTMLCanvasElement;
 initCanvasListeners();
 
 export let camera = new THREE.PerspectiveCamera(
@@ -45,14 +44,23 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 document.body.appendChild(renderer.domElement);
 
-window.addEventListener('resize', () => {
+let target_destroyed = new Howl({
+    src: ["/static/target-destroyed.ogg"],
+    rate: 0.7
+});
+
+export let killMessage = () => {
+    target_destroyed.play();
+};
+
+window.addEventListener("resize", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 });
 
 let lastRenderTime: number = null;
-let render = () => {    
+let render = () => {
     let now = performance.now();
     let timeDif = 1000 / 60; // estimate for first frame
     if (lastRenderTime !== null) timeDif = now - lastRenderTime;

@@ -211,7 +211,10 @@ socketMessageHandlers["playerHit"] = function(socket, data) {
     if (player) {
         // We assume here they didn't shoot themselves.
         // Just tell the player they've been hit.
-        socketSend(player.socket, "hit", { damage: data.damage });
+        socketSend(player.socket, "hit", {
+            damage: data.damage,
+            culprit: socketPlayerAssociation.get(socket).id
+        });
     }
 };
 
@@ -221,7 +224,8 @@ socketMessageHandlers["dead"] = function(socket, data) {
         sockets.forEach(socket => {
             if (socket !== player.socket) {
                 socketSend(socket, "died", {
-                    id: data.id
+                    id: data.id,
+                    culprit: data.culprit
                 });
             }
         });

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { xAxis, zAxis, camera, mainCanvas } from "./rendering";
+import { xAxis, zAxis, camera, mainCanvas, killMessage } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState, inputEventDispatcher } from "./input";
 import { socketSend, handlers } from "./net";
@@ -70,7 +70,7 @@ export class Player {
         );
     }
 
-    die() {
+    die(culprit: string) {
         if (localPlayer === this) {
             mainCanvas.style.filter = "saturate(0) contrast(2)";
             setTimeout(() => {
@@ -79,7 +79,8 @@ export class Player {
                 mainCanvas.style.filter = "";
             }, 1000);
             socketSend("dead", {
-                id: this.id
+                id: this.id,
+                culprit
             });
         } else {
             this.object3D.visible = false;
@@ -236,14 +237,17 @@ handlers["hit"] = (data: any) => {
     if (localPlayer.health > 0) {
         localPlayer.setHealth(localPlayer.health - data.damage);
         if (localPlayer.health <= 0) {
-            localPlayer.die();
+            localPlayer.die(data.culprit);
         }
     }
 };
 
 handlers["died"] = (data: any) => {
     let player = players.get(data.id);
-    player.die();
+    player.die(data.culprit);
+    if (localPlayer === players.get(data.culprit)) {
+        killMessage();
+    }
 };
 
 export function updatePlayer(obj: any) {

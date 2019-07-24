@@ -3,9 +3,11 @@ import * as THREE from "three";
 import { gameState } from "./game_state";
 import { socketSend, handlers } from "./net";
 import { zAxis, xAxis } from "./rendering";
+import { Howl } from "howler";
 
 interface WeaponSpecifications {
     name: string;
+    pitch: number;
     rateOfFire: number; // Shots per second
     inaccuracy: number; // In max radians
     projectilesPerShot: number;
@@ -21,6 +23,8 @@ export class Weapon {
         this.timeBetweenShots = 1000 / this.spec.rateOfFire;
     }
 }
+
+let pop = new Howl({ src: "/static/pop.wav" });
 
 export class WeaponInstance {
     public weapon: Weapon;
@@ -38,9 +42,10 @@ export class WeaponInstance {
 
         let now = performance.now();
         if (now - this.lastShotTime >= this.weapon.timeBetweenShots) {
+            pop.rate(Math.random() * 0.4 + this.weapon.spec.pitch);
+            pop.play();
             let origin = this.wielder.getHeadPosition();
             origin.z -= 0.2;
-
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
                 let direction = new THREE.Vector3(0, 1, 0);
                 let yawInaccuracy =
@@ -85,6 +90,7 @@ export class WeaponInstance {
 
 export const ASSAULT_RIFLE = new Weapon({
     name: "ASSAULT RIFLE",
+    pitch: 1,
     rateOfFire: 5,
     inaccuracy: 0.015,
     projectilesPerShot: 1,
@@ -96,6 +102,7 @@ export const ASSAULT_RIFLE = new Weapon({
 
 export const SHOTGUN = new Weapon({
     name: "SHOTGUN",
+    pitch: 0.5,
     rateOfFire: 1,
     inaccuracy: 0.15,
     projectilesPerShot: 6,
@@ -107,6 +114,7 @@ export const SHOTGUN = new Weapon({
 
 export const SNIPER = new Weapon({
     name: "SNIPER",
+    pitch: 3,
     rateOfFire: 0.75,
     inaccuracy: 0.002,
     projectilesPerShot: 1,
@@ -118,6 +126,7 @@ export const SNIPER = new Weapon({
 
 export const SMG = new Weapon({
     name: "SMG",
+    pitch: 1.4,
     rateOfFire: 10,
     inaccuracy: 0.12,
     projectilesPerShot: 1,
@@ -138,6 +147,8 @@ interface ProjectileOptions {
     speed: number; // units per second
     damage: number;
 }
+
+let ping = new Howl({ src: "/static/ping.aiff", volume: 10 });
 
 export class Projectile {
     public options: ProjectileOptions;
@@ -165,25 +176,29 @@ export class Projectile {
         this.lifetime = 0;
         this.shouldCheckCollision = false;
 
-		// Pull this out to a const
-		let timeFrag = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and timeFrag is 1/2, then the projectile is 2.5 units long.
-		let lineStart = new THREE.Vector3(0,0,0);
-		let back = this.direction
-			.clone()
-			.multiplyScalar(this.options.speed * timeFrag);
+        // Pull this out to a const
+        let timeFrag = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and timeFrag is 1/2, then the projectile is 2.5 units long.
+        let lineStart = new THREE.Vector3(0, 0, 0);
+        let back = this.direction
+            .clone()
+            .multiplyScalar(this.options.speed * timeFrag);
         lineStart.sub(back);
-        let curve = new THREE.LineCurve3(lineStart, new THREE.Vector3(0,0,0));
+        let curve = new THREE.LineCurve3(lineStart, new THREE.Vector3(0, 0, 0));
         let tubeGeometry = new THREE.TubeBufferGeometry(
-			curve, 16, 0.035, 6, true
+            curve,
+            16,
+            0.035,
+            6,
+            true
         );
         this.object3D = new THREE.Mesh(
             tubeGeometry,
             PROJECTILE_TRAJECTORY_MATERIAL
         );
-		this.object3D.castShadow = true;
-		
-		this.object3D.position.copy(this.lastEndPoint);
-		this.object3D.visible = false;
+        this.object3D.castShadow = true;
+
+        this.object3D.position.copy(this.lastEndPoint);
+        this.object3D.visible = false;
     }
 
     update(timeDif: number) {
@@ -229,6 +244,7 @@ export class Projectile {
             });
             if (player) {
                 // We shot a player!
+                ping.play();
 
                 socketSend("playerHit", {
                     id: player.id,
@@ -242,10 +258,10 @@ export class Projectile {
         } else {
             newEndPoint.add(travelled);
             this.lastEndPoint = newEndPoint;
-		}
-		
-		this.object3D.position.copy(this.lastEndPoint);
-		this.object3D.visible = true;
+        }
+
+        this.object3D.position.copy(this.lastEndPoint);
+        this.object3D.visible = true;
     }
 }
 
