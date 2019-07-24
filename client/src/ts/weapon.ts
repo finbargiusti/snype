@@ -165,26 +165,28 @@ export class Projectile {
         this.lifetime = 0;
         this.shouldCheckCollision = false;
 
-        let shittyCurve = new THREE.LineCurve3(this.origin, this.origin);
-        let shittyTube = new THREE.TubeBufferGeometry(
-            shittyCurve,
-            0,
-            0,
-            0,
-            true
+		// Pull this out to a const
+		let timeFrag = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and timeFrag is 1/2, then the projectile is 2.5 units long.
+		let lineStart = new THREE.Vector3(0,0,0);
+		let back = this.direction
+			.clone()
+			.multiplyScalar(this.options.speed * timeFrag);
+        lineStart.sub(back);
+        let curve = new THREE.LineCurve3(lineStart, new THREE.Vector3(0,0,0));
+        let tubeGeometry = new THREE.TubeBufferGeometry(
+			curve, 16, 0.035, 6, true
         );
         this.object3D = new THREE.Mesh(
-            shittyTube,
+            tubeGeometry,
             PROJECTILE_TRAJECTORY_MATERIAL
         );
-        this.object3D.castShadow = true;
+		this.object3D.castShadow = true;
+		
+		this.object3D.position.copy(this.lastEndPoint)
     }
 
     update(timeDif: number) {
         let { currentMap } = gameState;
-
-        // GC shit
-        this.object3D.geometry.dispose();
 
         this.lifetime += timeDif;
         if (this.lifetime >= MAX_PROJECTILE_LIFETIME) {
@@ -239,22 +241,9 @@ export class Projectile {
         } else {
             newEndPoint.add(travelled);
             this.lastEndPoint = newEndPoint;
-        }
-
-        let lineStart = this.lastEndPoint.clone();
-        let timeFrag = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and timeFrag is 1/2, then the projectile is 2.5 units long.
-        if (this.lifetime < timeFrag * 1000) {
-            lineStart = this.origin;
-        } else {
-            let back = this.direction
-                .clone()
-                .multiplyScalar(this.options.speed * timeFrag);
-            lineStart.sub(back);
-        }
-
-        let curve = new THREE.LineCurve3(lineStart, this.lastEndPoint);
-        let tubeGeom = new THREE.TubeBufferGeometry(curve, 16, 0.035, 6, true);
-        this.object3D.geometry = tubeGeom;
+		}
+		
+		this.object3D.position.copy(this.lastEndPoint);
     }
 }
 

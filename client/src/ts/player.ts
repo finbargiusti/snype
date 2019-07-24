@@ -12,7 +12,6 @@ import {
     SHOTGUN,
     SNIPER,
     SMG,
-    LASER,
     weapons
 } from "./weapon";
 import { SnypeMap } from "./map";
