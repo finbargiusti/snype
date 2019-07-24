@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Projectile } from "./weapon";
 import { socketSend } from "./net";
+import { renderer } from "./rendering";
 
 export class SnypeMap {
     public rawData: any;
@@ -297,6 +298,7 @@ export class SnypeMap {
                     this.projectiles.indexOf(projectile),
                     1
                 );
+                projectile.object3D.geometry.dispose();
             }
 
             projectile.update(timeDif);
