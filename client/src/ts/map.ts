@@ -270,7 +270,8 @@ export class SnypeMap {
         // Add lighting
 
         var sunlight = new THREE.DirectionalLight(0xffffff, 1);
-        sunlight.position.set(40, 40, 50);
+        sunlight.target.position.set(25, 25, 0);
+        sunlight.position.set(65, 65, 50);
         sunlight.castShadow = true;
         sunlight.shadow.camera.left = -20;
         sunlight.shadow.camera.right = 20;
