@@ -5,8 +5,11 @@ import { zAxis } from "./rendering";
 import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY } from "./misc";
 import { getNearestDistance } from "./collision";
 import { socketSend } from "./net";
+import { isGrounded } from "./player";
 
 export function updateLocalPlayerMovement(dif: number) {
+    let grounded = isGrounded();
+
     let { currentMap, localPlayer } = gameState;
 
     // Create the vector in which the player is wanting move, based on their input.
@@ -31,7 +34,7 @@ export function updateLocalPlayerMovement(dif: number) {
 
     let velocCopy = localPlayer.velocity.clone();
     let posCopy = localPlayer.position.clone();
-    let actualSpeed = (inputState.shift)? PLAYER_SPEED_SPRINTING : PLAYER_SPEED; // Determine speed based on sprinting status
+    let actualSpeed = inputState.shift ? PLAYER_SPEED_SPRINTING : PLAYER_SPEED; // Determine speed based on sprinting status
     posCopy.add(movementVec.clone().multiplyScalar(actualSpeed * (dif / 1000)));
 
     // The vertical distance the player can just walk over
@@ -136,7 +139,7 @@ export function updateLocalPlayerMovement(dif: number) {
     });
 }
 
-inputEventDispatcher.addEventListener('mousemove', (e) => {
+inputEventDispatcher.addEventListener("mousemove", e => {
     let mouseEvent = e as MouseEvent;
 
     if (inputState.pointerLocked === false) return;

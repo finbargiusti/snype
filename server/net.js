@@ -43,7 +43,7 @@ let socketPlayerAssociation = new WeakMap();
 function getPlayerById(id) {
     let player = null;
 
-    players.forEach((a) => {
+    players.forEach(a => {
         if (a.id === id) player = a;
     });
 
@@ -123,10 +123,6 @@ socketMessageHandlers["connect"] = function(socket, data) {
 
     players.add(newPlayer);
     socketPlayerAssociation.set(socket, newPlayer);
-
-    players.forEach(playa => {
-        socketSend(socket, "addPlayer", formatPlayer(playa));
-    });
 };
 
 class Player {
@@ -188,7 +184,7 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
 socketMessageHandlers["createProjectile"] = function(socket, data) {
     // Simple relay to all other players.
 
-    sockets.forEach((socket2) => {
+    sockets.forEach(socket2 => {
         if (socket === socket2) return;
 
         socketSend(socket2, "createProjectile", data);
@@ -198,7 +194,7 @@ socketMessageHandlers["createProjectile"] = function(socket, data) {
 socketMessageHandlers["removeProjectile"] = function(socket, data) {
     // Simple relay to all other players.
 
-    sockets.forEach((socket2) => {
+    sockets.forEach(socket2 => {
         if (socket === socket2) return;
 
         socketSend(socket2, "removeProjectile", data);
@@ -210,7 +206,20 @@ socketMessageHandlers["playerHit"] = function(socket, data) {
     if (player) {
         // We assume here they didn't shoot themselves.
         // Just tell the player they've been hit.
-        socketSend(player.socket, "hit", {});
+        socketSend(player.socket, "hit", { damage: data.damage });
+    }
+};
+
+socketMessageHandlers["dead"] = function(socket, data) {
+    let player = getPlayerById(data.id);
+    if (player) {
+        sockets.forEach(socket => {
+            if (socket !== player.socket) {
+                socketSend(socket, "died", {
+                    id: data.id
+                });
+            }
+        });
     }
 };
 

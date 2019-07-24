@@ -5,10 +5,10 @@ import { socketSend, handlers } from "./net";
 import { zAxis, xAxis } from "./rendering";
 
 interface WeaponSpecifications {
-    rateOfFire: number, // Shots per second
-    inaccuracy: number, // In max radians
-    projectilesPerShot: number,
-    projectileOptions: ProjectileOptions
+    rateOfFire: number; // Shots per second
+    inaccuracy: number; // In max radians
+    projectilesPerShot: number;
+    projectileOptions: ProjectileOptions;
 }
 
 export class Weapon {
@@ -42,19 +42,35 @@ export class WeaponInstance {
 
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
                 let direction = new THREE.Vector3(0, 1, 0);
-                let yawInaccuracy = (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
-                let pitchInaccuracy = (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
-                direction.applyAxisAngle(xAxis, pitchInaccuracy + this.wielder.pitch);
-                direction.applyAxisAngle(zAxis, yawInaccuracy + this.wielder.yaw);
+                let yawInaccuracy =
+                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
+                let pitchInaccuracy =
+                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
+                direction.applyAxisAngle(
+                    xAxis,
+                    pitchInaccuracy + this.wielder.pitch
+                );
+                direction.applyAxisAngle(
+                    zAxis,
+                    yawInaccuracy + this.wielder.yaw
+                );
 
-                let proj = new Projectile(this.weapon.spec.projectileOptions, origin, direction);
+                let proj = new Projectile(
+                    this.weapon.spec.projectileOptions,
+                    origin,
+                    direction
+                );
                 proj.shouldCheckCollision = true; // Since it's local.
                 this.wielder.currentMap.addProjectile(proj);
 
                 socketSend("createProjectile", {
                     id: proj.id,
-                    origin: {x: origin.x, y: origin.y, z: origin.z},
-                    direction: {x: proj.direction.x, y: proj.direction.y, z: proj.direction.z },
+                    origin: { x: origin.x, y: origin.y, z: origin.z },
+                    direction: {
+                        x: proj.direction.x,
+                        y: proj.direction.y,
+                        z: proj.direction.z
+                    },
                     projectileOptions: this.weapon.spec.projectileOptions
                 });
             }
@@ -71,16 +87,28 @@ export const ASSAULT_RIFLE = new Weapon({
     inaccuracy: 0.025,
     projectilesPerShot: 1,
     projectileOptions: {
-        speed: 100
+        speed: 100,
+        damage: 10
     }
 });
 
 export const SHOTGUN = new Weapon({
     rateOfFire: 1,
     inaccuracy: 0.15,
-    projectilesPerShot: 5,
+    projectilesPerShot: 6,
     projectileOptions: {
-        speed: 75
+        speed: 75,
+        damage: 10
+    }
+});
+
+export const LASER = new Weapon({
+    rateOfFire: 10,
+    inaccuracy: 0,
+    projectilesPerShot: 1,
+    projectileOptions: {
+        speed: 1000,
+        damage: 1
     }
 });
 
@@ -89,7 +117,8 @@ export const SNIPER = new Weapon({
     inaccuracy: 0.005,
     projectilesPerShot: 1,
     projectileOptions: {
-        speed: 200
+        speed: 200,
+        damage: 80
     }
 });
 
@@ -98,15 +127,19 @@ export const SMG = new Weapon({
     inaccuracy: 0.12,
     projectilesPerShot: 1,
     projectileOptions: {
-        speed: 75
+        speed: 75,
+        damage: 8
     }
 });
 
-const PROJECTILE_TRAJECTORY_MATERIAL = new THREE.MeshBasicMaterial({color: 0xff004c});
+const PROJECTILE_TRAJECTORY_MATERIAL = new THREE.MeshBasicMaterial({
+    color: 0xff004c
+});
 const MAX_PROJECTILE_LIFETIME = 1000; // Kill it after this many milliseconds. Always.
 
 interface ProjectileOptions {
-    speed: number, // units per second
+    speed: number; // units per second
+    damage: number;
 }
 
 export class Projectile {
@@ -121,7 +154,11 @@ export class Projectile {
     public shouldCheckCollision: boolean;
     public id: string;
 
-    constructor(options: ProjectileOptions, origin: THREE.Vector3, direction: THREE.Vector3) {
+    constructor(
+        options: ProjectileOptions,
+        origin: THREE.Vector3,
+        direction: THREE.Vector3
+    ) {
         this.id = Math.random().toString();
         this.options = options;
         this.origin = origin;
@@ -132,8 +169,17 @@ export class Projectile {
         this.shouldCheckCollision = false;
 
         let shittyCurve = new THREE.LineCurve3(this.origin, this.origin);
-        let shittyTube = new THREE.TubeBufferGeometry(shittyCurve, 0, 0, 0, true);
-        this.object3D = new THREE.Mesh(shittyTube, PROJECTILE_TRAJECTORY_MATERIAL);
+        let shittyTube = new THREE.TubeBufferGeometry(
+            shittyCurve,
+            0,
+            0,
+            0,
+            true
+        );
+        this.object3D = new THREE.Mesh(
+            shittyTube,
+            PROJECTILE_TRAJECTORY_MATERIAL
+        );
         this.object3D.castShadow = true;
     }
 
@@ -144,9 +190,11 @@ export class Projectile {
         if (this.lifetime >= MAX_PROJECTILE_LIFETIME) {
             this.shouldRemove = true;
         }
-    
+
         let newEndPoint = this.lastEndPoint.clone();
-        let travelled = this.direction.clone().multiplyScalar(this.options.speed * timeDif / 1000);
+        let travelled = this.direction
+            .clone()
+            .multiplyScalar((this.options.speed * timeDif) / 1000);
 
         let first: THREE.Intersection = null;
         let hitboxes: THREE.Object3D[];
@@ -154,7 +202,12 @@ export class Projectile {
             hitboxes = getNonLocalPlayerHitboxes();
             // Ah. Super dirty. Creating an array every time, seriously? Disgustang!!
             let allColliders = [...currentMap.colliders, ...hitboxes];
-            let ray = new THREE.Raycaster(this.lastEndPoint, this.direction, 0.01, travelled.length() * 1.01);
+            let ray = new THREE.Raycaster(
+                this.lastEndPoint,
+                this.direction,
+                0.01,
+                travelled.length() * 1.01
+            );
             let intersections = ray.intersectObjects(allColliders);
             first = intersections[0];
         }
@@ -166,7 +219,7 @@ export class Projectile {
             this.shouldRemove = true; // It's gonna remove it next frame.
 
             let player: Player = null;
-            players.forEach((a) => {
+            players.forEach(a => {
                 if (a.hitbox === first.object) {
                     player = a;
                 }
@@ -175,7 +228,8 @@ export class Projectile {
                 // We shot a player!
 
                 socketSend("playerHit", {
-                    id: player.id
+                    id: player.id,
+                    damage: this.options.damage
                 });
             }
 
@@ -192,7 +246,9 @@ export class Projectile {
         if (this.lifetime < timeFrag * 1000) {
             lineStart = this.origin;
         } else {
-            let back = this.direction.clone().multiplyScalar(this.options.speed * timeFrag);
+            let back = this.direction
+                .clone()
+                .multiplyScalar(this.options.speed * timeFrag);
             lineStart.sub(back);
         }
 
@@ -208,7 +264,11 @@ handlers["createProjectile"] = function(data: any) {
 
     let projectileOptions = data.projectileOptions as ProjectileOptions;
     let origin = new THREE.Vector3(data.origin.x, data.origin.y, data.origin.z);
-    let direction = new THREE.Vector3(data.direction.x, data.direction.y, data.direction.z);
+    let direction = new THREE.Vector3(
+        data.direction.x,
+        data.direction.y,
+        data.direction.z
+    );
 
     let proj = new Projectile(projectileOptions, origin, direction);
     proj.id = data.id;
@@ -219,7 +279,7 @@ handlers["removeProjectile"] = function(data: any) {
     let { currentMap } = gameState;
     if (!currentMap) return;
 
-    let index = currentMap.projectiles.findIndex((a) => a.id === data.id);
+    let index = currentMap.projectiles.findIndex(a => a.id === data.id);
     if (index !== -1) {
         let proj = currentMap.projectiles[index];
         currentMap.scene.remove(proj.object3D);

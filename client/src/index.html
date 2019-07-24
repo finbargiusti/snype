@@ -3,11 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Orbitron&display=swap"
+      rel="stylesheet"
+    />
     <title>Snype</title>
   </head>
   <body>
     <script src="./ts/index.ts" defer></script>
     <canvas id="root"></canvas>
+    <h1 id="health">100</h1>
     <img src="media/crosshair.png" id="crosshair" />
   </body>
   <style>
@@ -15,6 +20,7 @@
       margin: 0px;
       padding: 0px;
       overflow: hidden;
+      font-family: "Orbitron", sans-serif;
     }
     #crosshair {
       width: 60px;
@@ -22,6 +28,11 @@
       left: 50%;
       top: 50%;
       transform: translateX(-50%) translateY(-50%);
+    }
+    #health {
+      color: white;
+      position: absolute;
+      margin-left: 10px;
     }
   </style>
 </html>

@@ -1,11 +1,19 @@
 import * as THREE from "three";
-import { xAxis, zAxis, camera } from "./rendering";
+import { xAxis, zAxis, camera, mainCanvas } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState } from "./input";
 import { socketSend, handlers } from "./net";
 import { getNearestDistance } from "./collision";
 import { gameState } from "./game_state";
-import { Weapon, WeaponInstance, ASSAULT_RIFLE, SHOTGUN, SNIPER, SMG } from "./weapon";
+import {
+    Weapon,
+    WeaponInstance,
+    ASSAULT_RIFLE,
+    SHOTGUN,
+    SNIPER,
+    SMG,
+    LASER
+} from "./weapon";
 import { SnypeMap } from "./map";
 
 export let players = new Map<string, Player>();
@@ -14,7 +22,7 @@ export function getNonLocalPlayerHitboxes() {
     let { localPlayer } = gameState;
     let arr: THREE.Object3D[] = [];
 
-    players.forEach((a) => {
+    players.forEach(a => {
         if (a !== localPlayer) arr.push(a.hitbox);
     });
 
@@ -41,7 +49,45 @@ export class Player {
     public object3D: THREE.Object3D;
     public hitbox: THREE.Object3D;
     public weapon: WeaponInstance;
+    public health: number = 100;
     public currentMap: SnypeMap;
+
+    spawn() {
+        if (this.currentMap.spawnPoints.length > 0) {
+            let spawn = this.currentMap.spawnPoints[
+                Math.floor(Math.random() * this.currentMap.spawnPoints.length)
+            ];
+            this.position.set(spawn.x, spawn.y, spawn.z);
+        } else {
+            this.position.set(1, 1, 0);
+        }
+    }
+
+    setHealth(health: number) {
+        this.health = health;
+        document.getElementById("health").innerText = String(
+            localPlayer.health
+        );
+    }
+
+    die() {
+        if (localPlayer === this) {
+            mainCanvas.style.filter = "saturate(0) contrast(2)";
+            setTimeout(() => {
+                this.spawn();
+                this.setHealth(100);
+                mainCanvas.style.filter = "";
+            }, 1000);
+            socketSend("dead", {
+                id: this.id
+            });
+        } else {
+            this.object3D.visible = false;
+            setTimeout(() => {
+                this.object3D.visible = true;
+            }, 1000);
+        }
+    }
 
     constructor(obj: any) {
         let { currentMap } = gameState;
@@ -50,7 +96,7 @@ export class Player {
         this.id = obj.id;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
-        this.weapon = new WeaponInstance(ASSAULT_RIFLE, this);
+        this.weapon = new WeaponInstance(SMG, this);
 
         this.object3D = createPlayerObject3D();
         currentMap.scene.add(this.object3D);
@@ -58,9 +104,14 @@ export class Player {
         let hitboxGeometry = new THREE.BoxBufferGeometry(0.8, 0.8, 0.8);
         hitboxGeometry.computeBoundingBox();
         hitboxGeometry.computeBoundingSphere();
-        let hitboxMaterial = new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe: true, alphaTest: 0, visible: false}); // Rendering only for debug
+        let hitboxMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            wireframe: true,
+            alphaTest: 0,
+            visible: false
+        }); // Rendering only for debug
         this.hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-        
+
         currentMap.scene.add(this.hitbox);
     }
 
@@ -81,16 +132,26 @@ export class Player {
     }
 
     update(obj: any) {
-        if (obj.position) {
-            this.position.set(obj.position.x, obj.position.y, obj.position.z);
-            this.object3D.position.copy(this.getHeadPosition());
-            this.hitbox.position.copy(this.getHeadPosition());
+        if (this.health > 0) {
+            if (obj.position) {
+                this.position.set(
+                    obj.position.x,
+                    obj.position.y,
+                    obj.position.z
+                );
+                this.object3D.position.copy(this.getHeadPosition());
+                this.hitbox.position.copy(this.getHeadPosition());
+            }
+            if (obj.velocity) {
+                this.velocity.set(
+                    obj.velocity.x,
+                    obj.velocity.y,
+                    obj.velocity.z
+                );
+            }
+            if (obj.yaw) this.yaw = obj.yaw;
+            if (obj.pitch) this.pitch = obj.pitch;
         }
-        if (obj.velocity) {
-            this.velocity.set(obj.velocity.x, obj.velocity.y, obj.velocity.z);
-        }
-        if (obj.yaw) this.yaw = obj.yaw;
-        if (obj.pitch) this.pitch = obj.pitch;
     }
 
     remove() {
@@ -108,7 +169,7 @@ export function createLocalPlayer() {
         id: localPlayerId
     });
     localPlayer.object3D.visible = false; // Don't render any of the local player, because that'd be stupid.
-    
+
     gameState.localPlayer = localPlayer;
 
     players.set(localPlayerId, localPlayer);
@@ -153,6 +214,20 @@ handlers["removePlayer"] = function(data: any) {
     removePlayer(data);
 };
 
+handlers["hit"] = (data: any) => {
+    if (localPlayer.health > 0) {
+        localPlayer.setHealth(localPlayer.health - data.damage);
+        if (localPlayer.health <= 0) {
+            localPlayer.die();
+        }
+    }
+};
+
+handlers["died"] = (data: any) => {
+    let player = players.get(data.id);
+    player.die();
+};
+
 export function updatePlayer(obj: any) {
     let player = players.get(obj.id);
     if (!player) return;
@@ -179,6 +254,8 @@ export function useWeapon() {
     let { localPlayer } = gameState;
 
     if (inputState.primaryMb === true) {
-        localPlayer.weapon.shoot();
+        if (localPlayer.health > 0) {
+            localPlayer.weapon.shoot();
+        }
     }
 }

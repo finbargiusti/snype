@@ -19,6 +19,8 @@ function socketOnOpen() {
     socketSend("connect", {
         playerId: localPlayer.id
     });
+
+    localPlayer.spawn();
 }
 
 function socketOnMessage(e: MessageEvent) {

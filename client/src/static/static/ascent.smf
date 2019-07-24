@@ -2,14 +2,21 @@
 ---
 name: "Ascent"
 author: "Finbar Giusti"
-wallHeight: 1
+wallHeight: 12 
 ---
 
+
+// Spawns
+Spawn 2 2 0
+Spawn 2 14 0
+Spawn 14 2 0
+Spawn 14 14 0
+
 // Walls
-Wall 0 0 16 1
-Wall 0 0 1 16
-Wall 15 0 1 16
-Wall 0 15 16 1
+Wall 0 0 16 0.01 
+Wall 0 0 0.01 16
+Wall 16 0 0.01 16
+Wall 0 16 16 0.01 
 
 // Ring Barricades
 Box 3 3 0 1 3 2

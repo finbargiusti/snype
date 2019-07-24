@@ -43,7 +43,11 @@ export class SnypeMap {
         this.objects.push(...data.objects);
 
         // TODO: Pull this out to a const
-        let wallMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        const wallMaterial = new THREE.MeshLambertMaterial({
+            color: 0xffffff,
+            opacity: 0.3,
+            transparent: true
+        });
 
         data.objects.forEach((object: any) => {
             switch (object.type) {
@@ -94,7 +98,6 @@ export class SnypeMap {
                             (data.metadata.wallHeight || 4) / 2
                         );
                         wallMesh.receiveShadow = true;
-                        wallMesh.castShadow = true;
 
                         this.drawableObjects.push(wallMesh);
                         this.colliders.push(wallMesh);
@@ -240,9 +243,9 @@ export class SnypeMap {
 
         // Add floor
 
-        let minX = -1,
+        let minX = 0,
             maxX = 1,
-            minY = -1,
+            minY = 0,
             maxY = 1;
 
         this.objects.forEach(obj => {
@@ -290,7 +293,10 @@ export class SnypeMap {
         for (let projectile of this.projectiles) {
             if (projectile.shouldRemove) {
                 this.scene.remove(projectile.object3D);
-                this.projectiles.splice(this.projectiles.indexOf(projectile), 1);
+                this.projectiles.splice(
+                    this.projectiles.indexOf(projectile),
+                    1
+                );
             }
 
             projectile.update(timeDif);
