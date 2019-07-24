@@ -182,7 +182,8 @@ export class Projectile {
         );
 		this.object3D.castShadow = true;
 		
-		this.object3D.position.copy(this.lastEndPoint)
+		this.object3D.position.copy(this.lastEndPoint);
+		this.object3D.visible = false;
     }
 
     update(timeDif: number) {
@@ -244,6 +245,7 @@ export class Projectile {
 		}
 		
 		this.object3D.position.copy(this.lastEndPoint);
+		this.object3D.visible = true;
     }
 }
 
