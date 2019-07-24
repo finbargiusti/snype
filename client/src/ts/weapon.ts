@@ -5,6 +5,7 @@ import { socketSend, handlers } from "./net";
 import { zAxis, xAxis } from "./rendering";
 
 interface WeaponSpecifications {
+    name: string;
     rateOfFire: number; // Shots per second
     inaccuracy: number; // In max radians
     projectilesPerShot: number;
@@ -83,8 +84,9 @@ export class WeaponInstance {
 }
 
 export const ASSAULT_RIFLE = new Weapon({
+    name: "ASSAULT RIFLE",
     rateOfFire: 5,
-    inaccuracy: 0.025,
+    inaccuracy: 0.015,
     projectilesPerShot: 1,
     projectileOptions: {
         speed: 100,
@@ -93,6 +95,7 @@ export const ASSAULT_RIFLE = new Weapon({
 });
 
 export const SHOTGUN = new Weapon({
+    name: "SHOTGUN",
     rateOfFire: 1,
     inaccuracy: 0.15,
     projectilesPerShot: 6,
@@ -102,19 +105,10 @@ export const SHOTGUN = new Weapon({
     }
 });
 
-export const LASER = new Weapon({
-    rateOfFire: 10,
-    inaccuracy: 0,
-    projectilesPerShot: 1,
-    projectileOptions: {
-        speed: 1000,
-        damage: 1
-    }
-});
-
 export const SNIPER = new Weapon({
+    name: "SNIPER",
     rateOfFire: 0.75,
-    inaccuracy: 0.005,
+    inaccuracy: 0.002,
     projectilesPerShot: 1,
     projectileOptions: {
         speed: 200,
@@ -123,6 +117,7 @@ export const SNIPER = new Weapon({
 });
 
 export const SMG = new Weapon({
+    name: "SMG",
     rateOfFire: 10,
     inaccuracy: 0.12,
     projectilesPerShot: 1,
@@ -131,6 +126,8 @@ export const SMG = new Weapon({
         damage: 8
     }
 });
+
+export const weapons: Weapon[] = [ASSAULT_RIFLE, SHOTGUN, SNIPER, SMG];
 
 const PROJECTILE_TRAJECTORY_MATERIAL = new THREE.MeshBasicMaterial({
     color: 0xff004c
@@ -184,10 +181,10 @@ export class Projectile {
     }
 
     update(timeDif: number) {
-		let { currentMap } = gameState;
-		
-		// GC shit
-		this.object3D.geometry.dispose();
+        let { currentMap } = gameState;
+
+        // GC shit
+        this.object3D.geometry.dispose();
 
         this.lifetime += timeDif;
         if (this.lifetime >= MAX_PROJECTILE_LIFETIME) {
@@ -286,7 +283,7 @@ handlers["removeProjectile"] = function(data: any) {
     if (index !== -1) {
         let proj = currentMap.projectiles[index];
         currentMap.scene.remove(proj.object3D);
-		currentMap.projectiles.splice(index, 1);
-		proj.object3D.geometry.dispose();
+        currentMap.projectiles.splice(index, 1);
+        proj.object3D.geometry.dispose();
     }
 };

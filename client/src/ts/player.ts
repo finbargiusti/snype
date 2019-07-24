@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { xAxis, zAxis, camera, mainCanvas } from "./rendering";
 import { GRAVITY } from "./misc";
-import { inputState } from "./input";
+import { inputState, inputEventDispatcher } from "./input";
 import { socketSend, handlers } from "./net";
 import { getNearestDistance } from "./collision";
 import { gameState } from "./game_state";
@@ -12,7 +12,8 @@ import {
     SHOTGUN,
     SNIPER,
     SMG,
-    LASER
+    LASER,
+    weapons
 } from "./weapon";
 import { SnypeMap } from "./map";
 
@@ -48,7 +49,7 @@ export class Player {
     public pitch: number = 0;
     public object3D: THREE.Object3D;
     public hitbox: THREE.Object3D;
-    public weapon: WeaponInstance;
+    public weapon = new WeaponInstance(SMG, this);
     public health: number = 100;
     public currentMap: SnypeMap;
 
@@ -89,6 +90,17 @@ export class Player {
         }
     }
 
+    setWeapon(weapon: Weapon) {
+        this.weapon.weapon = weapon;
+        document.getElementById("weapon").innerText = weapon.spec.name;
+    }
+
+    cycleWeapon() {
+        this.setWeapon(
+            weapons[(weapons.indexOf(this.weapon.weapon) + 1) % weapons.length]
+        );
+    }
+
     constructor(obj: any) {
         let { currentMap } = gameState;
         this.currentMap = currentMap;
@@ -96,7 +108,7 @@ export class Player {
         this.id = obj.id;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
-        this.weapon = new WeaponInstance(SMG, this);
+        this.setWeapon(SMG);
 
         this.object3D = createPlayerObject3D();
         currentMap.scene.add(this.object3D);
@@ -190,6 +202,13 @@ export function setCameraToLocalPlayer() {
     camera.rotateOnWorldAxis(xAxis, localPlayer.pitch);
     camera.rotateOnWorldAxis(zAxis, localPlayer.yaw);
 }
+
+inputEventDispatcher.addEventListener("keydown", e => {
+    let event = e as KeyboardEvent;
+    if (event.keyCode == 81) {
+        localPlayer.cycleWeapon();
+    }
+});
 
 export function isGrounded() {
     let yes = new THREE.Vector3(0, 0, -1);

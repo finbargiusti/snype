@@ -1,4 +1,5 @@
 import { mainCanvas } from "./rendering";
+import { createLocalPlayer } from "./player";
 
 export let inputState = {
     pointerLocked: false,
@@ -15,7 +16,7 @@ export let inputEventDispatcher = new EventTarget();
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
-    //console.log(keyCode);    
+    console.log(keyCode);
 
     switch (keyCode) {
         case 87:
@@ -25,7 +26,7 @@ window.addEventListener("keydown", e => {
             break;
         case 83:
             {
-                inputState.backwards = true;                
+                inputState.backwards = true;
             }
             break;
         case 65:
@@ -43,9 +44,15 @@ window.addEventListener("keydown", e => {
                 inputState.spacebar = true;
             }
             break;
-        case 16: { // shift
-            inputState.shift = true; 
-        }; break;
+        case 16:
+            {
+                // shift
+                inputState.shift = true;
+            }
+            break;
+        case 81: {
+            inputEventDispatcher.dispatchEvent(new KeyboardEvent(e.type, e));
+        }
     }
 });
 
@@ -78,19 +85,22 @@ window.addEventListener("keyup", e => {
                 inputState.spacebar = false;
             }
             break;
-        case 16: { // shift
-            inputState.shift = false; 
-        }; break;
+        case 16:
+            {
+                // shift
+                inputState.shift = false;
+            }
+            break;
     }
 });
 
-window.addEventListener('mousedown', (e) => {
+window.addEventListener("mousedown", e => {
     if (e.button === 0) {
         inputState.primaryMb = true;
     }
 });
 
-window.addEventListener('mouseup', (e) => {
+window.addEventListener("mouseup", e => {
     if (e.button === 0) {
         inputState.primaryMb = false;
     }
