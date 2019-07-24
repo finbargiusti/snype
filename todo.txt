@@ -1,5 +1,4 @@
 == David ==
-- Optimize bullet rendering
 - Add editor
 - Rework movement speed code
 - Add more animations
@@ -10,7 +9,6 @@
 - Add low-poly gun models
 - Add AO and bloom
 - Fix spraying when looking up and down
-- Add favicon
 
 == Finbar ==
 - N/A
