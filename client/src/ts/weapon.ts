@@ -105,7 +105,7 @@ export const SHOTGUN = new Weapon({
     pitch: 0.5,
     rateOfFire: 1,
     inaccuracy: 0.15,
-    projectilesPerShot: 6,
+    projectilesPerShot: 7,
     projectileOptions: {
         speed: 75,
         damage: 10
@@ -148,7 +148,7 @@ interface ProjectileOptions {
     damage: number;
 }
 
-let ping = new Howl({ src: "/static/ping.aiff", volume: 10 });
+let ping = new Howl({ src: "/static/ping.aiff" });
 
 export class Projectile {
     public options: ProjectileOptions;
@@ -244,7 +244,7 @@ export class Projectile {
             });
             if (player) {
                 // We shot a player!
-                ping.play();
+				ping.play();
 
                 socketSend("playerHit", {
                     id: player.id,

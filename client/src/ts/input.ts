@@ -16,7 +16,7 @@ export let inputEventDispatcher = new EventTarget();
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
-    console.log(keyCode);
+    //console.log(keyCode);
 
     switch (keyCode) {
         case 87:

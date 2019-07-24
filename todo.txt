@@ -9,6 +9,7 @@
 - Add low-poly gun models
 - Add AO and bloom
 - Fix spraying when looking up and down
+- Increase shadow map size
 
 == Finbar ==
 - N/A
