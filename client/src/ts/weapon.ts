@@ -48,23 +48,27 @@ export class WeaponInstance {
             let origin = this.wielder.getHeadPosition();
             origin.z -= 0.2;
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
-				let direction = new THREE.Vector3(0, 1, 0);
-				let perp = new THREE.Vector3(1, 0, 0);
-				let raw = new THREE.Vector3(0, 1, 0);
+                let direction = new THREE.Vector3(0, 1, 0);
+                let perp = new THREE.Vector3(1, 0, 0);
+                let raw = new THREE.Vector3(0, 1, 0);
 
-				// Left and right inaccuracy
-				let yawInaccuracy = (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
+                // Left and right inaccuracy
+                let yawInaccuracy =
+                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
 
-				direction.applyAxisAngle(zAxis, this.wielder.yaw + yawInaccuracy);
-				perp.applyAxisAngle(zAxis, this.wielder.yaw);
-				raw.applyAxisAngle(zAxis, this.wielder.yaw);
+                direction.applyAxisAngle(
+                    zAxis,
+                    this.wielder.yaw + yawInaccuracy
+                );
+                perp.applyAxisAngle(zAxis, this.wielder.yaw);
+                raw.applyAxisAngle(zAxis, this.wielder.yaw);
 
-				direction.applyAxisAngle(perp, this.wielder.pitch);
-				raw.applyAxisAngle(perp, this.wielder.pitch);
+                direction.applyAxisAngle(perp, this.wielder.pitch);
+                raw.applyAxisAngle(perp, this.wielder.pitch);
 
-				// Rotate around in a circle
-				let theta = Math.random() * Math.PI*2;
-				direction.applyAxisAngle(raw, theta);	
+                // Rotate around in a circle
+                let theta = Math.random() * Math.PI * 2;
+                direction.applyAxisAngle(raw, theta);
 
                 let proj = new Projectile(
                     this.weapon.spec.projectileOptions,
@@ -159,7 +163,7 @@ interface ProjectileOptions {
     damage: number;
 }
 
-let ping = new Howl({ src: "/static/ping.aiff" });
+let ping = new Howl({ src: ["/static/ping.wav"], volume: 0.4 });
 
 export class Projectile {
     public options: ProjectileOptions;
@@ -259,7 +263,7 @@ export class Projectile {
                 this.hitPlayers.add(player);
                 
                 // We shot a player!
-				ping.play();
+                ping.play();
 
                 socketSend("playerHit", {
                     id: player.id,
