@@ -135,6 +135,7 @@ class Player {
         this.id = id;
         this.socket = null;
         this.position = { x: 5, y: 5, z: 0 };
+        this.health = 100;
     }
 
     init() {
@@ -149,6 +150,44 @@ class Player {
 
             socketSend(socket2, "addPlayer", formatPlayer(this));
         });
+    }
+
+    isDead() {
+        return this.health <= 0;
+    }
+
+    dealDamage(dmg, source) {
+        if (this.isDead()) return; // Can't deal damage to a dead man.
+        if (dmg <= 0) return;
+
+        this.health -= dmg;
+        if (this.health < 0) this.health = 0;
+
+        socketSend(this.socket, "updateHealth", {
+            health: this.health
+        });
+
+        if (this.isDead()) {
+            sockets.forEach((socket) => {
+                socketSend(socket, "death", {
+                    playerId: this.id,
+                    source: {
+                        type: "player",
+                        id: source.id
+                    }
+                });
+            });
+
+            setTimeout(() => {
+                this.health = 100;
+
+                sockets.forEach((socket) => {
+                    socketSend(socket, "respawn", {
+                        playerId: this.id
+                    });
+                });
+            }, 1000);
+        }
     }
 }
 
@@ -187,7 +226,7 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
 };
 
 socketMessageHandlers["createProjectile"] = function(socket, data) {
-    // Simple relay to all other players.
+    // Simply relay to all other players.
 
     sockets.forEach(socket2 => {
         if (socket === socket2) return;
@@ -197,7 +236,7 @@ socketMessageHandlers["createProjectile"] = function(socket, data) {
 };
 
 socketMessageHandlers["removeProjectile"] = function(socket, data) {
-    // Simple relay to all other players.
+    // Simply relay to all other players.
 
     sockets.forEach(socket2 => {
         if (socket === socket2) return;
@@ -211,24 +250,15 @@ socketMessageHandlers["playerHit"] = function(socket, data) {
     if (player) {
         // We assume here they didn't shoot themselves.
         // Just tell the player they've been hit.
+
+        let culprit = socketPlayerAssociation.get(socket);
+
         socketSend(player.socket, "hit", {
             damage: data.damage,
-            culprit: socketPlayerAssociation.get(socket).id
+            culprit: culprit.id
         });
-    }
-};
 
-socketMessageHandlers["dead"] = function(socket, data) {
-    let player = getPlayerById(data.id);
-    if (player) {
-        sockets.forEach(socket => {
-            if (socket !== player.socket) {
-                socketSend(socket, "died", {
-                    id: data.id,
-                    culprit: data.culprit
-                });
-            }
-        });
+        player.dealDamage(data.damage, culprit);
     }
 };
 

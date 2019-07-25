@@ -17,6 +17,7 @@ export let inputEventDispatcher = new EventTarget();
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
     //console.log(keyCode);
+    inputEventDispatcher.dispatchEvent(new KeyboardEvent(e.type, e));
 
     switch (keyCode) {
         case 87:
@@ -51,7 +52,7 @@ window.addEventListener("keydown", e => {
             }
             break;
         case 81: {
-            inputEventDispatcher.dispatchEvent(new KeyboardEvent(e.type, e));
+            
         }
     }
 });
@@ -95,9 +96,13 @@ window.addEventListener("keyup", e => {
 });
 
 window.addEventListener("mousedown", e => {
+    if (!inputState.pointerLocked) return;
+
     if (e.button === 0) {
         inputState.primaryMb = true;
     }
+
+    inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
 });
 
 window.addEventListener("mouseup", e => {
