@@ -4,9 +4,10 @@ import { gameState } from "./game_state";
 import { socketSend, handlers } from "./net";
 import { zAxis, xAxis } from "./rendering";
 import { Howl } from "howler";
+import { playPop } from "./sound";
 
 interface WeaponSpecifications {
-    id: number,
+    id: number;
     name: string;
     pitch: number;
     rateOfFire: number; // Shots per second
@@ -25,8 +26,6 @@ export class Weapon {
     }
 }
 
-let pop = new Howl({ src: "/static/pop.wav" });
-
 export class WeaponInstance {
     public weapon: Weapon;
     public lastShotTime: number;
@@ -43,8 +42,8 @@ export class WeaponInstance {
 
         let now = performance.now();
         if (now - this.lastShotTime >= this.weapon.timeBetweenShots) {
-            pop.rate(Math.random() * 0.4 + this.weapon.spec.pitch);
-            pop.play();
+            playPop(undefined, this.weapon.spec.pitch);
+
             let origin = this.wielder.getHeadPosition();
             origin.z -= 0.2;
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
@@ -163,7 +162,7 @@ interface ProjectileOptions {
     damage: number;
 }
 
-let ping = new Howl({ src: ["/static/ping.wav"], volume: 0.4 });
+let ping = new Howl({ src: ["/static/ping.wav"], volume: 0.4, rate: 0.5 });
 
 export class Projectile {
     public options: ProjectileOptions;
@@ -258,10 +257,9 @@ export class Projectile {
                     player = a;
                 }
             });
-            outer:
-            if (player && !this.hitPlayers.has(player)) {
+            outer: if (player && !this.hitPlayers.has(player)) {
                 this.hitPlayers.add(player);
-                
+
                 // We shot a player!
                 ping.play();
 
@@ -295,6 +293,12 @@ handlers["createProjectile"] = function(data: any) {
         data.direction.y,
         data.direction.z
     );
+
+    let weapon = weapons.find(weapon => {
+        return weapon.spec.id === data.weaponId;
+    });
+
+    playPop(origin, weapon.spec.pitch);
 
     let proj = new Projectile(projectileOptions, origin, direction);
     proj.id = data.id;

@@ -8,7 +8,7 @@
       rel="stylesheet"
     />
     <title>Snype</title>
-    <link rel="shortcut icon" href="./media/18554.png">
+    <link rel="shortcut icon" href="./media/18554.png" />
   </head>
   <body>
     <script src="./ts/index.ts" defer></script>
@@ -18,6 +18,16 @@
     <img src="media/crosshair.png" id="crosshair" />
   </body>
   <style>
+    @keyframes hit {
+      from {
+        color: #ff2222;
+        transform: scale(2);
+      }
+      to {
+        color: white;
+        transform: scale(1);
+      }
+    }
     body {
       margin: 0px;
       padding: 0px;
@@ -36,6 +46,14 @@
       position: absolute;
       margin-left: 10px;
       text-shadow: black 0px 0px 5px;
+      transform-origin: 0px 0px;
+      margin: 0;
+      left: 20px;
+      top: 20px;
+      line-height: 100%;
+    }
+    #health.hit {
+      animation: hit 0.3s;
     }
     #weapon {
       color: white;

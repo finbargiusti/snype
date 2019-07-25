@@ -40,6 +40,8 @@ function createPlayerObject3D() {
     return sphere;
 }
 
+const goSound = new Howl({ src: ["/static/go.ogg"] });
+
 export class Player {
     public id: string;
     public position: THREE.Vector3;
@@ -53,6 +55,7 @@ export class Player {
     public currentMap: SnypeMap;
 
     spawn() {
+        goSound.play();
         if (this.currentMap.spawnPoints.length > 0) {
             let spawn = this.currentMap.spawnPoints[
                 Math.floor(Math.random() * this.currentMap.spawnPoints.length)
@@ -65,9 +68,11 @@ export class Player {
 
     setHealth(health: number) {
         this.health = health;
-        document.getElementById("health").innerText = String(
-            localPlayer.health
-        );
+        let healthEl = document.getElementById("health");
+        healthEl.innerText = String(localPlayer.health);
+        healthEl.classList.remove("hit");
+        healthEl.clientWidth;
+        healthEl.classList.add("hit");
     }
 
     die() {
@@ -199,12 +204,20 @@ export function setCameraToLocalPlayer() {
     camera.rotateOnWorldAxis(xAxis, Math.PI / 2);
     camera.rotateOnWorldAxis(xAxis, localPlayer.pitch);
     camera.rotateOnWorldAxis(zAxis, localPlayer.yaw);
+
+    Howler.pos(headPos.x, headPos.y, headPos.z);
+    let oriental = localPlayer.getOrientationVector();
+    Howler.orientation(oriental.x, oriental.y, oriental.z, 0, 0, 1);
 }
+
+let switchSound = new Howl({ src: ["/static/switch.wav"], rate: 0.8 });
 
 inputEventDispatcher.addEventListener("keydown", e => {
     let event = e as KeyboardEvent;
     if (event.keyCode == 81) {
+        switchSound.stop();
         localPlayer.cycleWeapon();
+        switchSound.play();
     }
 });
 
@@ -276,9 +289,9 @@ export function removePlayer(obj: any) {
     }
 }
 
-inputEventDispatcher.addEventListener('mousedown', (e) => {
+inputEventDispatcher.addEventListener("mousedown", e => {
     let mouseEvent = e as MouseEvent;
-    
+
     if (mouseEvent.button === 0) {
         useWeapon();
     }

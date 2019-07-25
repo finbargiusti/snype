@@ -2,7 +2,7 @@
 ---
 name: "Platforms"
 author: "David Payr"
-wallHeight: 1
+wallHeight: 12 
 ---
 
 // Walls

@@ -168,7 +168,7 @@ class Player {
         });
 
         if (this.isDead()) {
-            sockets.forEach((socket) => {
+            sockets.forEach(socket => {
                 socketSend(socket, "death", {
                     playerId: this.id,
                     source: {
@@ -181,12 +181,12 @@ class Player {
             setTimeout(() => {
                 this.health = 100;
 
-                sockets.forEach((socket) => {
+                sockets.forEach(socket => {
                     socketSend(socket, "respawn", {
                         playerId: this.id
                     });
                 });
-            }, 1000);
+            }, 2000);
         }
     }
 }
