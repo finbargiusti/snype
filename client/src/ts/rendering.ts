@@ -12,6 +12,7 @@ import { initCanvasListeners } from "./input";
 import { gameState } from "./game_state";
 import { updateLocalPlayerMovement } from "./movement";
 import { Howl, Howler } from "howler";
+import { playPop } from "./sound";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
@@ -75,7 +76,7 @@ let render = () => {
     if (currentMap) {
         currentMap.update(timeDif);
         renderer.render(currentMap.scene, camera);
-    }
+    }    
 
     requestAnimationFrame(render);
     lastRenderTime = now;

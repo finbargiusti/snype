@@ -207,7 +207,7 @@ export function setCameraToLocalPlayer() {
 
     Howler.pos(headPos.x, headPos.y, headPos.z);
     let oriental = localPlayer.getOrientationVector();
-    Howler.orientation(oriental.x, oriental.y, oriental.z, 0, 0, 1);
+    Howler.orientation(oriental.x, oriental.y, 0, 0, 0, 1);
 }
 
 let switchSound = new Howl({ src: ["/static/switch.wav"], rate: 0.8 });
