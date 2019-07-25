@@ -2,7 +2,7 @@ import { gameState } from "./game_state";
 import { inputState, inputEventDispatcher } from "./input";
 import * as THREE from "three";
 import { zAxis } from "./rendering";
-import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY } from "./misc";
+import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
 import { getNearestDistance } from "./collision";
 import { socketSend } from "./net";
 import { isGrounded } from "./player";
@@ -150,10 +150,9 @@ inputEventDispatcher.addEventListener("mousemove", e => {
 
     let localPlayer = gameState.localPlayer;
 
-    localPlayer.yaw += -x / 1000;
-    localPlayer.pitch += -y / 1000;
-    localPlayer.pitch = Math.max(
-        -Math.PI / 2,
-        Math.min(Math.PI / 2, localPlayer.pitch)
-    );
+    let yaw = localPlayer.yaw + -x / 1000;
+    let pitch = localPlayer.pitch + -y / 1000;
+    pitch = clamp(pitch, -Math.PI/2, Math.PI/2);
+
+    localPlayer.update({yaw, pitch});
 });

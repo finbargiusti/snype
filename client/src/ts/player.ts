@@ -70,23 +70,21 @@ export class Player {
         );
     }
 
-    die(culprit: string) {
+    die() {
         if (localPlayer === this) {
             mainCanvas.style.filter = "saturate(0) contrast(2)";
-            setTimeout(() => {
-                this.spawn();
-                this.setHealth(100);
-                mainCanvas.style.filter = "";
-            }, 1000);
-            socketSend("dead", {
-                id: this.id,
-                culprit
-            });
         } else {
             this.object3D.visible = false;
-            setTimeout(() => {
-                this.object3D.visible = true;
-            }, 1000);
+        }
+    }
+
+    respawn() {
+        if (localPlayer === this) {
+            this.spawn();
+            this.setHealth(100);
+            mainCanvas.style.filter = "";
+        } else {
+            this.object3D.visible = true;
         }
     }
 
@@ -233,21 +231,27 @@ handlers["removePlayer"] = function(data: any) {
     removePlayer(data);
 };
 
+// Upon getting hit.
 handlers["hit"] = (data: any) => {
-    if (localPlayer.health > 0) {
-        localPlayer.setHealth(localPlayer.health - data.damage);
-        if (localPlayer.health <= 0) {
-            localPlayer.die(data.culprit);
-        }
+    // TODO?
+};
+
+handlers["updateHealth"] = (data: any) => {
+    localPlayer.setHealth(data.health);
+};
+
+handlers["death"] = (data: any) => {
+    let player = players.get(data.playerId);
+    if (player) player.die();
+
+    if (localPlayer === players.get(data.source.id)) {
+        killMessage();
     }
 };
 
-handlers["died"] = (data: any) => {
-    let player = players.get(data.id);
-    player.die(data.culprit);
-    if (localPlayer === players.get(data.culprit)) {
-        killMessage();
-    }
+handlers["respawn"] = (data: any) => {
+    let player = players.get(data.playerId);
+    if (player) player.respawn();
 };
 
 export function updatePlayer(obj: any) {
@@ -272,12 +276,18 @@ export function removePlayer(obj: any) {
     }
 }
 
+inputEventDispatcher.addEventListener('mousedown', (e) => {
+    let mouseEvent = e as MouseEvent;
+    
+    if (mouseEvent.button === 0) {
+        useWeapon();
+    }
+});
+
 export function useWeapon() {
     let { localPlayer } = gameState;
 
-    if (inputState.primaryMb === true) {
-        if (localPlayer.health > 0) {
-            localPlayer.weapon.shoot();
-        }
+    if (inputState.primaryMb === true && localPlayer.health > 0) {
+        localPlayer.weapon.shoot();
     }
 }

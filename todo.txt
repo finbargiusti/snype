@@ -2,13 +2,11 @@
 - Add editor
 - Rework movement speed code
 - Add more animations
-- Sounds
 - Feedback on hitting somebody / getting hit
 - Add Binarify to server
 - Add self-shadowing
 - Add low-poly gun models
 - Add AO and bloom
-- Fix spraying when looking up and down
 
 == Finbar ==
 - N/A

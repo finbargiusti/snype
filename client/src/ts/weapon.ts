@@ -48,18 +48,26 @@ export class WeaponInstance {
             origin.z -= 0.2;
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
                 let direction = new THREE.Vector3(0, 1, 0);
+                let perp = new THREE.Vector3(1, 0, 0);
+                let raw = new THREE.Vector3(0, 1, 0);
+
+                // Left and right inaccuracy
                 let yawInaccuracy =
                     (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
-                let pitchInaccuracy =
-                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
-                direction.applyAxisAngle(
-                    xAxis,
-                    pitchInaccuracy + this.wielder.pitch
-                );
+
                 direction.applyAxisAngle(
                     zAxis,
-                    yawInaccuracy + this.wielder.yaw
+                    this.wielder.yaw + yawInaccuracy
                 );
+                perp.applyAxisAngle(zAxis, this.wielder.yaw);
+                raw.applyAxisAngle(zAxis, this.wielder.yaw);
+
+                direction.applyAxisAngle(perp, this.wielder.pitch);
+                raw.applyAxisAngle(perp, this.wielder.pitch);
+
+                // Rotate around in a circle
+                let theta = Math.random() * Math.PI * 2;
+                direction.applyAxisAngle(raw, theta);
 
                 let proj = new Projectile(
                     this.weapon.spec.projectileOptions,
@@ -105,7 +113,7 @@ export const SHOTGUN = new Weapon({
     pitch: 0.5,
     rateOfFire: 1,
     inaccuracy: 0.15,
-    projectilesPerShot: 6,
+    projectilesPerShot: 7,
     projectileOptions: {
         speed: 75,
         damage: 10
