@@ -2,11 +2,11 @@
 - Add editor
 - Rework movement speed code
 - Add more animations
-- Feedback on hitting somebody / getting hit
 - Add Binarify to server
 - Add self-shadowing
 - Add low-poly gun models
 - Add AO and bloom
+- keepAlive
 
 == Finbar ==
 - N/A

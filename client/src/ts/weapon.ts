@@ -6,6 +6,7 @@ import { zAxis, xAxis } from "./rendering";
 import { Howl } from "howler";
 
 interface WeaponSpecifications {
+    id: number,
     name: string;
     pitch: number;
     rateOfFire: number; // Shots per second
@@ -81,7 +82,8 @@ export class WeaponInstance {
                         y: proj.direction.y,
                         z: proj.direction.z
                     },
-                    projectileOptions: this.weapon.spec.projectileOptions
+                    projectileOptions: this.weapon.spec.projectileOptions,
+                    weaponId: this.weapon.spec.id
                 });
             }
 
@@ -93,6 +95,7 @@ export class WeaponInstance {
 }
 
 export const ASSAULT_RIFLE = new Weapon({
+    id: 0,
     name: "ASSAULT RIFLE",
     pitch: 1,
     rateOfFire: 5,
@@ -105,6 +108,7 @@ export const ASSAULT_RIFLE = new Weapon({
 });
 
 export const SHOTGUN = new Weapon({
+    id: 1,
     name: "SHOTGUN",
     pitch: 0.5,
     rateOfFire: 1,
@@ -117,6 +121,7 @@ export const SHOTGUN = new Weapon({
 });
 
 export const SNIPER = new Weapon({
+    id: 2,
     name: "SNIPER",
     pitch: 3,
     rateOfFire: 0.75,
@@ -129,6 +134,7 @@ export const SNIPER = new Weapon({
 });
 
 export const SMG = new Weapon({
+    id: 3,
     name: "SMG",
     pitch: 1.4,
     rateOfFire: 10,
@@ -146,6 +152,7 @@ const PROJECTILE_TRAJECTORY_MATERIAL = new THREE.MeshBasicMaterial({
     color: 0xff004c
 });
 const MAX_PROJECTILE_LIFETIME = 1000; // Kill it after this many milliseconds. Always.
+const TIME_FRAG = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and TIME_FRAG is 1/2, then the projectile is 2.5 units long.
 
 interface ProjectileOptions {
     speed: number; // units per second
@@ -160,11 +167,12 @@ export class Projectile {
     public direction: THREE.Vector3; // This better be normalized!
     public object3D: THREE.Mesh;
     public lastEndPoint: THREE.Vector3;
-    public shouldRemove: boolean = false;
+    public shouldRemove: boolean;
     public spawnTime: number;
     public lifetime: number;
     public shouldCheckCollision: boolean;
     public id: string;
+    public hitPlayers: Set<Player>;
 
     constructor(
         options: ProjectileOptions,
@@ -179,13 +187,13 @@ export class Projectile {
         this.spawnTime = performance.now();
         this.lifetime = 0;
         this.shouldCheckCollision = false;
+        this.shouldRemove = false;
+        this.hitPlayers = new Set();
 
-        // Pull this out to a const
-        let timeFrag = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and timeFrag is 1/2, then the projectile is 2.5 units long.
         let lineStart = new THREE.Vector3(0, 0, 0);
         let back = this.direction
             .clone()
-            .multiplyScalar(this.options.speed * timeFrag);
+            .multiplyScalar(this.options.speed * TIME_FRAG);
         lineStart.sub(back);
         let curve = new THREE.LineCurve3(lineStart, new THREE.Vector3(0, 0, 0));
         let tubeGeometry = new THREE.TubeBufferGeometry(
@@ -246,7 +254,10 @@ export class Projectile {
                     player = a;
                 }
             });
-            if (player) {
+            outer:
+            if (player && !this.hitPlayers.has(player)) {
+                this.hitPlayers.add(player);
+                
                 // We shot a player!
 				ping.play();
 

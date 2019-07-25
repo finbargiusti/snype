@@ -231,6 +231,8 @@ socketMessageHandlers["createProjectile"] = function(socket, data) {
     sockets.forEach(socket2 => {
         if (socket === socket2) return;
 
+        data.shooterId = socketPlayerAssociation.get(socket).id;
+        
         socketSend(socket2, "createProjectile", data);
     });
 };
