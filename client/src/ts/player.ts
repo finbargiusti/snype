@@ -183,7 +183,7 @@ export function createLocalPlayer() {
     localPlayer = new Player({
         id: localPlayerId
     });
-    localPlayer.object3D.visible = false; // Don't render any of the local player, because that'd be stupid.
+    (localPlayer.object3D as THREE.Mesh).material = new THREE.ShadowMaterial();
 
     gameState.localPlayer = localPlayer;
 
