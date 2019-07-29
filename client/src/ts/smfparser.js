@@ -206,3 +206,9 @@ export const parse = (file) => {
         ambience
     };
 };
+
+if (typeof module !== "undefined") {
+    // We're in Node
+
+    module.exports.parse = parse;
+}
