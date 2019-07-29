@@ -4,8 +4,11 @@ import * as THREE from "three";
 import { zAxis } from "./rendering";
 import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
 import { socketSend } from "./net";
+import { Vector3 } from "three";
 
 const JUMP_INTENSITY = 8;
+
+let jumpVelocity = new THREE.Vector3(0, 0, 0);
 
 export function updateLocalPlayerMovement(dif: number) {
     let { currentMap, localPlayer } = gameState;
@@ -37,6 +40,8 @@ export function updateLocalPlayerMovement(dif: number) {
     // Apply that movement vector based on if the player is grounded or not:
 
     if (localPlayer.isGrounded) {
+        jumpVelocity.set(0, 0, 0);
+
         velCopy.x = movementVec.x * actualSpeed;
         velCopy.y = movementVec.y * actualSpeed;
 
@@ -44,19 +49,27 @@ export function updateLocalPlayerMovement(dif: number) {
             velCopy.z += JUMP_INTENSITY;
         }
     } else {
-        // Commented out for now, this was my attempt to slow down movement impact in mid-air:
-        /*
-        let scaledX = movementVec.x * actualSpeed * 0.15,
-            scaledY = movementVec.y * actualSpeed * 0.15;
+        let scaledX = movementVec.x * actualSpeed,
+            scaledY = movementVec.y * actualSpeed;
 
-        if ((velCopy.x * scaledX < 0 || Math.abs(velCopy.x + scaledX) < actualSpeed) &&
-            (velCopy.y * scaledY < 0 || Math.abs(velCopy.y + scaledY) < actualSpeed)) {
-            velCopy.x += scaledX;
-            velCopy.y += scaledY;
-        }*/
+        if (jumpVelocity.x == 0 && jumpVelocity.y == 0) {
+            jumpVelocity.set(scaledX, scaledY, 0);
+        }
 
-        velCopy.x = movementVec.x * actualSpeed;
-        velCopy.y = movementVec.y * actualSpeed;
+        let newJump = jumpVelocity.clone();
+        newJump.set(0, Math.hypot(newJump.x, newJump.y), 0);
+        newJump.applyAxisAngle(zAxis, localPlayer.yaw);
+
+        if (scaledX) {
+            velCopy.x = jumpVelocity.x * 0.3 + scaledX * 0.7;
+        } else {
+            velCopy.x = jumpVelocity.x * 0.6 + newJump.x * 0.4;
+        }
+        if (scaledY) {
+            velCopy.y = jumpVelocity.y * 0.3 + scaledY * 0.7;
+        } else {
+            velCopy.y = jumpVelocity.y * 0.6 + newJump.y * 0.4;
+        }
     }
 
     velCopy.add(GRAVITY.clone().multiplyScalar(dif / 1000));
@@ -67,16 +80,33 @@ export function updateLocalPlayerMovement(dif: number) {
     let playerHeight = 1.8;
     let legHeight = 0.3;
 
-    if (velCopy.length() > 0.0001) { // If we're moving
+    if (velCopy.length() > 0.0001) {
+        // If we're moving
         // Create two bounding boxes, one for the legs and one for the rest of the body:
 
         let legsBB = new THREE.Box3(
-            new THREE.Vector3(posCopy.x - playerRadius, posCopy.y - playerRadius, posCopy.z - 0.005),
-            new THREE.Vector3(posCopy.x + playerRadius, posCopy.y + playerRadius, posCopy.z + legHeight)
+            new THREE.Vector3(
+                posCopy.x - playerRadius,
+                posCopy.y - playerRadius,
+                posCopy.z - 0.005
+            ),
+            new THREE.Vector3(
+                posCopy.x + playerRadius,
+                posCopy.y + playerRadius,
+                posCopy.z + legHeight
+            )
         );
         let bodyBB = new THREE.Box3(
-            new THREE.Vector3(posCopy.x - playerRadius, posCopy.y - playerRadius, posCopy.z + legHeight),
-            new THREE.Vector3(posCopy.x + playerRadius, posCopy.y + playerRadius, posCopy.z + playerHeight)
+            new THREE.Vector3(
+                posCopy.x - playerRadius,
+                posCopy.y - playerRadius,
+                posCopy.z + legHeight
+            ),
+            new THREE.Vector3(
+                posCopy.x + playerRadius,
+                posCopy.y + playerRadius,
+                posCopy.z + playerHeight
+            )
         );
 
         // Get all objects intersecting with those BBs
@@ -120,17 +150,25 @@ export function updateLocalPlayerMovement(dif: number) {
         /* Vertical collision */
         function doVerticalCollision() {
             legsBB = new THREE.Box3(
-                new THREE.Vector3(posCopy.x - playerRadius, posCopy.y - playerRadius, posCopy.z - 0.005),
-                new THREE.Vector3(posCopy.x + playerRadius, posCopy.y + playerRadius, posCopy.z + legHeight)
+                new THREE.Vector3(
+                    posCopy.x - playerRadius,
+                    posCopy.y - playerRadius,
+                    posCopy.z - 0.005
+                ),
+                new THREE.Vector3(
+                    posCopy.x + playerRadius,
+                    posCopy.y + playerRadius,
+                    posCopy.z + legHeight
+                )
             );
             intersectingObjectsLegs = [];
 
             for (let i = 0; i < currentMap.colliders.length; i++) {
                 let mesh = currentMap.colliders[i];
-    
+
                 let bb = mesh.geometry.boundingBox.clone();
                 bb.applyMatrix4(mesh.matrixWorld);
-    
+
                 if (legsBB.intersectsBox(bb)) {
                     intersectingObjectsLegs.push(currentMap.colliders[i]);
                 }
@@ -154,24 +192,42 @@ export function updateLocalPlayerMovement(dif: number) {
                         // k === 0 -> Scanning upwards, testing for a ceiling we hit.
                         // k !== 0 -> Scanning downwards, testing for ground below us.
 
-                        let direction = (k === 0)? zAxis : zAxis.clone().negate(),
-                            far = (k === 0)? playerHeight-legHeight : legHeight + 0.05,
-                            colliders = (k === 0)? intersectingObjectsBody : intersectingObjectsLegs;
+                        let direction =
+                                k === 0 ? zAxis : zAxis.clone().negate(),
+                            far =
+                                k === 0
+                                    ? playerHeight - legHeight
+                                    : legHeight + 0.05,
+                            colliders =
+                                k === 0
+                                    ? intersectingObjectsBody
+                                    : intersectingObjectsLegs;
 
-                        let origin = new THREE.Vector3(x, y, posCopy.z + legHeight);
-                        let ray = new THREE.Raycaster(origin, direction, 0, far);
+                        let origin = new THREE.Vector3(
+                            x,
+                            y,
+                            posCopy.z + legHeight
+                        );
+                        let ray = new THREE.Raycaster(
+                            origin,
+                            direction,
+                            0,
+                            far
+                        );
                         let intersections = ray.intersectObjects(colliders);
 
                         if (intersections.length > 0) {
-                            outer:
-                            if (k === 0 && velCopy.z > 0) {
+                            outer: if (k === 0 && velCopy.z > 0) {
                                 posCopy.z -= far - intersections[0].distance;
                                 velCopy.z = 0;
                             } else if (k === 1) {
                                 if (highest === null) {
                                     highest = intersections[0];
                                 } else {
-                                    if (intersections[0].distance < highest.distance) {
+                                    if (
+                                        intersections[0].distance <
+                                        highest.distance
+                                    ) {
                                         highest = intersections[0];
                                     }
                                 }
@@ -195,20 +251,29 @@ export function updateLocalPlayerMovement(dif: number) {
             } else {
                 localPlayer.isGrounded = false;
             }
-        }   
+        }
 
         /* Horizontal collision */
         function doHorizontalCollision() {
             // Get a vector coplanar to the x-y axis, describing horizontal movement:
             let horizontalMovement = velCopy.clone();
             horizontalMovement.z = 0;
-            if (horizontalMovement.x === 0 || horizontalMovement.y === 0) return;
+            if (horizontalMovement.x === 0 || horizontalMovement.y === 0)
+                return;
             horizontalMovement.normalize();
 
             // Recalculate colliding bounding boxes, because position might have been changed in the vertical collision section.
 
-            bodyBB.min = new THREE.Vector3(posCopy.x - playerRadius, posCopy.y - playerRadius, posCopy.z + legHeight);
-            bodyBB.max = new THREE.Vector3(posCopy.x + playerRadius, posCopy.y + playerRadius, posCopy.z + playerHeight);
+            bodyBB.min = new THREE.Vector3(
+                posCopy.x - playerRadius,
+                posCopy.y - playerRadius,
+                posCopy.z + legHeight
+            );
+            bodyBB.max = new THREE.Vector3(
+                posCopy.x + playerRadius,
+                posCopy.y + playerRadius,
+                posCopy.z + playerHeight
+            );
             intersectingObjectsBody = [];
 
             for (let i = 0; i < currentMap.colliders.length; i++) {
@@ -224,7 +289,11 @@ export function updateLocalPlayerMovement(dif: number) {
 
             // Get all triangles the bounding box intersects with:
 
-            type triIntersect = {triangle: THREE.Triangle, normal: THREE.Vector3, plane: THREE.Plane};
+            type triIntersect = {
+                triangle: THREE.Triangle;
+                normal: THREE.Vector3;
+                plane: THREE.Plane;
+            };
             let intersectedTriangles: triIntersect[] = [];
             for (let i = 0; i < intersectingObjectsBody.length; i++) {
                 let mesh = intersectingObjectsBody[i];
@@ -236,7 +305,9 @@ export function updateLocalPlayerMovement(dif: number) {
                     let normal = face.normal as THREE.Vector3;
 
                     // This whole thing should deal with sideways collision, not up and down.
-                    let isMostlyHorizontal = Math.abs(normal.z) > Math.abs(normal.x) && Math.abs(normal.z) > Math.abs(normal.y);
+                    let isMostlyHorizontal =
+                        Math.abs(normal.z) > Math.abs(normal.x) &&
+                        Math.abs(normal.z) > Math.abs(normal.y);
                     if (isMostlyHorizontal) continue; // Skip.
 
                     let a = vertices[face.a].clone() as THREE.Vector3;
@@ -271,7 +342,11 @@ export function updateLocalPlayerMovement(dif: number) {
                     let comp = planeBuckets[j][0];
 
                     // These decimal numbers are just epsilons; we never know if floats may prank us
-                    if (tri.normal.dot(comp.normal) > 0.99 && Math.abs(tri.plane.constant - comp.plane.constant) < 0.01) {
+                    if (
+                        tri.normal.dot(comp.normal) > 0.99 &&
+                        Math.abs(tri.plane.constant - comp.plane.constant) <
+                            0.01
+                    ) {
                         // They lie in the same plane. Save the bucket.
                         bucket = planeBuckets[j];
                         break;
@@ -293,14 +368,17 @@ export function updateLocalPlayerMovement(dif: number) {
                 // Find the largest bucket with triangles intersecting the bounding box. In the first call, this will always be the biggest overall bucket, but that won't always be the case in subsequent recursive calls.
 
                 let wantedBucketLength: number;
-                outer:
-                for (let i = 0; i < planeBuckets.length; i++) {
+                outer: for (let i = 0; i < planeBuckets.length; i++) {
                     let bucket = planeBuckets[i];
 
                     for (let j = 0; j < bucket.length; j++) {
                         let intersect = bucket[j];
 
-                        if ((bodyBB as any).intersectsTriangle(intersect.triangle)) {
+                        if (
+                            (bodyBB as any).intersectsTriangle(
+                                intersect.triangle
+                            )
+                        ) {
                             wantedBucketLength = bucket.length;
                             break outer;
                         }
@@ -317,7 +395,7 @@ export function updateLocalPlayerMovement(dif: number) {
                 for (let i = 0; i < planeBuckets.length; i++) {
                     let bucket = planeBuckets[i];
                     if (bucket.length !== wantedBucketLength) continue;
-                    
+
                     let dot = bucket[0].normal.dot(invertedMovementVec);
                     if (dot > maxDotProduct) {
                         maxDotProduct = dot;
@@ -331,17 +409,27 @@ export function updateLocalPlayerMovement(dif: number) {
                 // Here, we start resolving the collision. First, we project our current position onto the bucket's plane:
                 let projected = new THREE.Vector3();
                 max[0].plane.projectPoint(posCopy, projected);
-                
+
                 // Then we move a player radius away from that plane along its normal
-                projected.add(max[0].normal.clone().multiplyScalar(playerRadius * 1.01));
+                projected.add(
+                    max[0].normal.clone().multiplyScalar(playerRadius * 1.01)
+                );
                 posCopy.copy(projected);
 
                 // We've resolved the collision with this plane and we can remove the bucket:
                 planeBuckets.splice(maxIndex, 1);
 
                 // Rebuild the bounding box based on the new position
-                bodyBB.min = new THREE.Vector3(posCopy.x - playerRadius, posCopy.y - playerRadius, posCopy.z + legHeight);
-                bodyBB.max = new THREE.Vector3(posCopy.x + playerRadius, posCopy.y + playerRadius, posCopy.z + playerHeight);
+                bodyBB.min = new THREE.Vector3(
+                    posCopy.x - playerRadius,
+                    posCopy.y - playerRadius,
+                    posCopy.z + legHeight
+                );
+                bodyBB.max = new THREE.Vector3(
+                    posCopy.x + playerRadius,
+                    posCopy.y + playerRadius,
+                    posCopy.z + playerHeight
+                );
 
                 // Resursive call to check if we're still overlapping with triangles. If so, those will be resolved aswell.
                 resolveCollision();
@@ -356,13 +444,24 @@ export function updateLocalPlayerMovement(dif: number) {
             endPoint.z += legHeight;
             let direction = endPoint.sub(bodyStart);
 
-            let rayDoubleCheck = new THREE.Raycaster(bodyStart, direction, 0, direction.length());
-            let intersections = rayDoubleCheck.intersectObjects(currentMap.colliders);
+            let rayDoubleCheck = new THREE.Raycaster(
+                bodyStart,
+                direction,
+                0,
+                direction.length()
+            );
+            let intersections = rayDoubleCheck.intersectObjects(
+                currentMap.colliders
+            );
             for (let i = 0; i < intersections.length; i++) {
                 let intersection = intersections[0];
 
                 // Again, ignore any not-really-horizontal surfaces.
-                let isMostlyHorizontal = Math.abs(intersection.face.normal.z) > Math.abs(intersection.face.normal.x) && Math.abs(intersection.face.normal.z) > Math.abs(intersection.face.normal.y);
+                let isMostlyHorizontal =
+                    Math.abs(intersection.face.normal.z) >
+                        Math.abs(intersection.face.normal.x) &&
+                    Math.abs(intersection.face.normal.z) >
+                        Math.abs(intersection.face.normal.y);
                 if (isMostlyHorizontal) continue;
 
                 // If we arrive here, that's bad. We probably glitched through something. Fix the incorrect position:
@@ -372,7 +471,9 @@ export function updateLocalPlayerMovement(dif: number) {
                 posCopy.y = intersection.point.y;
 
                 // Push them away along the face's normal
-                let horizontalNormal = intersection.face.normal.clone().normalize();
+                let horizontalNormal = intersection.face.normal
+                    .clone()
+                    .normalize();
                 posCopy.add(horizontalNormal.multiplyScalar(playerRadius));
 
                 break;
@@ -390,7 +491,10 @@ export function updateLocalPlayerMovement(dif: number) {
 
     // If the player's position has changed almost not at all, we can avoid sending his position over the network.
     let epsilon = 1e-14;
-    let isDifferent = Math.abs(posCopy.x - localPlayer.position.x) > epsilon || Math.abs(posCopy.y - localPlayer.position.y) > epsilon || Math.abs(posCopy.z - localPlayer.position.z) > epsilon;
+    let isDifferent =
+        Math.abs(posCopy.x - localPlayer.position.x) > epsilon ||
+        Math.abs(posCopy.y - localPlayer.position.y) > epsilon ||
+        Math.abs(posCopy.z - localPlayer.position.z) > epsilon;
 
     // Update the actual vectors.
     localPlayer.update({
@@ -399,9 +503,10 @@ export function updateLocalPlayerMovement(dif: number) {
     });
 
     // Send the changes to the server
-    if (isDifferent) socketSend("updatePosition", {
-        position: { x: posCopy.x, y: posCopy.y, z: posCopy.z }
-    });
+    if (isDifferent)
+        socketSend("updatePosition", {
+            position: { x: posCopy.x, y: posCopy.y, z: posCopy.z }
+        });
 }
 
 inputEventDispatcher.addEventListener("mousemove", e => {
@@ -417,7 +522,7 @@ inputEventDispatcher.addEventListener("mousemove", e => {
 
     let yaw = localPlayer.yaw + -x / 1000;
     let pitch = localPlayer.pitch + -y / 1000;
-    pitch = clamp(pitch, -Math.PI/2, Math.PI/2);
+    pitch = clamp(pitch, -Math.PI / 2, Math.PI / 2);
 
-    localPlayer.update({yaw, pitch});
+    localPlayer.update({ yaw, pitch });
 });
