@@ -6,10 +6,10 @@ wallHeight: 12
 ---
 
 // Walls
-Wall 0 0 32 1
-Wall 0 0 1 16
-Wall 31 0 1 16
-Wall 0 15 32 1
+Wall 0 0 32 0.1 
+Wall 0 0 0.1 16
+Wall 32 0 0.1 16
+Wall 0 16 32 0.1 
 
 // Spawns
 Spawn 3 7.5 1
