@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "parcel watch -d client/dist client/src/index.html",
-    "server": "node server/index.js"
+    "server": "nodemon server/index.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "dependencies": {
     "@types/howler": "^2.1.1",
     "howler": "^2.1.2",
+    "nodemon": "^1.19.1",
     "parcel": "^1.12.3",
     "postprocessing": "^6.5.1",
     "rollup": "^1.17.0",
