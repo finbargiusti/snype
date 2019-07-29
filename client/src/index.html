@@ -13,11 +13,41 @@
   <body>
     <script src="./ts/index.ts" defer></script>
     <canvas id="root"></canvas>
-    <h1 id="health">100</h1>
-    <h1 id="weapon">SMG</h1>
+    <h2 id="health">100</h2>
+    <h2 id="weapon">SMG</h2>
     <img src="media/crosshair.png" id="crosshair" />
+    <div id="maps">
+      <h1>Snype</h1>
+    </div>
   </body>
   <style>
+    #maps {
+      display: none;
+      background-color: rgba(0, 0, 0, 0.5);
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      color: white;
+      padding-top: 50px;
+      overflow: scroll;
+      padding-bottom: 50px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 48px;
+    }
+    #maps p {
+      font-size: 30px;
+      padding: 20px;
+      width: 700px;
+      margin: auto;
+    }
+    #maps p:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+    }
     @keyframes hit {
       from {
         color: #ff2222;
@@ -48,6 +78,7 @@
       text-shadow: black 0px 0px 5px;
       transform-origin: 0px 0px;
       margin: 0;
+      font-size: 35px;
       left: 20px;
       top: 20px;
       line-height: 100%;
@@ -56,6 +87,7 @@
       animation: hit 0.3s;
     }
     #weapon {
+      font-size: 35px;
       color: white;
       position: absolute;
       bottom: 10px;

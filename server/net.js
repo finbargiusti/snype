@@ -1,7 +1,10 @@
 const http = require("http");
 const serveStatic = require("serve-static");
 const url = require("url");
+const pather = require("path");
 const ws = require("ws");
+const { parse } = require("../client/src/ts/smfparser");
+const fs = require("fs");
 
 const serve = serveStatic(__dirname + "/../client/dist", {
     setHeaders(res) {
@@ -9,6 +12,36 @@ const serve = serveStatic(__dirname + "/../client/dist", {
         res.setHeader("Cache-Control", "no-cache");
     }
 });
+
+const localServe = serveStatic(__dirname, {
+    setHeaders(res) {
+        res.setHeader("Cache-Control", "no-cache");
+    }
+});
+
+let routes = {};
+
+routes["/defaultmaps"] = (request, response) => {
+    let defaultMaps = fs.readdirSync(
+        pather.resolve(__dirname + "/maps/default")
+    );
+
+    defaultMaps = defaultMaps.map(path => {
+        return {
+            metadata: parse(
+                fs
+                    .readFileSync(
+                        pather.resolve(__dirname + `/maps/default/${path}`)
+                    )
+                    .toString()
+            ).metadata,
+            path: "/maps/default/" + path
+        };
+    });
+
+    response.writeHead(200);
+    response.end(JSON.stringify(defaultMaps));
+};
 
 const PORT = 20003;
 function createHTTPServer() {
@@ -20,8 +53,13 @@ function createHTTPServer() {
 
         response.setHeader("Access-Control-Allow-Origin", "*");
 
-        if (false) {
-            // Don't question me
+        if (Object.keys(routes).includes(urlObj.path)) {
+            routes[urlObj.path](request, response);
+        } else if (urlObj.path.startsWith("/maps/")) {
+            localServe(request, response, () => {
+                response.writeHead(404);
+                response.end("404");
+            });
         } else {
             serve(request, response, () => {
                 response.writeHead(404);
@@ -232,7 +270,7 @@ socketMessageHandlers["createProjectile"] = function(socket, data) {
         if (socket === socket2) return;
 
         data.shooterId = socketPlayerAssociation.get(socket).id;
-        
+
         socketSend(socket2, "createProjectile", data);
     });
 };

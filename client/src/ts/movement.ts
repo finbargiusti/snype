@@ -51,7 +51,7 @@ export function updateLocalPlayerMovement(dif: number) {
         velCopy.y = movementVec.y * actualSpeed;
 
         if (inputState.spacebar) {
-            velCopy.z += JUMP_INTENSITY;
+            velCopy.z = JUMP_INTENSITY;
         }
     } else {
         let scaledX = movementVec.x * actualSpeed,
@@ -538,10 +538,10 @@ function updateEditorMovement(dif: number) {
     movementVec.applyAxisAngle(xAxis, localPlayer.pitch);
     movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
-    posCopy.add(movementVec.multiplyScalar(FLYING_SPEED * dif / 1000));
+    posCopy.add(movementVec.multiplyScalar((FLYING_SPEED * dif) / 1000));
 
     localPlayer.update({
-        position: {x: posCopy.x, y: posCopy.y, z: posCopy.z}
+        position: { x: posCopy.x, y: posCopy.y, z: posCopy.z }
     });
 }
 
