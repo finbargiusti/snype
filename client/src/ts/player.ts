@@ -53,6 +53,7 @@ export class Player {
     public weapon = new WeaponInstance(SMG, this);
     public health: number = 100;
     public currentMap: SnypeMap;
+    public isGrounded: boolean = false;
 
     spawn() {
         goSound.play();
@@ -222,12 +223,7 @@ inputEventDispatcher.addEventListener("keydown", e => {
 });
 
 export function isGrounded() {
-    let yes = new THREE.Vector3(0, 0, -1);
-    let point = localPlayer.position.clone();
-    point.z += 0.05;
-    let floorIntersection = getNearestDistance(point, yes);
-
-    return floorIntersection && floorIntersection.distance <= 0.055;
+    return localPlayer.isGrounded;
 }
 
 handlers["addPlayer"] = function(data: any) {

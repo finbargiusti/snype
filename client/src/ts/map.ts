@@ -10,7 +10,7 @@ export class SnypeMap {
     public scene: THREE.Scene;
     public drawableObjects: any[];
     public projectiles: Projectile[];
-    public colliders: any[];
+    public colliders: THREE.Mesh[];
 
     constructor(data: any) {
         this.rawData = null;
@@ -65,13 +65,13 @@ export class SnypeMap {
                                     0x2a2a2a
                             })
                         );
-                        boxMesh.geometry.computeBoundingBox();
-                        boxMesh.geometry.computeBoundingSphere();
                         boxMesh.position.set(
                             object.position.x + object.size.x / 2,
                             object.position.y + object.size.y / 2,
                             object.position.z + object.size.z / 2
                         );
+                        boxMesh.geometry.computeBoundingBox();
+                        boxMesh.geometry.computeBoundingSphere();
                         boxMesh.receiveShadow = true;
                         boxMesh.castShadow = true;
 
@@ -89,13 +89,13 @@ export class SnypeMap {
                             ),
                             wallMaterial
                         );
-                        wallMesh.geometry.computeBoundingBox();
-                        wallMesh.geometry.computeBoundingSphere();
                         wallMesh.position.set(
                             object.position.x + object.size.x / 2,
                             object.position.y + object.size.y / 2,
                             (data.metadata.wallHeight || 4) / 2
                         );
+                        wallMesh.geometry.computeBoundingBox();
+                        wallMesh.geometry.computeBoundingSphere();
                         wallMesh.receiveShadow = true;
 
                         this.drawableObjects.push(wallMesh);
@@ -247,8 +247,11 @@ export class SnypeMap {
             minY = 0,
             maxY = 1;
 
+        let noWalls = true;
         this.objects.forEach(obj => {
             if (obj.type !== "wall") return;
+
+            noWalls = false;
 
             minX = Math.min(minX, obj.position.x);
             maxX = Math.max(maxX, obj.position.x + obj.size.x);
@@ -256,12 +259,20 @@ export class SnypeMap {
             maxY = Math.max(maxY, obj.position.y + obj.size.y);
         });
 
+        if (noWalls) {
+            minX = -30,
+            maxX = 30,
+            minY = -30,
+            maxY = 30
+        }
+
         let floor = new THREE.Mesh(
             new THREE.PlaneGeometry(maxX - minX, maxY - minY, 1, 1),
             new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: false })
         );
-        floor.position.x = (maxX - minX) / 2;
-        floor.position.y = (maxY - minY) / 2;
+        floor.position.x = (maxX + minX) / 2;
+        floor.position.y = (maxY + minY) / 2;
+        floor.geometry.computeBoundingBox();
 
         floor.receiveShadow = true;
         this.scene.add(floor);

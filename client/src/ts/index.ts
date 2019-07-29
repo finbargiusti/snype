@@ -23,7 +23,7 @@ async function loadLevel(url: any) {
 }
 
 async function init() {
-    await loadLevel("/static/platforms.smf");
+    await loadLevel("/static/collision.smf");
 }
 
 init();

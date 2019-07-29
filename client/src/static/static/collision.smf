@@ -1,0 +1,59 @@
+#! v1
+---
+name: "Collision Testing"
+author: "David Payr"
+wallHeight: 0.1
+---
+
+// Spawns
+Spawn 0 0 0
+
+// Boxes
+Box -1 3 0 2 2 1 --color 0xff5555
+Box 2 4 0 2 1 2 --color 0xff5500
+
+// Corner
+Box -5 1 0 1 2 1 --color 0xffff00
+Box -5 3 0 3 1 1 --color 0xffff00
+
+// Bump
+Box 3 0 0 3 2 0.25 --color 0x00ffff
+
+// Slope
+Ramp -8 -3 0 5 3 3 "-x" --color 0x33ff00
+
+// Stairs
+Box -4 -5 0.75 1 1 0.25 --color 0x000000
+Box -5 -5 1.75 1 1 0.25 --color 0x000000
+Box -6 -5 2.75 1 1 0.25 --color 0x000000
+Box -7 -5 3.75 1 1 0.25 --color 0x000000
+Box -8 -5 4.75 1 1 0.25 --color 0x000000
+Box -8 -1 4.75 1 1 0.25 --color 0x000000
+Box -8 3 4.75 1 1 0.25 --color 0x000000
+Box -8 7 4.75 1 1 0.25 --color 0x000000
+Box -4 7 0.75 1 1 0.25 --color 0x000000
+Box -5 7 1.75 1 1 0.25 --color 0x000000
+Box -6 7 2.75 1 1 0.25 --color 0x000000
+Box -7 7 3.75 1 1 0.25 --color 0x000000
+
+// Pole
+Box 0 -5 0 0.25 0.25 10 --color 0x444444
+
+// Beams
+Box 3 -6 1 0.25 5 0.25 --color 0x440000
+Box 3 -3.5 0 0.25 0.25 1 --color 0x440000
+Box 4 -6 1 0.25 5 0.25 --color 0x440000
+Box 4 -3.5 0 0.25 0.25 1 --color 0x440000
+Box 5 -6 1 0.25 5 0.25 --color 0x440000
+Box 5 -3.5 0 0.25 0.25 1 --color 0x440000
+
+// Thin wall
+Box 1 9 0 5 0.01 2 --color 0xcccccc
+
+// Ceiling
+Box -2 -7 2 4 1 0.5 --color 0xff1493
+
+// Multiple-segment wall
+Box 8 5 0 1 3 1 --color 0xff33dd
+Box 8 5 1 1 3 1 --color 0xff33dd
+Box 8 5 2 1 3 1 --color 0xff33dd
