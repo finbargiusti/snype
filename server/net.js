@@ -13,11 +13,17 @@ const serve = serveStatic(__dirname + "/../client/dist", {
     }
 });
 
+const localServe = serveStatic(__dirname, {
+    setHeaders(res) {
+        res.setHeader("Cache-Control", "no-cache");
+    }
+});
+
 let routes = {};
 
 routes["/defaultmaps"] = (request, response) => {
     let defaultMaps = fs.readdirSync(
-        pather.resolve(__dirname + "/../client/dist/static/maps/default")
+        pather.resolve(__dirname + "/maps/default")
     );
 
     defaultMaps = defaultMaps.map(path => {
@@ -25,14 +31,11 @@ routes["/defaultmaps"] = (request, response) => {
             metadata: parse(
                 fs
                     .readFileSync(
-                        pather.resolve(
-                            __dirname +
-                                `/../client/dist/static/maps/default/${path}`
-                        )
+                        pather.resolve(__dirname + `/maps/default/${path}`)
                     )
                     .toString()
             ).metadata,
-            path: "/static/maps/default/" + path
+            path: "/maps/default/" + path
         };
     });
 
@@ -52,6 +55,11 @@ function createHTTPServer() {
 
         if (Object.keys(routes).includes(urlObj.path)) {
             routes[urlObj.path](request, response);
+        } else if (urlObj.path.startsWith("/maps/")) {
+            localServe(request, response, () => {
+                response.writeHead(404);
+                response.end("404");
+            });
         } else {
             serve(request, response, () => {
                 response.writeHead(404);

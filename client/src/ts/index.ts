@@ -54,7 +54,6 @@ let listMaps = async (url: any) => {
 
 let init = async () => {
     listMaps("/defaultmaps");
-    // await loadLevel("/static/platforms.smf");
 };
 
 init();
