@@ -69,7 +69,7 @@ export class Player {
     setHealth(health: number) {
         this.health = health;
         let healthEl = document.getElementById("health");
-        healthEl.innerText = String(localPlayer.health);
+        healthEl.innerText = String(Math.floor(localPlayer.health));
         healthEl.classList.remove("hit");
         healthEl.clientWidth;
         healthEl.classList.add("hit");
