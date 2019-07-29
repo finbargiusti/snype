@@ -54,6 +54,32 @@ export class Player {
     public currentMap: SnypeMap;
     public isGrounded: boolean = false;
 
+    constructor(obj: any) {
+        let { currentMap } = gameState;
+        this.currentMap = currentMap;
+
+        this.id = obj.id;
+        this.position = new THREE.Vector3(0, 0, 0);
+        this.velocity = new THREE.Vector3(0, 0, 0);
+        this.setWeapon(SMG);
+
+        this.object3D = createPlayerObject3D();
+        currentMap.scene.add(this.object3D);
+
+        let hitboxGeometry = new THREE.BoxBufferGeometry(0.8, 0.8, 0.8);
+        hitboxGeometry.computeBoundingBox();
+        hitboxGeometry.computeBoundingSphere();
+        let hitboxMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            wireframe: true,
+            alphaTest: 0,
+            visible: false
+        }); // Rendering only for debug
+        this.hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
+
+        currentMap.scene.add(this.hitbox);
+    }
+
     spawn() {
         goSound.play();
         if (this.currentMap.spawnPoints.length > 0) {
@@ -104,32 +130,6 @@ export class Player {
         this.setWeapon(
             weapons[(weapons.indexOf(this.weapon.weapon) + 1) % weapons.length]
         );
-    }
-
-    constructor(obj: any) {
-        let { currentMap } = gameState;
-        this.currentMap = currentMap;
-
-        this.id = obj.id;
-        this.position = new THREE.Vector3(0, 0, 0);
-        this.velocity = new THREE.Vector3(0, 0, 0);
-        this.setWeapon(SMG);
-
-        this.object3D = createPlayerObject3D();
-        currentMap.scene.add(this.object3D);
-
-        let hitboxGeometry = new THREE.BoxBufferGeometry(0.8, 0.8, 0.8);
-        hitboxGeometry.computeBoundingBox();
-        hitboxGeometry.computeBoundingSphere();
-        let hitboxMaterial = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            wireframe: true,
-            alphaTest: 0,
-            visible: false
-        }); // Rendering only for debug
-        this.hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-
-        currentMap.scene.add(this.hitbox);
     }
 
     getHeadPosition() {
