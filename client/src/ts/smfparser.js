@@ -1,8 +1,8 @@
-export function degToRad(deg) {
+function degToRad(deg) {
     return deg / 180 * Math.PI;
 }
 
-export function radToDeg(rad) {
+function radToDeg(rad) {
     return rad / Math.PI * 180;
 }
 
@@ -35,7 +35,7 @@ const parseOptions = (items) => {
     return options;
 };
 
-export const parse = (file) => {
+const parse = (file) => {
     let lp = literalParse;
 
     const lines = file.split("\n");
