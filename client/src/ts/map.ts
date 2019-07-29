@@ -17,6 +17,8 @@ export class SnypeMap {
     public projectiles: Projectile[];
     public colliders: THREE.Mesh[];
 
+    public objectDataConnection: WeakMap<THREE.Object3D, any>;
+
     constructor(data: any) {
         this.rawData = null;
         this.metadata = null;
@@ -28,6 +30,8 @@ export class SnypeMap {
         this.drawableObjects = [];
         this.projectiles = [];
         this.colliders = [];
+
+        this.objectDataConnection = new WeakMap();
 
         this.loadRawSMFData(data);
         this.buildScene();
@@ -82,6 +86,7 @@ export class SnypeMap {
 
                         this.drawableObjects.push(boxMesh);
                         this.colliders.push(boxMesh);
+                        this.objectDataConnection.set(boxMesh, object);
                     }
                     break;
                 case "wall":
@@ -113,46 +118,50 @@ export class SnypeMap {
 
                         let v3 = THREE.Vector3;
 
+                        let centerX = object.position.x + object.size.x/2,
+                            centerY = object.position.y + object.size.y/2,
+                            centerZ = object.position.z + object.size.z/2;
+
                         geometry.vertices.push(
                             new v3(
-                                object.position.x,
-                                object.position.y,
-                                object.position.z
+                                object.position.x - centerX,
+                                object.position.y - centerY,
+                                object.position.z - centerZ
                             ),
                             new v3(
-                                object.position.x + object.size.x,
-                                object.position.y,
-                                object.position.z
+                                object.position.x + object.size.x - centerX,
+                                object.position.y - centerY,
+                                object.position.z - centerZ
                             ),
                             new v3(
-                                object.position.x,
-                                object.position.y + object.size.y,
-                                object.position.z
+                                object.position.x - centerX,
+                                object.position.y + object.size.y - centerY,
+                                object.position.z - centerZ
                             ),
                             new v3(
-                                object.position.x + object.size.x,
-                                object.position.y + object.size.y,
-                                object.position.z
+                                object.position.x + object.size.x - centerX,
+                                object.position.y + object.size.y - centerY,
+                                object.position.z - centerZ
                             ),
                             new v3(
-                                object.position.x,
-                                object.position.y,
-                                object.position.z + object.size.z
+                                object.position.x - centerX,
+                                object.position.y - centerY,
+                                object.position.z + object.size.z - centerZ
                             ),
                             new v3(
-                                object.position.x + object.size.x,
-                                object.position.y,
-                                object.position.z + object.size.z
+                                object.position.x + object.size.x - centerX,
+                                object.position.y - centerY,
+                                object.position.z + object.size.z - centerZ
                             ),
                             new v3(
-                                object.position.x,
-                                object.position.y + object.size.y,
-                                object.position.z + object.size.z
+                                object.position.x - centerX,
+                                object.position.y + object.size.y - centerY,
+                                object.position.z + object.size.z - centerZ
                             ),
                             new v3(
-                                object.position.x + object.size.x,
-                                object.position.y + object.size.y,
-                                object.position.z + object.size.z
+                                object.position.x + object.size.x - centerX,
+                                object.position.y + object.size.y - centerY,
+                                object.position.z + object.size.z - centerZ
                             )
                         );
 
@@ -227,11 +236,13 @@ export class SnypeMap {
                             })
                         );
 
+                        rampMesh.position.set(centerX, centerY, centerZ);
                         rampMesh.castShadow = true;
                         rampMesh.receiveShadow = true;
 
                         this.drawableObjects.push(rampMesh);
                         this.colliders.push(rampMesh);
+                        this.objectDataConnection.set(rampMesh, object);
                     }
                     break;
             }

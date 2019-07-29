@@ -548,7 +548,10 @@ function updateEditorMovement(dif: number) {
 inputEventDispatcher.addEventListener("mousemove", e => {
     let mouseEvent = e as MouseEvent;
 
-    if (inputState.pointerLocked === false) return;
+    if (inputState.pointerLocked === false && !gameState.isEditor) return;
+    if (gameState.isEditor) {
+        if (!inputState.secondaryMb) return;
+    }
     if (!gameState.localPlayer) return;
 
     let x = mouseEvent.movementX;

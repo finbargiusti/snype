@@ -297,6 +297,8 @@ inputEventDispatcher.addEventListener("mousedown", e => {
 export function useWeapon() {
     let { localPlayer } = gameState;
 
+    if (gameState.isEditor) return;
+
     if (inputState.primaryMb === true && localPlayer.health > 0) {
         localPlayer.weapon.shoot();
     }
