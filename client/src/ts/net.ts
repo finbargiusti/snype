@@ -36,7 +36,8 @@ function socketOnMessage(e: MessageEvent) {
 }
 
 export let socketSend = (command: string, data: any) => {
-    if (socket.readyState !== 1) return;
+    if (!socket || socket.readyState !== 1) return;
+    
     socket.send(
         JSON.stringify({
             command,

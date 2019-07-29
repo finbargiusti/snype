@@ -61,8 +61,10 @@ export class Player {
                 Math.floor(Math.random() * this.currentMap.spawnPoints.length)
             ];
             this.position.set(spawn.x, spawn.y, spawn.z);
+            this.yaw = spawn.yaw;
         } else {
             this.position.set(1, 1, 0);
+            this.yaw = 0;
         }
     }
 

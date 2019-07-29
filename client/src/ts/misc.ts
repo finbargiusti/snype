@@ -9,3 +9,11 @@ export function clamp(val: number, min: number, max: number) {
     if (val < min) return min;
     return val;
 }
+
+export function degToRad(deg: number) {
+    return deg / 180 * Math.PI;
+}
+
+export function radToDeg(rad: number) {
+    return rad / Math.PI * 180;
+}

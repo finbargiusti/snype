@@ -12,8 +12,8 @@ Wall 32 0 0.1 16
 Wall 0 16 32 0.1 
 
 // Spawns
-Spawn 3 7.5 1
-Spawn 27 7.5 1
+Spawn 3 7.5 1 -90
+Spawn 27 7.5 1 90
 
 Ramp 3 3 0 2 3 1 "+y" --color 0x6593f5
 Ramp 3 10 0 2 3 1 "-y" --color 0x6593f5

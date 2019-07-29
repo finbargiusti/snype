@@ -3,5 +3,6 @@ import { Player } from "./player";
 
 export const gameState = {
     currentMap: <SnypeMap>null,
-    localPlayer: <Player>null
+    localPlayer: <Player>null,
+    isEditor: false
 };

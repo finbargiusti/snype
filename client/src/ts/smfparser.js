@@ -1,8 +1,16 @@
+export function degToRad(deg) {
+    return deg / 180 * Math.PI;
+}
+
+export function radToDeg(rad) {
+    return rad / Math.PI * 180;
+}
+
 // Parser Script
 
 const SUPPORTED_VERSIONS = ["v1"];
 
-const literalParse = (string: string) => {
+const literalParse = (string) => {
     if (string === "true" || string === "false") {
         return string === "true";
     }
@@ -15,8 +23,8 @@ const literalParse = (string: string) => {
     return Number(string);
 };
 
-const parseOptions = (items: string[]) => {
-    let options: any = {};
+const parseOptions = (items) => {
+    let options = {};
 
     items.forEach((string, i) => {
         if (string.startsWith("--")) {
@@ -27,14 +35,14 @@ const parseOptions = (items: string[]) => {
     return options;
 };
 
-export const parse = (file: string) => {
+export const parse = (file) => {
     let lp = literalParse;
 
     const lines = file.split("\n");
 
     // Verify and Acquire version
 
-    let fileVersion: string;
+    let fileVersion;
     let firstLine = lines[0].trim();
     if (firstLine.startsWith("#! ")) {
         if (SUPPORTED_VERSIONS.includes(firstLine.slice(3))) {
@@ -50,7 +58,11 @@ export const parse = (file: string) => {
 
     let metadata_counter = 0;
 
-    let metadata: any = {};
+    let metadata = {};
+
+    let sky = { color: 0x7ec0ee };
+    let sun = { direction: { x: -40, y: -40, z: -50 }, color: 0xffffff, intensity: 1 };
+    let ambience = { color: 0xffffff, intensity: 0.3 };
 
     let spawnPoints = [];
 
@@ -84,7 +96,7 @@ export const parse = (file: string) => {
 
         if (metadata_counter === 2) {
             const items = line.split(" ");
-            let obj: any = null;
+            let obj = null;
 
             for (let j = 0; j < items.length; j++) {
                 if (!items[j].trim()) {
@@ -93,12 +105,33 @@ export const parse = (file: string) => {
             }
 
             switch (items[0]) {
+                case "Sky": {
+                    sky.color = lp(items[1]);
+
+                    obj = sky;
+                }; break;
+                case "Sun": {
+                    sun.direction.x = lp(items[1]);
+                    sun.direction.y = lp(items[2]);
+                    sun.direction.z = lp(items[3]);
+                    sun.color = lp(items[4]);
+                    sun.intensity = lp(items[5]);
+
+                    obj = sun;
+                }; break;
+                case "Ambience": {
+                    ambience.color = lp(items[1]);
+                    ambience.intensity = lp(items[2]);
+
+                    obj = ambience;
+                }; break;
                 case "Spawn":
                     {
                         obj = {
                             x: lp(items[1]),
                             y: lp(items[2]),
-                            z: lp(items[3])
+                            z: lp(items[3]),
+                            yaw: degToRad((lp(items[4])) || 0)
                         };
                         spawnPoints.push(obj);
                     }
@@ -167,6 +200,9 @@ export const parse = (file: string) => {
     return {
         metadata,
         spawnPoints,
-        objects
+        objects,
+        sky,
+        sun,
+        ambience
     };
 };

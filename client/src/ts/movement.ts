@@ -1,7 +1,7 @@
 import { gameState } from "./game_state";
 import { inputState, inputEventDispatcher } from "./input";
 import * as THREE from "three";
-import { zAxis } from "./rendering";
+import { zAxis, xAxis } from "./rendering";
 import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
 import { socketSend } from "./net";
 import { Vector3 } from "three";
@@ -11,9 +11,14 @@ const JUMP_INTENSITY = 8;
 let jumpVelocity = new THREE.Vector3(0, 0, 0);
 
 export function updateLocalPlayerMovement(dif: number) {
-    let { currentMap, localPlayer } = gameState;
+    let { currentMap, localPlayer, isEditor } = gameState;
 
     dif = Math.min(1000 / 30, dif); // MINIMUM TIMESTEP: 1/30s
+
+    if (isEditor) {
+        updateEditorMovement(dif);
+        return;
+    }
 
     let posCopy = localPlayer.position.clone();
     let velCopy = localPlayer.velocity.clone();
@@ -507,6 +512,37 @@ export function updateLocalPlayerMovement(dif: number) {
         socketSend("updatePosition", {
             position: { x: posCopy.x, y: posCopy.y, z: posCopy.z }
         });
+}
+
+const FLYING_SPEED = 20;
+
+function updateEditorMovement(dif: number) {
+    let { localPlayer } = gameState;
+
+    let posCopy = localPlayer.position.clone();
+
+    let movementVec = new THREE.Vector3(0, 0, 0);
+    if (inputState.forwards) {
+        movementVec.y += 1;
+    }
+    if (inputState.backwards) {
+        movementVec.y -= 1;
+    }
+    if (inputState.left) {
+        movementVec.x -= 1;
+    }
+    if (inputState.right) {
+        movementVec.x += 1;
+    }
+    movementVec.normalize();
+    movementVec.applyAxisAngle(xAxis, localPlayer.pitch);
+    movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
+
+    posCopy.add(movementVec.multiplyScalar(FLYING_SPEED * dif / 1000));
+
+    localPlayer.update({
+        position: {x: posCopy.x, y: posCopy.y, z: posCopy.z}
+    });
 }
 
 inputEventDispatcher.addEventListener("mousemove", e => {

@@ -1,5 +1,10 @@
 import * as THREE from "three";
 import { Projectile } from "./weapon";
+import { renderer } from "./rendering";
+
+const SUN_DIRECTION = new THREE.Vector3(-40, -40, -50);
+SUN_DIRECTION.normalize();
+const SUN_CAMERA_DISTANCE = 50;
 
 export class SnypeMap {
     public rawData: any;
@@ -278,11 +283,18 @@ export class SnypeMap {
         this.scene.add(floor);
         this.colliders.push(floor);
 
-        // Add lighting
+        // Add sky and lighting
 
-        var sunlight = new THREE.DirectionalLight(0xffffff, 1);
-        sunlight.target.position.set(25, 25, 0);
-        sunlight.position.set(65, 65, 50);
+        renderer.setClearColor(this.rawData.sky.color);
+
+        let d = this.rawData.sun.direction;
+        let normalizedSunDirection = new THREE.Vector3(d.x, d.y, d.z);
+        normalizedSunDirection.normalize();
+
+        var sunlight = new THREE.DirectionalLight(this.rawData.sun.color, this.rawData.sun.intensity);
+        sunlight.target.position.set(floor.position.x, floor.position.y, 0);
+        sunlight.position.copy(sunlight.target.position);
+        sunlight.position.add(normalizedSunDirection.clone().negate().multiplyScalar(SUN_CAMERA_DISTANCE));
         sunlight.castShadow = true;
         sunlight.shadow.camera.left = -20;
         sunlight.shadow.camera.right = 20;
@@ -291,8 +303,16 @@ export class SnypeMap {
         sunlight.shadow.mapSize.width = 1000;
         sunlight.shadow.mapSize.height = 1000;
 
+        var sun = new THREE.Mesh(
+            new THREE.IcosahedronBufferGeometry(75, 3),
+            new THREE.MeshBasicMaterial({color: this.rawData.sun.color, transparent: true, opacity: this.rawData.sun.intensity})
+        );
+        sun.position.add(normalizedSunDirection.clone().negate().multiplyScalar(1000));
+        sun.castShadow = sun.receiveShadow = false;
+        this.scene.add(sun);
+
         this.scene.add(sunlight);
-        this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+        this.scene.add(new THREE.AmbientLight(this.rawData.ambience.color, this.rawData.ambience.intensity));
     }
 
     addProjectile(proj: Projectile) {
