@@ -3,9 +3,7 @@ import { inputState, inputEventDispatcher } from "./input";
 import * as THREE from "three";
 import { zAxis } from "./rendering";
 import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
-import { getNearestDistance } from "./collision";
 import { socketSend } from "./net";
-import { isGrounded } from "./player";
 
 const JUMP_INTENSITY = 8;
 
@@ -100,8 +98,44 @@ export function updateLocalPlayerMovement(dif: number) {
             }
         }
 
+        let order: "horizontal-first" | "vertical-first" = "horizontal-first";
+        // Commented out for now. Just don't make steep slopes.
+        /*
+        for (let i = 0; i < intersectingObjectsLegs.length; i++) {
+            let mesh = intersectingObjectsLegs[i];
+            if (intersectingObjectsBody.includes(mesh)) {
+                order = "vertical-first";
+                break;
+            }
+        }*/
+
+        if (order === "horizontal-first") {
+            doHorizontalCollision();
+            doVerticalCollision();
+        } else {
+            doVerticalCollision();
+            doHorizontalCollision();
+        }
+
         /* Vertical collision */
-        {
+        function doVerticalCollision() {
+            legsBB = new THREE.Box3(
+                new THREE.Vector3(posCopy.x - playerRadius, posCopy.y - playerRadius, posCopy.z - 0.005),
+                new THREE.Vector3(posCopy.x + playerRadius, posCopy.y + playerRadius, posCopy.z + legHeight)
+            );
+            intersectingObjectsLegs = [];
+
+            for (let i = 0; i < currentMap.colliders.length; i++) {
+                let mesh = currentMap.colliders[i];
+    
+                let bb = mesh.geometry.boundingBox.clone();
+                bb.applyMatrix4(mesh.matrixWorld);
+    
+                if (legsBB.intersectsBox(bb)) {
+                    intersectingObjectsLegs.push(currentMap.colliders[i]);
+                }
+            }
+
             let startX = posCopy.x - playerRadius,
                 startY = posCopy.y - playerRadius,
                 dx = playerRadius,
@@ -131,8 +165,6 @@ export function updateLocalPlayerMovement(dif: number) {
                         if (intersections.length > 0) {
                             outer:
                             if (k === 0 && velCopy.z > 0) {
-                                break outer; // TEMP. Disable hitting the ceiling.
-
                                 posCopy.z -= far - intersections[0].distance;
                                 velCopy.z = 0;
                             } else if (k === 1) {
@@ -166,11 +198,11 @@ export function updateLocalPlayerMovement(dif: number) {
         }   
 
         /* Horizontal collision */
-        horizontalBlock: {
+        function doHorizontalCollision() {
             // Get a vector coplanar to the x-y axis, describing horizontal movement:
             let horizontalMovement = velCopy.clone();
             horizontalMovement.z = 0;
-            if (horizontalMovement.x === 0 || horizontalMovement.y === 0) break horizontalBlock;
+            if (horizontalMovement.x === 0 || horizontalMovement.y === 0) return;
             horizontalMovement.normalize();
 
             // Recalculate colliding bounding boxes, because position might have been changed in the vertical collision section.

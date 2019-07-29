@@ -20,7 +20,8 @@ Box -5 3 0 3 1 1 --color 0xffff00
 Box 3 0 0 3 2 0.25 --color 0x00ffff
 
 // Slope
-Ramp -8 -3 0 5 3 3 "-x" --color 0x33ff00
+Ramp -8 -4 0 5 3 3 "-x" --color 0x33ff00
+Box -15 -4 2 7 3 1 --color 0x33ff00
 
 // Stairs
 Box -4 -5 0.75 1 1 0.25 --color 0x000000
@@ -57,3 +58,8 @@ Box -2 -7 2 4 1 0.5 --color 0xff1493
 Box 8 5 0 1 3 1 --color 0xff33dd
 Box 8 5 1 1 3 1 --color 0xff33dd
 Box 8 5 2 1 3 1 --color 0xff33dd
+
+// Tunnel
+Box 9 1 0 5 1 3 --color 0xffaa00
+Box 9 -1 0 5 1 3 --color 0xffaa00
+Box 9 0 2 5 1 1 --color 0xffaa00

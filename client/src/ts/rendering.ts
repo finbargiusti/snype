@@ -33,7 +33,8 @@ export let camera = new THREE.PerspectiveCamera(
 );
 
 export let renderer = new THREE.WebGLRenderer({
-    canvas: mainCanvas
+    canvas: mainCanvas,
+    antialias: true
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);

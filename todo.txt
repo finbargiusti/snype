@@ -6,8 +6,6 @@
 - Add low-poly gun models
 - Add AO and bloom
 - keepAlive
-- Fix collision on flat walls, made up of multiple vertical segments (u can kind of hook onto it, currently)
-- Fix head-bumping
 
 == Finbar ==
 - N/A

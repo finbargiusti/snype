@@ -3,7 +3,6 @@ import { xAxis, zAxis, camera, mainCanvas, killMessage } from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState, inputEventDispatcher } from "./input";
 import { socketSend, handlers } from "./net";
-import { getNearestDistance } from "./collision";
 import { gameState } from "./game_state";
 import {
     Weapon,
