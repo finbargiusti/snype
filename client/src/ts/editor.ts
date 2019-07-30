@@ -2,6 +2,8 @@ import { inputEventDispatcher, inputState } from "./input";
 import { mainCanvas, camera, zAxis, yAxis, xAxis } from "./rendering";
 import * as THREE from "three";
 import { gameState } from "./game_state";
+import { createBoxGeometry, createRampGeometry } from "./map";
+import { copyTextToClipboard } from "./misc";
 
 const DIRECTION_ARROW_LENGTH = 1;
 const DIRECTION_ARROW_THICKNESS = 0.05;
@@ -17,6 +19,7 @@ export function initEditor() {
     (document.querySelector('#editorOverlay') as HTMLElement).style.display = "block";
 
     initGridContainer();
+    updateArrowAction(currentArrowAction);
 }
 
 const selectedMaterial = new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true, depthTest: false});
@@ -34,14 +37,19 @@ class DirectionArrows {
     public heads: THREE.Mesh[];
     public hitboxes: THREE.Mesh[];
     public hovered: string = null;
+    public coneGeom: THREE.ConeBufferGeometry;
+    public ballGeom: THREE.SphereBufferGeometry;
 
     constructor() {
+        this.coneGeom = new THREE.ConeBufferGeometry(DIRECTION_ARROW_THICKNESS * 4, DIRECTION_ARROW_LENGTH * 0.5, 10);
+        this.ballGeom = new THREE.SphereBufferGeometry(DIRECTION_ARROW_THICKNESS * 4, 16, 16);
+
         let arrowBodyX = new THREE.Mesh(
             new THREE.CylinderBufferGeometry(DIRECTION_ARROW_THICKNESS, DIRECTION_ARROW_THICKNESS, DIRECTION_ARROW_LENGTH, 5, 1),
             arrowXBase
         );
         let arrowHeadX = new THREE.Mesh(
-            new THREE.ConeBufferGeometry(DIRECTION_ARROW_THICKNESS * 4, DIRECTION_ARROW_LENGTH * 0.5, 10),
+            this.coneGeom,
             arrowXBase
         );
         let xHitbox = new THREE.Mesh(
@@ -66,7 +74,7 @@ class DirectionArrows {
             arrowYBase
         );
         let arrowHeadY = new THREE.Mesh(
-            new THREE.ConeBufferGeometry(DIRECTION_ARROW_THICKNESS * 4, DIRECTION_ARROW_LENGTH * 0.5, 10),
+            this.coneGeom,
             arrowYBase
         );
         let yHitbox = new THREE.Mesh(
@@ -88,7 +96,7 @@ class DirectionArrows {
             arrowZBase
         );
         let arrowHeadZ = new THREE.Mesh(
-            new THREE.ConeBufferGeometry(DIRECTION_ARROW_THICKNESS * 4, DIRECTION_ARROW_LENGTH * 0.5, 10),
+            this.coneGeom,
             arrowZBase
         );
         let zHitbox = new THREE.Mesh(
@@ -174,6 +182,18 @@ class DirectionArrows {
             }
         }
     }
+
+    summonDemCones() {
+        for (let yes of this.heads) {
+            yes.geometry = this.coneGeom;
+        }
+    }
+
+    summonDemBalls() {
+        for (let yes of this.heads) {
+            yes.geometry = this.ballGeom;
+        }
+    }
 }
 
 let directionArrows = new DirectionArrows();
@@ -182,7 +202,7 @@ let selectedDrawable: any = null;
 let selectedDataObj: any = null;
 let wireframeOverlay: any = null;
 
-inputEventDispatcher.addEventListener('mousedown', (e) => {
+inputEventDispatcher.addEventListener('canvasmousedown', (e) => {
     if (!gameState.isEditor) return;
 
     let mouseEvent = e as MouseEvent;
@@ -217,36 +237,44 @@ inputEventDispatcher.addEventListener('mousedown', (e) => {
             return a.object !== selectedDrawable && currentMap.objectDataConnection.has(a.object);
         });
         if (firstIndex !== -1) {
-            if (selectedDrawable) {
-                deselectCurrentlySelected();
-            }
-
-            let drawable = objects[firstIndex].object as THREE.Mesh;
-            let dataObject = currentMap.objectDataConnection.get(drawable);
-
-            let wf = new THREE.Mesh(drawable.geometry, selectedMaterial);
-            wf.applyMatrix(drawable.matrixWorld);
-
-            selectedDrawable = drawable;
-            selectedDataObj = dataObject;
-            wireframeOverlay = wf;
-
-            currentMap.scene.add(wf);
-            directionArrows.show(drawable.position);
+            selectThing(objects[firstIndex].object as THREE.Mesh);
         } else {
             deselectCurrentlySelected();
         }
     }
 });
 
+function selectThing(drawable: THREE.Mesh) {
+    if (selectedDrawable) {
+        deselectCurrentlySelected();
+    }
+
+    let dataObject = gameState.currentMap.objectDataConnection.get(drawable);
+
+    let wf = new THREE.Mesh(drawable.geometry, selectedMaterial);
+    drawable.updateMatrixWorld();
+    wf.applyMatrix(drawable.matrixWorld);
+
+    selectedDrawable = drawable;
+    selectedDataObj = dataObject;
+    wireframeOverlay = wf;
+
+    gameState.currentMap.scene.add(wf);
+    directionArrows.show(drawable.position);
+    showObjectProperties(selectedDataObj);
+}
+
 let snapToGrid = true;
 let gridSize = 1.0;
 let dragStart: THREE.Vector3 = null;
 let objPosAtDragStart: THREE.Vector3 = null;
+let objSizeAtDragStart: THREE.Vector3 = null;
 
 function startDrag() {
     dragStart = getPositionOnDirectionArrow();
     objPosAtDragStart = new THREE.Vector3(selectedDataObj.position.x, selectedDataObj.position.y, selectedDataObj.position.z);
+    objSizeAtDragStart = new THREE.Vector3(selectedDataObj.size.x, selectedDataObj.size.y, selectedDataObj.size.z);
+    (document.querySelector('#editorOverlay') as HTMLElement).style.userSelect = "none";
 }
 
 function getPositionOnDirectionArrow() {
@@ -300,6 +328,7 @@ function deselectCurrentlySelected() {
     directionArrows.hide();
     dragStart = null;
     objPosAtDragStart = null;
+    objectPropertiesContainer.style.display = "none";
 }
 
 inputEventDispatcher.addEventListener('mouseup', (e) => {
@@ -311,14 +340,52 @@ inputEventDispatcher.addEventListener('mouseup', (e) => {
         document.exitPointerLock();
     } else if (mouseEvent.button === 0) {
         dragStart = null;
+        (document.querySelector('#editorOverlay') as HTMLElement).style.userSelect = "";
     }
 });
 
 function changeSelectionPosition(v: THREE.Vector3) {
+    if (!selectedDataObj) return;
+    
     selectedDataObj.position = {x: v.x, y: v.y, z: v.z};
-    selectedDrawable.position.copy(v);
-    wireframeOverlay.position.copy(v);
-    directionArrows.group.position.copy(v);
+
+    let visualCenter = getVisualCenterForObj(selectedDataObj);
+    selectedDrawable.position.copy(visualCenter);
+    wireframeOverlay.position.copy(visualCenter);
+    directionArrows.group.position.copy(visualCenter);
+    showObjectProperties(selectedDataObj);
+}
+
+function changeSelectionSize(dx: number, dy: number, dz: number) {
+    if (!selectedDataObj) return;
+
+    selectedDataObj.size.x = dx;
+    selectedDataObj.size.y = dy;
+    selectedDataObj.size.z = dz;
+
+    let newGeometry: THREE.Geometry;
+    if (selectedDataObj.type === "box") {
+        newGeometry = createBoxGeometry(selectedDataObj);
+    } else if (selectedDataObj.type === "ramp") {
+        newGeometry = createRampGeometry(selectedDataObj);
+    }
+
+    selectedDrawable.geometry = newGeometry;
+    wireframeOverlay.geometry = newGeometry;
+
+    let visualCenter = getVisualCenterForObj(selectedDataObj);
+    selectedDrawable.position.copy(visualCenter);
+    wireframeOverlay.position.copy(visualCenter);
+    directionArrows.group.position.copy(visualCenter);
+    showObjectProperties(selectedDataObj);
+}
+
+function getVisualCenterForObj(obj: any) {
+    return new THREE.Vector3(
+        obj.position.x + obj.size.x / 2,
+        obj.position.y + obj.size.y / 2,
+        obj.position.z + obj.size.z / 2
+    );
 }
 
 inputEventDispatcher.addEventListener('mousemove', (e) => {
@@ -334,31 +401,54 @@ inputEventDispatcher.addEventListener('mousemove', (e) => {
         if (directionArrows.hovered === "y") dist = posNow.y - dragStart.y;
         if (directionArrows.hovered === "z") dist = posNow.z - dragStart.z;
 
-        //if (snapToGrid) dist = dist - (dist % gridSize)
-
-        let vec: THREE.Vector3;
-        if (directionArrows.hovered === "x") {
-            vec = new THREE.Vector3(dist, 0, 0);
-        } else if (directionArrows.hovered === "y") {
-            vec = new THREE.Vector3(0, dist, 0);
-        } else if (directionArrows.hovered === "z") {
-            vec = new THREE.Vector3(0, 0, dist);
-        }
-
-        let newPos = objPosAtDragStart.clone().add(vec);
-        if (snapToGrid) {
-            // Bitchass code ahead:
+        if (currentArrowAction === "translate") {
+            let vec: THREE.Vector3;
             if (directionArrows.hovered === "x") {
-                newPos.x = newPos.x - (newPos.x % gridSize);
+                vec = new THREE.Vector3(dist, 0, 0);
             } else if (directionArrows.hovered === "y") {
-                newPos.y = newPos.y - (newPos.y % gridSize);
+                vec = new THREE.Vector3(0, dist, 0);
             } else if (directionArrows.hovered === "z") {
-                newPos.z = newPos.z - (newPos.z % gridSize);
+                vec = new THREE.Vector3(0, 0, dist);
             }
-        }
-        
 
-        changeSelectionPosition(newPos);
+            let newPos = objPosAtDragStart.clone().add(vec);
+            if (snapToGrid) {
+                // Bitchass code ahead:
+                if (directionArrows.hovered === "x") {
+                    newPos.x = newPos.x - (newPos.x % gridSize);
+                } else if (directionArrows.hovered === "y") {
+                    newPos.y = newPos.y - (newPos.y % gridSize);
+                } else if (directionArrows.hovered === "z") {
+                    newPos.z = newPos.z - (newPos.z % gridSize);
+                }
+            }
+
+            changeSelectionPosition(newPos);
+        } else {
+            // Scaling
+
+            let newScale: number;
+            if (directionArrows.hovered === "x") {
+                newScale = objSizeAtDragStart.x + dist;
+            } else if (directionArrows.hovered === "y") {
+                newScale = objSizeAtDragStart.y + dist;
+            } else if (directionArrows.hovered === "z") {
+                newScale = objSizeAtDragStart.z + dist;
+            }
+
+            if (snapToGrid) newScale = newScale - (newScale % gridSize);
+            if (newScale < 0.01) newScale = 0.01;
+
+            if (directionArrows.hovered === "x") {
+                selectedDataObj.size.x = newScale;
+            } else if (directionArrows.hovered === "y") {
+                selectedDataObj.size.y = newScale;
+            } else if (directionArrows.hovered === "z") {
+                selectedDataObj.size.z = newScale;
+            }
+
+            changeSelectionSize(selectedDataObj.size.x, selectedDataObj.size.y, selectedDataObj.size.z);
+        }
     } else {
         directionArrows.raytest(mouseEvent);
     } 
@@ -384,3 +474,220 @@ function updateGridContainer() {
     snapToGridButton.checked = snapToGrid;
     gridSizeInput.value = gridSize.toFixed(3);
 }
+
+let objectPropertiesContainer = document.querySelector('#objectProperties') as HTMLElement;
+objectPropertiesContainer.style.display = "none";
+
+function showObjectProperties(obj: any) {
+    objectPropertiesContainer.style.display = "block";
+
+    let innerDiv = objectPropertiesContainer.querySelector(':scope > div') as HTMLElement;
+    innerDiv.innerHTML = "";
+
+    if (obj.type === "box" || obj.type === "ramp") {
+        let x = createInputElement("Position x", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.position.x = Number(val);
+            changeSelectionPosition(new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z));
+        }, obj.position.x);
+        let y = createInputElement("Position y", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.position.y = Number(val);
+            changeSelectionPosition(new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z));
+        }, obj.position.y);
+        let z = createInputElement("Position z", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.position.z = Number(val);
+            changeSelectionPosition(new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z));
+        }, obj.position.z);
+
+        let dx = createInputElement("Size x", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.size.x = Number(val);
+            changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
+        }, obj.size.x);
+        let dy = createInputElement("Size y", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.size.y = Number(val);
+            changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
+        }, obj.size.y);
+        let dz = createInputElement("Size z", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.size.z = Number(val);
+            changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
+        }, obj.size.z);
+
+        innerDiv.appendChild(x);
+        innerDiv.appendChild(y);
+        innerDiv.appendChild(z);
+        innerDiv.appendChild(dx);
+        innerDiv.appendChild(dy);
+        innerDiv.appendChild(dz);
+
+        let color = createInputElement("Color", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.options.color = Number(val);
+            selectedDrawable.material.color = new THREE.Color(obj.options.color);
+        }, obj.options.color && "0x" + obj.options.color.toString(16));
+
+        innerDiv.appendChild(color);
+
+        if (obj.type === "ramp") {
+            let rotateBtn = createButtonElement("Reorient", () => {
+                switch (obj.orientation) {
+                    case "+x": { obj.orientation = "-y"; }; break;
+                    case "-y": { obj.orientation = "-x"; }; break;
+                    case "-x": { obj.orientation = "+y"; }; break;
+                    case "+y": { obj.orientation = "+x"; }; break;
+                }
+
+                selectedDrawable.geometry = createRampGeometry(obj);
+            });
+
+            innerDiv.appendChild(rotateBtn);
+        }
+    }
+}
+
+function createInputElement(name: string, onchange: Function, value: any = "") {
+    let outer = document.createElement("div");
+    outer.classList.add("editorProperty");
+    let title = document.createElement("h4");
+    title.textContent = name;
+    let input = document.createElement("input");
+    input.value = value;
+
+    input.addEventListener('change', () => {
+        onchange(input.value);
+    });
+
+    outer.appendChild(title);
+    outer.appendChild(input);
+
+    return outer;
+}
+
+function createButtonElement(name: string, onclick: Function) {
+    let outer = document.createElement("div");
+    outer.classList.add("editorProperty");
+    let title = document.createElement("h4");
+    title.textContent = name;
+    let input = document.createElement("button");
+    input.innerHTML = name;
+
+    input.addEventListener('click', () => {
+        onclick();
+    });
+
+    outer.appendChild(title);
+    outer.appendChild(input);
+
+    return outer;
+}
+
+let currentArrowAction: "translate" | "scale" = "translate";
+
+let arrowActionDisplay = document.querySelector('#arrowActionDisplay') as HTMLElement;
+let arrowActionTranslateBtn = document.querySelector('#arrowActionTranslate') as HTMLElement;
+let arrowActionScaleBtn = document.querySelector('#arrowActionScale') as HTMLElement;
+
+function updateArrowAction(newAction: "translate" | "scale") {
+    currentArrowAction = newAction;
+
+    arrowActionDisplay.textContent = currentArrowAction.toUpperCase();
+
+    if (currentArrowAction === "translate") {
+        directionArrows.summonDemCones();
+    } else {
+        directionArrows.summonDemBalls();
+    }
+}
+
+arrowActionTranslateBtn.addEventListener('click', () => updateArrowAction("translate"));
+arrowActionScaleBtn.addEventListener('click', () => updateArrowAction("scale"));
+
+inputEventDispatcher.addEventListener('keypress', (e) => {
+    let keyEvent = e as KeyboardEvent;
+
+    if (document.activeElement !== document.body) return;
+
+    if (keyEvent.keyCode === 8) {
+        if (selectedDataObj) {
+            let allowed = confirm("Are you sure that you want to delete this object?");
+
+            if (allowed) {
+                let index = gameState.currentMap.rawData.objects.indexOf(selectedDataObj);
+
+                if (index !== -1) {
+                    gameState.currentMap.rawData.objects.splice(index, 1);
+                    gameState.currentMap.scene.remove(selectedDrawable);
+                    gameState.currentMap.drawableObjects.splice(gameState.currentMap.drawableObjects.indexOf(selectedDrawable), 1);
+
+                    deselectCurrentlySelected();
+                }
+            }
+        }
+    }
+});
+
+let addBoxButton = document.querySelector('#addBox') as HTMLElement;
+let addRampButton = document.querySelector('#addRamp') as HTMLElement;
+addBoxButton.addEventListener('click', () => {
+    let lookyLookyVector = gameState.localPlayer.getOrientationVector();
+    let newPos = gameState.localPlayer.getHeadPosition().clone();
+    newPos.add(lookyLookyVector.multiplyScalar(2));
+
+    if (snapToGrid) {
+        newPos.x = newPos.x - newPos.x % gridSize;
+        newPos.y = newPos.y - newPos.y % gridSize;
+        newPos.z = newPos.z - newPos.z % gridSize;
+    }
+
+    let obj = {
+        type: "box",
+        position: {x: newPos.x, y: newPos.y, z: newPos.z},
+        size: {x: 1, y: 1, z: 1},
+        options: {color: 0xffffff}
+    };
+
+    gameState.currentMap.rawData.objects.push(obj);
+    let { drawable } = gameState.currentMap.createBox(obj);
+    gameState.currentMap.scene.add(drawable);
+
+    selectThing(drawable);
+});
+addRampButton.addEventListener('click', () => {
+    let lookyLookyVector = gameState.localPlayer.getOrientationVector();
+    let newPos = gameState.localPlayer.getHeadPosition().clone();
+    newPos.add(lookyLookyVector.multiplyScalar(2));
+
+    if (snapToGrid) {
+        newPos.x = newPos.x - newPos.x % gridSize;
+        newPos.y = newPos.y - newPos.y % gridSize;
+        newPos.z = newPos.z - newPos.z % gridSize;
+    }
+
+    let obj = {
+        type: "ramp",
+        position: {x: newPos.x, y: newPos.y, z: newPos.z},
+        size: {x: 1, y: 1, z: 1},
+        options: {color: 0xffffff},
+        orientation: "+y"
+    };
+
+    gameState.currentMap.rawData.objects.push(obj);
+    let { drawable } = gameState.currentMap.createRamp(obj);
+    gameState.currentMap.scene.add(drawable);
+
+    selectThing(drawable);
+});
+
+let generateSmfButton = document.querySelector('#generateSmf') as HTMLElement;
+generateSmfButton.addEventListener('click', () => {
+    console.log(gameState.currentMap.stringify());
+});
+
+let copySmfButton = document.querySelector('#copySmf') as HTMLElement;
+copySmfButton.addEventListener('click', () => {
+    copyTextToClipboard(gameState.currentMap.stringify());
+});

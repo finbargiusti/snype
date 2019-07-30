@@ -19,6 +19,10 @@
     pointer-events: initial;
 }
 
+.editorContainer input {
+    font-family: monospace;
+}
+
 .editorContainer > h3 {
     margin: 0;
     margin: 5px 0px;
