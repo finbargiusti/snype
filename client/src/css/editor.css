@@ -1,0 +1,39 @@
+#editorOverlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: none;
+    font-family: sans-serif;
+    pointer-events: none;
+}
+
+.editorContainer {
+    background: snow;
+    border-radius: 5px;
+    padding: 10px;
+    width: 200px;
+    margin: 10px;
+    border: 1px solid gray;
+    pointer-events: initial;
+}
+
+.editorContainer > h3 {
+    margin: 0;
+    margin: 5px 0px;
+    font-size: 18px;
+    text-align: left;
+    margin-bottom: 15px;
+    text-decoration: underline;
+}
+
+.editorContainer h4 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: normal;
+}
+
+.editorProperty {
+    margin-top: 15px;
+}

@@ -8,11 +8,6 @@ import { openSocket, socketSend } from "./net";
 import { initEditor } from "./editor";
 
 let loadLevel = async (url: any) => {
-    const urlParams = new URLSearchParams(window.location.search);
-    let isEditor = urlParams.get("editor") === "true";
-
-    gameState.isEditor = isEditor;
-
     let response = await fetch(url);
     let text = await response.text();
 
@@ -59,8 +54,18 @@ let listMaps = async (url: any) => {
 };
 
 let init = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    let isEditor = urlParams.get("editor") === "true";
+    gameState.isEditor = isEditor;
+
+    if (isEditor) {
+        await loadLevel("static/platforms.smf");
+        initEditor();
+        return;
+    }
+
     listMaps("/defaultmaps");
     openSocket();
 };
 
-init();
+window.addEventListener('load', init);

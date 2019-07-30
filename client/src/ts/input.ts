@@ -11,7 +11,9 @@ export let inputState = {
     shift: false,
     spacebar: false,
     primaryMb: false,
-    secondaryMb: false
+    secondaryMb: false,
+    mouseX: window.innerWidth/2,
+    mouseY: window.innerHeight/2,
 };
 
 export let inputEventDispatcher = new EventTarget();
@@ -128,6 +130,9 @@ export function initCanvasListeners() {
     });
 
     mainCanvas.addEventListener("mousemove", e => {
+        inputState.mouseX = e.clientX;
+        inputState.mouseY = e.clientY;
+
         inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
     });
 
