@@ -4,7 +4,7 @@ import { parse } from "./smfparser.js";
 import { SnypeMap } from "./map";
 import { gameState } from "./game_state";
 import { createLocalPlayer } from "./player";
-import { openSocket } from "./net";
+import { openSocket, socketSend } from "./net";
 import { initEditor } from "./editor";
 
 let loadLevel = async (url: any) => {
@@ -20,7 +20,17 @@ let loadLevel = async (url: any) => {
     gameState.currentMap = newMap;
 
     createLocalPlayer();
-    openSocket();
+    if (!isEditor) {
+        socketSend("connect", {
+            playerId: gameState.localPlayer.id,
+            mapUrl: url
+        });
+        gameState.localPlayer.spawn();
+    }
+
+    if (isEditor) {
+        initEditor();
+    }
 };
 
 let listMaps = async (url: any) => {
@@ -55,6 +65,7 @@ let init = async () => {
     }
 
     listMaps("/defaultmaps");
+    openSocket();
 };
 
 window.addEventListener('load', init);

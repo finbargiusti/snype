@@ -13,14 +13,7 @@ export let socket: WebSocket = null;
 export let handlers: { [command: string]: Function } = {};
 
 function socketOnOpen() {
-    let { localPlayer } = gameState;
-    if (!localPlayer) return;
-
-    socketSend("connect", {
-        playerId: localPlayer.id
-    });
-
-    localPlayer.spawn();
+    // Run when socket opens
 }
 
 function socketOnMessage(e: MessageEvent) {
@@ -37,7 +30,7 @@ function socketOnMessage(e: MessageEvent) {
 
 export let socketSend = (command: string, data: any) => {
     if (!socket || socket.readyState !== 1) return;
-    
+
     socket.send(
         JSON.stringify({
             command,
