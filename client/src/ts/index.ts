@@ -20,15 +20,13 @@ let loadLevel = async (url: any) => {
     gameState.currentMap = newMap;
 
     createLocalPlayer();
-    if (!isEditor) {
+    if (!gameState.isEditor) {
         socketSend("connect", {
             playerId: gameState.localPlayer.id,
             mapUrl: url
         });
         gameState.localPlayer.spawn();
-    }
-
-    if (isEditor) {
+    } else {
         initEditor();
     }
 };
