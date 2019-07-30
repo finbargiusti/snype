@@ -156,6 +156,7 @@ function createWebSocketServer(httpServer) {
 
 socketMessageHandlers["connect"] = function(socket, data) {
     let newPlayer = new Player(data.playerId);
+    newPlayer.mapUrl = data.mapUrl;
     newPlayer.socket = socket;
     newPlayer.init();
 
@@ -163,7 +164,7 @@ socketMessageHandlers["connect"] = function(socket, data) {
     socketPlayerAssociation.set(socket, newPlayer);
 
     players.forEach(playa => {
-        if (playa === newPlayer) return;
+        if (playa === newPlayer || playa.mapUrl !== newPlayer.mapUrl) return;
         socketSend(socket, "addPlayer", formatPlayer(playa));
     });
 };
@@ -171,6 +172,7 @@ socketMessageHandlers["connect"] = function(socket, data) {
 class Player {
     constructor(id) {
         this.id = id;
+        this.mapUrl = "";
         this.socket = null;
         this.position = { x: 5, y: 5, z: 0 };
         this.health = 100;
@@ -183,10 +185,10 @@ class Player {
     }
 
     broadcastAll() {
-        sockets.forEach(socket2 => {
-            if (this.socket === socket2) return;
+        players.forEach(player => {
+            if (this === player || this.mapUrl !== player.mapUrl) return;
 
-            socketSend(socket2, "addPlayer", formatPlayer(this));
+            socketSend(player.socket, "addPlayer", formatPlayer(this));
         });
     }
 
@@ -256,32 +258,37 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
     player.position.z = data.position.z;
 
     let playerUpdateData = { id: player.id, position: player.position };
-    sockets.forEach(socket2 => {
-        if (socket === socket2) return;
+    players.forEach(targetPlayer => {
+        if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
+            return;
 
-        socketSend(socket2, "updatePlayer", playerUpdateData);
+        socketSend(targetPlayer.socket, "updatePlayer", playerUpdateData);
     });
 };
 
 socketMessageHandlers["createProjectile"] = function(socket, data) {
+    let player = socketPlayerAssociation.get(socket);
     // Simply relay to all other players.
 
-    sockets.forEach(socket2 => {
-        if (socket === socket2) return;
+    players.forEach(targetPlayer => {
+        if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
+            return;
 
-        data.shooterId = socketPlayerAssociation.get(socket).id;
+        data.shooterId = player.id;
 
-        socketSend(socket2, "createProjectile", data);
+        socketSend(targetPlayer.socket, "createProjectile", data);
     });
 };
 
 socketMessageHandlers["removeProjectile"] = function(socket, data) {
+    let player = socketPlayerAssociation.get(socket);
     // Simply relay to all other players.
 
-    sockets.forEach(socket2 => {
-        if (socket === socket2) return;
+    players.forEach(targetPlayer => {
+        if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
+            return;
 
-        socketSend(socket2, "removeProjectile", data);
+        socketSend(targetPlayer.socket, "removeProjectile", data);
     });
 };
 

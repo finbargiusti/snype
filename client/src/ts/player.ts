@@ -66,6 +66,14 @@ export class Player {
             this.position.set(1, 1, 0);
             this.yaw = 0;
         }
+
+        socketSend("updatePosition", {
+            position: {
+                x: this.position.x,
+                y: this.position.y,
+                z: this.position.z
+            }
+        });
     }
 
     setHealth(health: number) {
