@@ -9,6 +9,7 @@
     />
     <title>Snype</title>
     <link rel="shortcut icon" href="./media/18554.png" />
+    <link rel="stylesheet" href="css/editor.css">
   </head>
   <body>
     <script src="./ts/index.ts" defer></script>
@@ -18,6 +19,16 @@
     <img src="media/crosshair.png" id="crosshair" />
     <div id="maps">
       <h1>Snype</h1>
+    </div>
+    <div id="editorOverlay">
+      <div class="editorContainer">
+        <h3>Grid</h3>
+        <input type="checkbox" id="snapToGrid">Snap to grid
+        <div class="editorProperty">
+          <h4>Grid size</h4>
+          <input type="text" value="1.0" id="gridSize">
+        </div>
+      </div>
     </div>
   </body>
   <style>
