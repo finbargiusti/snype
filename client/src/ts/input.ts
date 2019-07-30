@@ -1,5 +1,6 @@
 import { mainCanvas } from "./rendering";
 import { createLocalPlayer } from "./player";
+import { gameState } from "./game_state";
 
 export let inputState = {
     pointerLocked: false,
@@ -9,7 +10,8 @@ export let inputState = {
     right: false,
     shift: false,
     spacebar: false,
-    primaryMb: false
+    primaryMb: false,
+    secondaryMb: false
 };
 
 export let inputEventDispatcher = new EventTarget();
@@ -96,10 +98,13 @@ window.addEventListener("keyup", e => {
 });
 
 window.addEventListener("mousedown", e => {
-    if (!inputState.pointerLocked) return;
+    //if (!inputState.pointerLocked) return;
 
     if (e.button === 0) {
         inputState.primaryMb = true;
+    }
+    if (e.button === 2) {
+        inputState.secondaryMb = true;
     }
 
     inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
@@ -109,11 +114,17 @@ window.addEventListener("mouseup", e => {
     if (e.button === 0) {
         inputState.primaryMb = false;
     }
+
+    if (e.button === 2) {
+        inputState.secondaryMb = false;
+    }
+
+    inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
 });
 
 export function initCanvasListeners() {
     mainCanvas.addEventListener("click", () => {
-        mainCanvas.requestPointerLock();
+        if (!gameState.isEditor) mainCanvas.requestPointerLock();
     });
 
     mainCanvas.addEventListener("mousemove", e => {
