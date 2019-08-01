@@ -835,13 +835,24 @@ inputEventDispatcher.addEventListener('keypress', (e) => {
                 }
             }
         }
+    } else if (keyEvent.keyCode === 67) {
+        if (selectedDrawable) {
+            if (selectedDataObj.type === "box") {
+                createBox(selectedDataObj);
+            } else if (selectedDataObj.type === "ramp") {
+                createRamp(selectedDataObj);
+            } else if (gameState.currentMap.rawData.spawnPoints.includes(selectedDataObj)) {
+                createSpawn(selectedDataObj);
+            }
+        }
     }
 });
 
 let addBoxButton = document.querySelector('#addBox') as HTMLElement;
 let addRampButton = document.querySelector('#addRamp') as HTMLElement;
 let addSpawnButton = document.querySelector('#addSpawn') as HTMLElement;
-addBoxButton.addEventListener('click', () => {
+addBoxButton.addEventListener('click', createBox);
+function createBox(override: any = {}) {
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
@@ -855,8 +866,8 @@ addBoxButton.addEventListener('click', () => {
     let obj = {
         type: "box",
         position: {x: newPos.x, y: newPos.y, z: newPos.z},
-        size: {x: 1, y: 1, z: 1},
-        options: {color: 0xffffff}
+        size: override.size || {x: 1, y: 1, z: 1},
+        options: override.options || {color: 0xffffff}
     };
 
     gameState.currentMap.rawData.objects.push(obj);
@@ -866,8 +877,9 @@ addBoxButton.addEventListener('click', () => {
     gameState.currentMap.scene.add(drawable);
 
     selectThing(drawable);
-});
-addRampButton.addEventListener('click', () => {
+}
+addRampButton.addEventListener('click', createRamp);
+function createRamp(override: any = {}) {
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
@@ -881,9 +893,9 @@ addRampButton.addEventListener('click', () => {
     let obj = {
         type: "ramp",
         position: {x: newPos.x, y: newPos.y, z: newPos.z},
-        size: {x: 1, y: 1, z: 1},
-        options: {color: 0xffffff},
-        orientation: "+y"
+        size: override.size || {x: 1, y: 1, z: 1},
+        options: override.options || {color: 0xffffff},
+        orientation: override.orientation || "+y"
     };
 
     gameState.currentMap.rawData.objects.push(obj);
@@ -893,8 +905,9 @@ addRampButton.addEventListener('click', () => {
     gameState.currentMap.scene.add(drawable);
 
     selectThing(drawable);
-});
-addSpawnButton.addEventListener('click', () => {
+}
+addSpawnButton.addEventListener('click', createSpawn);
+function createSpawn(override: any = {}) {
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
@@ -909,7 +922,7 @@ addSpawnButton.addEventListener('click', () => {
         x: newPos.x,
         y: newPos.y,
         z: newPos.z,
-        yaw: 0
+        yaw: override.yaw || 0
     };
 
     gameState.currentMap.rawData.spawnPoints.push(obj);
@@ -919,7 +932,7 @@ addSpawnButton.addEventListener('click', () => {
     gameState.currentMap.scene.add(drawable);
 
     selectThing(drawable);
-});
+}
 
 let generateSmfButton = document.querySelector('#generateSmf') as HTMLElement;
 generateSmfButton.addEventListener('click', () => {
