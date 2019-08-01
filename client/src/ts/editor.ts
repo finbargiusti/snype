@@ -490,7 +490,7 @@ inputEventDispatcher.addEventListener('mousemove', (e) => {
                 }
             }
 
-            if (selectedDataObj.x) updateSelectedSpawnPoint(newPos);
+            if (selectedDataObj.x !== undefined) updateSelectedSpawnPoint(newPos);
             else changeSelectionPosition(newPos);
         } else {
             // Scaling
@@ -528,15 +528,19 @@ function handleWallDrag(dist: number) {
     if (snapToGrid) dist = dist - (dist % gridSize);
 
     if (selectedDrawable === currentMap.wallDrawables[0]) {
+        if (wallDataAtDragStart.minX + dist >= wallDataAtDragStart.maxX) return;
         currentMap.rawData.wall.minX = wallDataAtDragStart.minX + dist;
     }
     if (selectedDrawable === currentMap.wallDrawables[1]) {
+        if (wallDataAtDragStart.maxX + dist <= wallDataAtDragStart.minX) return;
         currentMap.rawData.wall.maxX = wallDataAtDragStart.maxX + dist;
     }
     if (selectedDrawable === currentMap.wallDrawables[2]) {
+        if (wallDataAtDragStart.minY + dist >= wallDataAtDragStart.maxY) return;
         currentMap.rawData.wall.minY = wallDataAtDragStart.minY + dist;
     }
     if (selectedDrawable === currentMap.wallDrawables[3]) {
+        if (wallDataAtDragStart.maxY + dist <= wallDataAtDragStart.minY) return;
         currentMap.rawData.wall.maxY = wallDataAtDragStart.maxY + dist;
     }
 
@@ -658,6 +662,7 @@ function showObjectProperties(obj: any) {
                 }
 
                 selectedDrawable.geometry = createRampGeometry(obj);
+                wireframeOverlay.geometry = selectedDrawable.geometry;
             });
 
             innerDiv.appendChild(rotateBtn);
@@ -818,6 +823,16 @@ inputEventDispatcher.addEventListener('keypress', (e) => {
 
                     deselectCurrentlySelected();
                 }
+
+                index = gameState.currentMap.rawData.spawnPoints.indexOf(selectedDataObj);
+
+                if (index !== -1) {
+                    gameState.currentMap.rawData.spawnPoints.splice(index, 1);
+                    gameState.currentMap.scene.remove(selectedDrawable);
+                    removeItemFromArray(allSelectables, selectedDrawable);
+
+                    deselectCurrentlySelected();
+                }
             }
         }
     }
@@ -825,6 +840,7 @@ inputEventDispatcher.addEventListener('keypress', (e) => {
 
 let addBoxButton = document.querySelector('#addBox') as HTMLElement;
 let addRampButton = document.querySelector('#addRamp') as HTMLElement;
+let addSpawnButton = document.querySelector('#addSpawn') as HTMLElement;
 addBoxButton.addEventListener('click', () => {
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
@@ -872,6 +888,32 @@ addRampButton.addEventListener('click', () => {
 
     gameState.currentMap.rawData.objects.push(obj);
     let { drawable } = gameState.currentMap.createRamp(obj);
+    allSelectables.push(drawable);
+    selectableDataConnection.set(drawable, obj);
+    gameState.currentMap.scene.add(drawable);
+
+    selectThing(drawable);
+});
+addSpawnButton.addEventListener('click', () => {
+    let lookyLookyVector = gameState.localPlayer.getOrientationVector();
+    let newPos = gameState.localPlayer.getHeadPosition().clone();
+    newPos.add(lookyLookyVector.multiplyScalar(2));
+
+    if (snapToGrid) {
+        newPos.x = newPos.x - newPos.x % gridSize;
+        newPos.y = newPos.y - newPos.y % gridSize;
+        newPos.z = newPos.z - newPos.z % gridSize;
+    }
+
+    let obj = {
+        x: newPos.x,
+        y: newPos.y,
+        z: newPos.z,
+        yaw: 0
+    };
+
+    gameState.currentMap.rawData.spawnPoints.push(obj);
+    let { drawable } = createDrawableSpawnPoint(obj);
     allSelectables.push(drawable);
     selectableDataConnection.set(drawable, obj);
     gameState.currentMap.scene.add(drawable);
@@ -931,15 +973,23 @@ function initSpawnPoints() {
     drawableSpawnPoints = [];
 
     for (let a of currentMap.rawData.spawnPoints) {
-        let mesh = new THREE.Mesh(
-            new THREE.ConeBufferGeometry(0.5, 1.5, 4),
-            SPAWN_POINT_MATERIAL
-        );
-
-        mesh.position.set(a.x, a.y, a.z);
-        mesh.rotateOnAxis(zAxis, a.yaw);
-
-        drawableSpawnPoints.push(mesh);
-        currentMap.scene.add(mesh);
+        createDrawableSpawnPoint(a);
     }
+}
+
+function createDrawableSpawnPoint(obj: any) {
+    let currentMap = gameState.currentMap;
+
+    let mesh = new THREE.Mesh(
+        new THREE.ConeBufferGeometry(0.5, 1.5, 4),
+        SPAWN_POINT_MATERIAL
+    );
+
+    mesh.position.set(obj.x, obj.y, obj.z);
+    mesh.rotateOnAxis(zAxis, obj.yaw);
+
+    drawableSpawnPoints.push(mesh);
+    currentMap.scene.add(mesh);
+
+    return { drawable: mesh };
 }
