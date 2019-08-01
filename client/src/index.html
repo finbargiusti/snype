@@ -21,6 +21,27 @@
       <h1>Snype</h1>
     </div>
     <div id="editorOverlay">
+      <div style="position: absolute; right: 0px; top: 0px;">
+        <div class="editorContainer">
+            <h3>General</h3>
+            <button id="generateSmf">Dump SMF to Console</button>
+            <button id="copySmf">Copy SMF to Clipboard</button>
+          </div>
+        <div class="editorContainer">
+          <h3>Arrow Action</h3>
+          <p id="arrowActionDisplay">Translate</p>
+          <button id="arrowActionTranslate">Translate</button>
+          <button id="arrowActionScale">Scale</button>
+        </div>
+        <div class="editorContainer">
+          <h3>Add</h3>
+          <button id="addBox">Box</button>
+          <button id="addRamp">Ramp</button>
+          <button id="addWall">Wall</button>
+          <button id="addSpawn">Spawn</button>
+        </div>
+      </div>
+      
       <div class="editorContainer">
         <h3>Grid</h3>
         <input type="checkbox" id="snapToGrid">Snap to grid
@@ -28,6 +49,10 @@
           <h4>Grid size</h4>
           <input type="text" value="1.0" id="gridSize">
         </div>
+      </div>
+      <div class="editorContainer" id="objectProperties">
+        <h3>Object Properties</h3>
+        <div></div>
       </div>
     </div>
   </body>

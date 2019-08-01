@@ -99,6 +99,10 @@ window.addEventListener("keyup", e => {
     }
 });
 
+window.addEventListener('keydown', (e) => {
+    inputEventDispatcher.dispatchEvent(new KeyboardEvent("keypress", e));
+});
+
 window.addEventListener("mousedown", e => {
     //if (!inputState.pointerLocked) return;
 
@@ -134,6 +138,10 @@ export function initCanvasListeners() {
         inputState.mouseY = e.clientY;
 
         inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
+    });
+
+    mainCanvas.addEventListener('mousedown', (e) => {
+        inputEventDispatcher.dispatchEvent(new MouseEvent("canvasmousedown", e));
     });
 
     document.addEventListener("pointerlockchange", lockChangeAlert, false);

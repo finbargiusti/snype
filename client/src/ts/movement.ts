@@ -519,6 +519,8 @@ const FLYING_SPEED = 20;
 function updateEditorMovement(dif: number) {
     let { localPlayer } = gameState;
 
+    if (document.activeElement !== document.body) return;
+
     let posCopy = localPlayer.position.clone();
 
     let movementVec = new THREE.Vector3(0, 0, 0);
