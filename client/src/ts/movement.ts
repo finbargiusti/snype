@@ -602,4 +602,11 @@ inputEventDispatcher.addEventListener("mousemove", e => {
     pitch = clamp(pitch, -Math.PI / 2, Math.PI / 2);
 
     localPlayer.update({ yaw, pitch });
+
+    if (!gameState.isEditor) {
+        socketSend("updateOrientation", {
+            yaw: localPlayer.yaw,
+            pitch: localPlayer.pitch
+        });
+    }
 });

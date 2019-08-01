@@ -29,6 +29,8 @@ export function getNonLocalPlayerHitboxes() {
 }
 
 function createPlayerObject3D() {
+    let group = new THREE.Group();
+
     let sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.4, 32, 32),
         new THREE.MeshPhongMaterial({ color: 0x00ffff })
@@ -36,7 +38,18 @@ function createPlayerObject3D() {
     sphere.castShadow = true;
     sphere.receiveShadow = true;
 
-    return sphere;
+    let pupil = new THREE.Mesh(
+        new THREE.IcosahedronBufferGeometry(0.2, 2),
+        new THREE.MeshPhongMaterial({color: 0x000000})
+    );
+    pupil.castShadow = true;
+    pupil.receiveShadow = true;
+    pupil.position.y += 0.25;
+
+    group.add(sphere);
+    group.add(pupil);
+
+    return group;
 }
 
 const goSound = new Howl({ src: ["/static/go.ogg"] });
@@ -195,8 +208,16 @@ export class Player {
                     obj.velocity.z
                 );
             }
-            if (obj.yaw) this.yaw = obj.yaw;
-            if (obj.pitch) this.pitch = obj.pitch;
+            if (obj.yaw && obj.pitch) {
+                this.yaw = obj.yaw;
+                this.pitch = obj.pitch;
+
+                this.object3D.rotation.x = 0;
+                this.object3D.rotation.y = 0;
+                this.object3D.rotation.z = 0;
+                this.object3D.rotateOnWorldAxis(xAxis, this.pitch);
+                this.object3D.rotateOnWorldAxis(zAxis, this.yaw);
+            }
         }
     }
 
@@ -214,7 +235,20 @@ export function createLocalPlayer() {
     localPlayer = new Player({
         id: localPlayerId
     });
-    (localPlayer.object3D as THREE.Mesh).material = new THREE.ShadowMaterial();
+
+    let mat = new THREE.ShadowMaterial();
+    for (let child of localPlayer.object3D.children) {
+        let mesh = child as THREE.Mesh;
+        mesh.receiveShadow = false;
+        mesh.material = mat;
+
+        // Cheeky! This catches the pupil.
+        if (mesh.geometry instanceof THREE.IcosahedronBufferGeometry) {
+            mesh.material.visible = false;
+        }
+    }
+
+    //(localPlayer.object3D as THREE.Mesh).material = new THREE.ShadowMaterial();
 
     gameState.localPlayer = localPlayer;
 
@@ -235,6 +269,11 @@ export function setCameraToLocalPlayer() {
     camera.rotateOnWorldAxis(xAxis, Math.PI / 2);
     camera.rotateOnWorldAxis(xAxis, localPlayer.pitch);
     camera.rotateOnWorldAxis(zAxis, localPlayer.yaw);
+    localPlayer.object3D.rotation.x = 0;
+    localPlayer.object3D.rotation.y = 0;
+    localPlayer.object3D.rotation.z = 0;
+    localPlayer.object3D.rotateOnWorldAxis(xAxis, localPlayer.pitch);
+    localPlayer.object3D.rotateOnWorldAxis(zAxis, localPlayer.yaw);
 
     Howler.pos(headPos.x, headPos.y, headPos.z);
     let oriental = localPlayer.getOrientationVector();

@@ -206,6 +206,8 @@ class Player {
         this.socket = null;
         this.position = { x: 5, y: 5, z: 0 };
         this.health = 100;
+        this.yaw = 0;
+        this.pitch = 0;
     }
 
     init() {
@@ -288,6 +290,25 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
     player.position.z = data.position.z;
 
     let playerUpdateData = { id: player.id, position: player.position };
+    players.forEach(targetPlayer => {
+        if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
+            return;
+
+        socketSend(targetPlayer.socket, "updatePlayer", playerUpdateData);
+    });
+};
+
+socketMessageHandlers["updateOrientation"] = function(socket, data) {
+    let player = socketPlayerAssociation.get(socket);
+    if (!player) {
+        console.error("You are big gay.");
+        return;
+    }
+
+    player.yaw = data.yaw;
+    player.pitch = data.pitch;
+
+    let playerUpdateData = { id: player.id, yaw: player.yaw, pitch: player.pitch };
     players.forEach(targetPlayer => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
