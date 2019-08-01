@@ -44,8 +44,6 @@ renderer.setClearColor(0x7ec0ee); // Sky color
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-document.body.appendChild(renderer.domElement);
-
 let target_destroyed = new Howl({
     src: ["/static/target-destroyed.ogg"],
     rate: 0.7
