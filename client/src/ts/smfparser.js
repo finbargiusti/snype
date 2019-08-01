@@ -8,7 +8,7 @@ function radToDeg(rad) {
 
 // Parser Script
 
-const SUPPORTED_VERSIONS = ["v1"];
+const SUPPORTED_VERSIONS = ["v1", "v2"];
 
 const literalParse = (string) => {
     if (string === "true" || string === "false") {
@@ -43,10 +43,12 @@ const parse = (file) => {
     // Verify and Acquire version
 
     let fileVersion;
+    let fileVersionNumber;
     let firstLine = lines[0].trim();
     if (firstLine.startsWith("#! ")) {
         if (SUPPORTED_VERSIONS.includes(firstLine.slice(3))) {
             fileVersion = firstLine.slice(3);
+            fileVersionNumber = Number(fileVersion.slice(1));
         } else {
             throw new Error("SMF Version not supported");
         }
@@ -67,6 +69,12 @@ const parse = (file) => {
     let spawnPoints = [];
 
     let objects = [];
+
+    let wall = null;
+    let wallMinX = 0;
+    let wallMaxX = 0;
+    let wallMinY = 0;
+    let wallMaxY = 0;
 
     for (let i = 1; i < lines.length; ++i) {
         let line = lines[i];
@@ -139,18 +147,40 @@ const parse = (file) => {
 
                 case "Wall":
                     {
-                        obj = {
-                            type: "wall",
-                            position: {
-                                x: lp(items[1]),
-                                y: lp(items[2])
-                            },
-                            size: {
-                                x: lp(items[3]),
-                                y: lp(items[4])
+                        if (fileVersionNumber === 1) {
+                            // OLD: Don't use directly.
+                            obj = {
+                                type: "wall",
+                                position: {
+                                    x: lp(items[1]),
+                                    y: lp(items[2])
+                                },
+                                size: {
+                                    x: lp(items[3]),
+                                    y: lp(items[4])
+                                }
+                            };
+
+                            wallMinX = Math.min(wallMinX, obj.position.x + obj.size.x);
+                            wallMaxX = Math.max(wallMaxX, obj.position.x);
+                            wallMinY = Math.min(wallMinY, obj.position.y + obj.size.y);
+                            wallMaxY = Math.max(wallMaxY, obj.position.y);
+                        } else {
+                            if (wall === null) {
+                                wall = {
+                                    minX: lp(items[1]),
+                                    maxX: lp(items[2]),
+                                    minY: lp(items[3]),
+                                    maxY: lp(items[4])
+                                };
+                            } else {
+                                throw new Error("Can't have more than one Wall definition!");
                             }
-                        };
-                        objects.push(obj);
+                        }
+
+                        continue;
+                        
+                        //objects.push(obj);
                     }
                     break;
 
@@ -197,13 +227,23 @@ const parse = (file) => {
         }
     }
 
+    if (wall === null) {
+        wall = {
+            minX: wallMinX,
+            maxX: wallMaxX,
+            minY: wallMinY,
+            maxY: wallMaxY
+        };
+    }
+
     return {
         metadata,
         spawnPoints,
         objects,
         sky,
         sun,
-        ambience
+        ambience,
+        wall
     };
 };
 

@@ -35,7 +35,7 @@ function fallbackCopyTextToClipboard(text: string) {
   
     document.body.removeChild(textArea);
   }
-  export function copyTextToClipboard(text: string) {
+export function copyTextToClipboard(text: string) {
     if (!navigator.clipboard) {
       fallbackCopyTextToClipboard(text);
       return;
@@ -45,4 +45,9 @@ function fallbackCopyTextToClipboard(text: string) {
     }, function(err) {
       console.error('Async: Could not copy text: ', err);
     });
-  }
+}
+
+export function removeItemFromArray<T>(arr: T[], item: T) {
+    let index = arr.indexOf(item);
+    if (index !== -1) arr.splice(index, 1);
+}
