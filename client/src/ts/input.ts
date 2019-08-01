@@ -103,6 +103,10 @@ window.addEventListener('keydown', (e) => {
     inputEventDispatcher.dispatchEvent(new KeyboardEvent("keypress", e));
 });
 
+window.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
+
 window.addEventListener("mousedown", e => {
     //if (!inputState.pointerLocked) return;
 

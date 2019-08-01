@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { Projectile } from "./weapon";
 import { renderer } from "./rendering";
-import { radToDeg } from "./misc";
+import { radToDeg, removeItemFromArray } from "./misc";
 
 const SUN_DIRECTION = new THREE.Vector3(-40, -40, -50);
 SUN_DIRECTION.normalize();
 const SUN_CAMERA_DISTANCE = 50;
+const WALL_THICKNESS = 0.1;
 
 export function createBoxGeometry(object: any) {
     let geometry = new THREE.BoxGeometry(
@@ -136,6 +137,13 @@ export function createRampGeometry(object: any) {
     return geometry;
 }
 
+// TODO: Pull this out to a const
+const wallMaterial = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+    opacity: 0.3,
+    transparent: true
+});
+
 export class SnypeMap {
     public rawData: any;
     public metadata: any;
@@ -147,7 +155,10 @@ export class SnypeMap {
     public projectiles: Projectile[];
     public colliders: THREE.Mesh[];
 
-    public objectDataConnection: WeakMap<THREE.Object3D, any>;
+    public objectDataConnection: Map<THREE.Object3D, any>;
+
+    public wallDrawables: THREE.Mesh[] = [];
+    public floorDrawable: THREE.Mesh = null;
 
     constructor(data: any) {
         this.rawData = null;
@@ -161,7 +172,7 @@ export class SnypeMap {
         this.projectiles = [];
         this.colliders = [];
 
-        this.objectDataConnection = new WeakMap();
+        this.objectDataConnection = new Map();
 
         this.loadRawSMFData(data);
         this.buildScene();
@@ -218,6 +229,120 @@ export class SnypeMap {
         return { drawable: rampMesh };
     }
 
+    createWallsAndFloor(object: any) {
+        for (let drawable of this.wallDrawables) {
+            //this.scene.remove(drawable);
+            //removeItemFromArray(this.colliders, drawable);
+        }
+        if (this.floorDrawable) {
+            this.scene.remove(this.floorDrawable);
+            removeItemFromArray(this.colliders, this.floorDrawable);
+        }
+
+        for (let i = 0; i < 4; i++) {
+            // 0: minX
+            // 1: maxX
+            // 2: minY
+            // 3: maxY
+
+            let position, size;
+            if (i === 0) {
+                position = {
+                    x: object.minX - WALL_THICKNESS,
+                    y: object.minY
+                };
+                size = {
+                    x: WALL_THICKNESS,
+                    y: object.maxY - object.minY
+                };
+            } else if (i === 1) {
+                position = {
+                    x: object.maxX,
+                    y: object.minY
+                };
+                size = {
+                    x: WALL_THICKNESS,
+                    y: object.maxY - object.minY
+                };
+            } else if (i === 2) {
+                position = {
+                    x: object.minX,
+                    y: object.minY - WALL_THICKNESS
+                };
+                size = {
+                    x: object.maxX - object.minX,
+                    y: WALL_THICKNESS
+                };
+            } else if (i === 3) {
+                position = {
+                    x: object.minX,
+                    y: object.maxY
+                };
+                size = {
+                    x: object.maxX - object.minX,
+                    y: WALL_THICKNESS
+                };
+            }
+
+            let wallMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    size.x,
+                    size.y,
+                    this.rawData.metadata.wallHeight || 4
+                ),
+                wallMaterial
+            );
+            wallMesh.position.set(
+                position.x + size.x / 2,
+                position.y + size.y / 2,
+                (this.rawData.metadata.wallHeight || 4) / 2
+            );
+            wallMesh.geometry.computeBoundingBox();
+            wallMesh.geometry.computeBoundingSphere();
+            wallMesh.receiveShadow = true;
+
+            if (this.wallDrawables[i]) {
+                this.wallDrawables[i].geometry = wallMesh.geometry;
+                this.wallDrawables[i].material = wallMesh.material;
+                this.wallDrawables[i].position.copy(wallMesh.position);
+            } else {
+                this.wallDrawables[i] = wallMesh;
+
+                this.drawableObjects.push(wallMesh);
+                this.colliders.push(wallMesh);
+                this.scene.add(wallMesh);
+                this.objectDataConnection.set(wallMesh, object);
+            }
+        }
+
+        let minX, maxX, minY, maxY;
+
+        if (!this.rawData.wall) {
+            minX = -30,
+            maxX = 30,
+            minY = -30,
+            maxY = 30
+        } else {
+            minX = this.rawData.wall.minX;
+            maxX = this.rawData.wall.maxX;
+            minY = this.rawData.wall.minY;
+            maxY = this.rawData.wall.maxY;
+        }
+
+        let floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(maxX - minX, maxY - minY, 1, 1),
+            new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: false })
+        );
+        floor.position.x = (maxX + minX) / 2;
+        floor.position.y = (maxY + minY) / 2;
+        floor.geometry.computeBoundingBox();
+
+        floor.receiveShadow = true;
+        this.scene.add(floor);
+        this.colliders.push(floor);
+        this.floorDrawable = floor;
+    }
+
     loadRawSMFData(data: any) {
         console.log("Loading map " + data.metadata.name);
 
@@ -231,13 +356,6 @@ export class SnypeMap {
         this.spawnPoints.push(...data.spawnPoints);
         this.objects.push(...data.objects);
 
-        // TODO: Pull this out to a const
-        const wallMaterial = new THREE.MeshLambertMaterial({
-            color: 0xffffff,
-            opacity: 0.3,
-            transparent: true
-        });
-
         data.objects.forEach((object: any) => {
             switch (object.type) {
                 case "box":
@@ -245,29 +363,12 @@ export class SnypeMap {
                         this.createBox(object);
                     }
                     break;
+                    /*
                 case "wall":
                     {
-                        let wallMesh = new THREE.Mesh(
-                            new THREE.BoxGeometry(
-                                object.size.x,
-                                object.size.y,
-                                data.metadata.wallHeight || 4
-                            ),
-                            wallMaterial
-                        );
-                        wallMesh.position.set(
-                            object.position.x + object.size.x / 2,
-                            object.position.y + object.size.y / 2,
-                            (data.metadata.wallHeight || 4) / 2
-                        );
-                        wallMesh.geometry.computeBoundingBox();
-                        wallMesh.geometry.computeBoundingSphere();
-                        wallMesh.receiveShadow = true;
-
-                        this.drawableObjects.push(wallMesh);
-                        this.colliders.push(wallMesh);
+                        this.createWall(object);   
                     }
-                    break;
+                    break;*/
                 case "ramp":
                     {
                         this.createRamp(object);
@@ -284,43 +385,8 @@ export class SnypeMap {
             this.scene.add(obj);
         });
 
-        // Add floor
-
-        let minX = 0,
-            maxX = 1,
-            minY = 0,
-            maxY = 1;
-
-        let noWalls = true;
-        this.objects.forEach(obj => {
-            if (obj.type !== "wall") return;
-
-            noWalls = false;
-
-            minX = Math.min(minX, obj.position.x);
-            maxX = Math.max(maxX, obj.position.x + obj.size.x);
-            minY = Math.min(minY, obj.position.y);
-            maxY = Math.max(maxY, obj.position.y + obj.size.y);
-        });
-
-        if (noWalls) {
-            minX = -30,
-            maxX = 30,
-            minY = -30,
-            maxY = 30
-        }
-
-        let floor = new THREE.Mesh(
-            new THREE.PlaneGeometry(maxX - minX, maxY - minY, 1, 1),
-            new THREE.MeshPhongMaterial({ color: 0xffffff, wireframe: false })
-        );
-        floor.position.x = (maxX + minX) / 2;
-        floor.position.y = (maxY + minY) / 2;
-        floor.geometry.computeBoundingBox();
-
-        floor.receiveShadow = true;
-        this.scene.add(floor);
-        this.colliders.push(floor);
+        // Add walls and floor
+        this.createWallsAndFloor(this.rawData.wall);
 
         // Add sky and lighting
 
@@ -331,7 +397,7 @@ export class SnypeMap {
         normalizedSunDirection.normalize();
 
         var sunlight = new THREE.DirectionalLight(this.rawData.sun.color, this.rawData.sun.intensity);
-        sunlight.target.position.set(floor.position.x, floor.position.y, 0);
+        sunlight.target.position.set(this.floorDrawable.position.x, this.floorDrawable.position.y, 0);
         sunlight.position.copy(sunlight.target.position);
         sunlight.position.add(normalizedSunDirection.clone().negate().multiplyScalar(SUN_CAMERA_DISTANCE));
         sunlight.castShadow = true;
@@ -375,7 +441,7 @@ export class SnypeMap {
     }
 
     stringify() {
-        let version = "v1";
+        let version = "v2";
         let output = "";
 
         function addLine(str: string) {
@@ -419,6 +485,13 @@ export class SnypeMap {
             let line = "";
             line += `Ambience ${ambience.color} ${ambience.intensity}`;
             line += formatOptions(ambience);
+            addLine(line);
+        }
+        {
+            let wall = this.rawData.wall;
+            let line = "";
+            line += `Wall ${wall.minX} ${wall.maxX} ${wall.minY} ${wall.maxY}`;
+            line += formatOptions(wall);
             addLine(line);
         }
 

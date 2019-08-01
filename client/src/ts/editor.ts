@@ -3,7 +3,7 @@ import { mainCanvas, camera, zAxis, yAxis, xAxis } from "./rendering";
 import * as THREE from "three";
 import { gameState } from "./game_state";
 import { createBoxGeometry, createRampGeometry } from "./map";
-import { copyTextToClipboard } from "./misc";
+import { copyTextToClipboard, degToRad, radToDeg } from "./misc";
 
 const DIRECTION_ARROW_LENGTH = 1;
 const DIRECTION_ARROW_THICKNESS = 0.05;
@@ -20,6 +20,9 @@ export function initEditor() {
 
     initGridContainer();
     updateArrowAction(currentArrowAction);
+    initMetadata();
+    initSpawnPoints();
+    initSelectables();
 }
 
 const selectedMaterial = new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true, depthTest: false});
@@ -39,6 +42,7 @@ class DirectionArrows {
     public hovered: string = null;
     public coneGeom: THREE.ConeBufferGeometry;
     public ballGeom: THREE.SphereBufferGeometry;
+    public hideAxes: any[];
 
     constructor() {
         this.coneGeom = new THREE.ConeBufferGeometry(DIRECTION_ARROW_THICKNESS * 4, DIRECTION_ARROW_LENGTH * 0.5, 10);
@@ -138,11 +142,27 @@ class DirectionArrows {
         this.hide();
     }
 
-    show(where?: THREE.Vector3) {
+    show(where?: THREE.Vector3, hideAxes: any[] = []) {
         this.group.visible = true;
 
         if (where) {
             this.group.position.copy(where);
+        }
+
+        this.hideAxes = hideAxes;
+
+        for (let a of this.bodies) a.visible = true;
+        for (let a of this.heads) a.visible = true;
+        for (let a of this.hitboxes) a.visible = true;
+
+        if (this.hideAxes.includes("x")) {
+            this.bodies[0].visible = this.heads[0].visible = this.hitboxes[0].visible = false;
+        }
+        if (this.hideAxes.includes("y")) {
+            this.bodies[1].visible = this.heads[1].visible = this.hitboxes[1].visible = false;
+        }
+        if (this.hideAxes.includes("z")) {
+            this.bodies[2].visible = this.heads[2].visible = this.hitboxes[2].visible = false;
         }
     }
 
@@ -202,6 +222,23 @@ let selectedDrawable: any = null;
 let selectedDataObj: any = null;
 let wireframeOverlay: any = null;
 
+function initSelectables() {
+    let { currentMap } = gameState;
+
+    allSelectables.push(...currentMap.drawableObjects);
+    allSelectables.push(...drawableSpawnPoints);
+
+    currentMap.objectDataConnection.forEach((value, key) => {
+        selectableDataConnection.set(key, value);
+    });
+    for (let i = 0; i < currentMap.rawData.spawnPoints.length; i++) {
+        selectableDataConnection.set(drawableSpawnPoints[i], currentMap.rawData.spawnPoints[i]);
+    }
+}
+
+let allSelectables: THREE.Object3D[] = [];
+let selectableDataConnection = new WeakMap<THREE.Object3D, any>();
+
 inputEventDispatcher.addEventListener('canvasmousedown', (e) => {
     if (!gameState.isEditor) return;
 
@@ -231,10 +268,10 @@ inputEventDispatcher.addEventListener('canvasmousedown', (e) => {
         mouse.y = - ( mouseEvent.clientY / window.innerHeight ) * 2 + 1;
         raycaster.setFromCamera(mouse.clone(), camera);
 
-        let objects = raycaster.intersectObjects(currentMap.drawableObjects);
+        let objects = raycaster.intersectObjects(allSelectables);
 
         let firstIndex = objects.findIndex((a) => {
-            return a.object !== selectedDrawable && currentMap.objectDataConnection.has(a.object);
+            return a.object !== selectedDrawable && selectableDataConnection.has(a.object);
         });
         if (firstIndex !== -1) {
             selectThing(objects[firstIndex].object as THREE.Mesh);
@@ -249,7 +286,8 @@ function selectThing(drawable: THREE.Mesh) {
         deselectCurrentlySelected();
     }
 
-    let dataObject = gameState.currentMap.objectDataConnection.get(drawable);
+    let currentMap = gameState.currentMap;
+    let dataObject = selectableDataConnection.get(drawable);
 
     let wf = new THREE.Mesh(drawable.geometry, selectedMaterial);
     drawable.updateMatrixWorld();
@@ -260,8 +298,17 @@ function selectThing(drawable: THREE.Mesh) {
     wireframeOverlay = wf;
 
     gameState.currentMap.scene.add(wf);
-    directionArrows.show(drawable.position);
     showObjectProperties(selectedDataObj);
+
+    let hideAxes:any[] = [];
+    if (drawable === currentMap.wallDrawables[0] || drawable === currentMap.wallDrawables[1]) {
+        hideAxes.push("y", "z");
+    }
+    if (drawable === currentMap.wallDrawables[2] || drawable === currentMap.wallDrawables[3]) {
+        hideAxes.push("x", "z");
+    }
+
+    directionArrows.show(drawable.position, hideAxes);
 }
 
 let snapToGrid = true;
@@ -269,11 +316,25 @@ let gridSize = 1.0;
 let dragStart: THREE.Vector3 = null;
 let objPosAtDragStart: THREE.Vector3 = null;
 let objSizeAtDragStart: THREE.Vector3 = null;
+let wallDataAtDragStart: any = null;
 
 function startDrag() {
     dragStart = getPositionOnDirectionArrow();
-    objPosAtDragStart = new THREE.Vector3(selectedDataObj.position.x, selectedDataObj.position.y, selectedDataObj.position.z);
-    objSizeAtDragStart = new THREE.Vector3(selectedDataObj.size.x, selectedDataObj.size.y, selectedDataObj.size.z);
+
+    if (selectedDataObj.position) {
+        objPosAtDragStart = new THREE.Vector3(selectedDataObj.position.x, selectedDataObj.position.y, selectedDataObj.position.z);
+    }
+    if (selectedDataObj.x !== undefined) {
+        // Probably is a spawn point!
+        objPosAtDragStart = new THREE.Vector3(selectedDataObj.x, selectedDataObj.y, selectedDataObj.z);
+    }
+    if (selectedDataObj.size) {
+        objSizeAtDragStart = new THREE.Vector3(selectedDataObj.size.x, selectedDataObj.size.y, selectedDataObj.size.z);
+    }
+    if (gameState.currentMap.wallDrawables.includes(selectedDrawable)) {
+        wallDataAtDragStart = JSON.parse(JSON.stringify(gameState.currentMap.rawData.wall));
+    }
+
     (document.querySelector('#editorOverlay') as HTMLElement).style.userSelect = "none";
 }
 
@@ -401,6 +462,11 @@ inputEventDispatcher.addEventListener('mousemove', (e) => {
         if (directionArrows.hovered === "y") dist = posNow.y - dragStart.y;
         if (directionArrows.hovered === "z") dist = posNow.z - dragStart.z;
 
+        if (gameState.currentMap.wallDrawables.includes(selectedDrawable)) {
+            handleWallDrag(dist);
+            return;
+        }
+
         if (currentArrowAction === "translate") {
             let vec: THREE.Vector3;
             if (directionArrows.hovered === "x") {
@@ -423,7 +489,8 @@ inputEventDispatcher.addEventListener('mousemove', (e) => {
                 }
             }
 
-            changeSelectionPosition(newPos);
+            if (selectedDataObj.x) updateSelectedSpawnPoint(newPos);
+            else changeSelectionPosition(newPos);
         } else {
             // Scaling
 
@@ -454,6 +521,52 @@ inputEventDispatcher.addEventListener('mousemove', (e) => {
     } 
 });
 
+function handleWallDrag(dist: number) {
+    let { currentMap } = gameState;
+
+    if (snapToGrid) dist = dist - (dist % gridSize);
+
+    if (selectedDrawable === currentMap.wallDrawables[0]) {
+        currentMap.rawData.wall.minX = wallDataAtDragStart.minX + dist;
+    }
+    if (selectedDrawable === currentMap.wallDrawables[1]) {
+        currentMap.rawData.wall.maxX = wallDataAtDragStart.maxX + dist;
+    }
+    if (selectedDrawable === currentMap.wallDrawables[2]) {
+        currentMap.rawData.wall.minY = wallDataAtDragStart.minY + dist;
+    }
+    if (selectedDrawable === currentMap.wallDrawables[3]) {
+        currentMap.rawData.wall.maxY = wallDataAtDragStart.maxY + dist;
+    }
+
+    updateWallNShit();
+}
+
+function updateWallNShit() {
+    let currentMap = gameState.currentMap;
+
+    currentMap.createWallsAndFloor(currentMap.rawData.wall);
+
+    if (selectedDrawable === currentMap.wallDrawables[0]) {
+        wireframeOverlay.position.copy(currentMap.wallDrawables[0].position);
+        directionArrows.group.position.copy(currentMap.wallDrawables[0].position);
+    }
+    if (selectedDrawable === currentMap.wallDrawables[1]) {
+        wireframeOverlay.position.copy(currentMap.wallDrawables[1].position);
+        directionArrows.group.position.copy(currentMap.wallDrawables[1].position);
+    }
+    if (selectedDrawable === currentMap.wallDrawables[2]) {
+        wireframeOverlay.position.copy(currentMap.wallDrawables[2].position);
+        directionArrows.group.position.copy(currentMap.wallDrawables[2].position);
+    }
+    if (selectedDrawable === currentMap.wallDrawables[3]) {
+        wireframeOverlay.position.copy(currentMap.wallDrawables[3].position);
+        directionArrows.group.position.copy(currentMap.wallDrawables[3].position);
+    }
+
+    showObjectProperties(selectedDataObj);
+}
+
 let snapToGridButton = document.querySelector('#snapToGrid') as HTMLInputElement;
 let gridSizeInput = document.querySelector('#gridSize') as HTMLInputElement;
 
@@ -479,6 +592,8 @@ let objectPropertiesContainer = document.querySelector('#objectProperties') as H
 objectPropertiesContainer.style.display = "none";
 
 function showObjectProperties(obj: any) {
+    if (!obj) return;
+
     objectPropertiesContainer.style.display = "block";
 
     let innerDiv = objectPropertiesContainer.querySelector(':scope > div') as HTMLElement;
@@ -546,7 +661,83 @@ function showObjectProperties(obj: any) {
 
             innerDiv.appendChild(rotateBtn);
         }
+    } else if (obj === gameState.currentMap.rawData.wall) {
+        let minX = createInputElement("Wall min x", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.minX = Number(val);
+            updateWallNShit();
+        }, obj.minX);
+        let maxX = createInputElement("Wall max x", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.maxX = Number(val);
+            updateWallNShit();
+        }, obj.maxX);
+        let minY = createInputElement("Wall min y", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.minY = Number(val);
+            updateWallNShit();
+        }, obj.minY);
+        let maxY = createInputElement("Wall max y", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.maxY = Number(val);
+            updateWallNShit();
+        }, obj.maxY);
+
+        innerDiv.appendChild(minX);
+        innerDiv.appendChild(maxX);
+        innerDiv.appendChild(minY);
+        innerDiv.appendChild(maxY);
+    } else if (gameState.currentMap.rawData.spawnPoints.includes(obj)) {
+        let minX = createInputElement("Position x", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.x = Number(val);
+            updateSelectedSpawnPoint();
+        }, obj.x);
+        let maxX = createInputElement("Position y", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.y = Number(val);
+            updateSelectedSpawnPoint();
+        }, obj.y);
+        let minY = createInputElement("Position z", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.z = Number(val);
+            updateSelectedSpawnPoint();
+        }, obj.z);
+        let maxY = createInputElement("Yaw (in degrees)", (val: any) => {
+            if (!selectedDataObj) return;
+            obj.yaw = degToRad(Number(val));
+            updateSelectedSpawnPoint();
+        }, radToDeg(obj.yaw));
+
+        innerDiv.appendChild(minX);
+        innerDiv.appendChild(maxX);
+        innerDiv.appendChild(minY);
+        innerDiv.appendChild(maxY);   
     }
+}
+
+function updateSelectedSpawnPoint(newPos?: THREE.Vector3) {
+    if (!selectedDrawable) return;
+
+    if (newPos) {
+        selectedDataObj.x = newPos.x;
+        selectedDataObj.y = newPos.y;
+        selectedDataObj.z = newPos.z;
+    }
+
+    selectedDrawable.position.set(selectedDataObj.x, selectedDataObj.y, selectedDataObj.z);
+    selectedDrawable.rotation.x = 0;
+    selectedDrawable.rotation.y = 0;
+    selectedDrawable.rotation.z = 0;
+    selectedDrawable.rotateOnAxis(zAxis, selectedDataObj.yaw);
+
+    wireframeOverlay.position.copy(selectedDrawable.position);
+    wireframeOverlay.rotation.x = selectedDrawable.rotation.x;
+    wireframeOverlay.rotation.y = selectedDrawable.rotation.y;
+    wireframeOverlay.rotation.z = selectedDrawable.rotation.z;
+    directionArrows.group.position.copy(selectedDrawable.position);
+
+    showObjectProperties(selectedDataObj);
 }
 
 function createInputElement(name: string, onchange: Function, value: any = "") {
@@ -691,3 +882,58 @@ let copySmfButton = document.querySelector('#copySmf') as HTMLElement;
 copySmfButton.addEventListener('click', () => {
     copyTextToClipboard(gameState.currentMap.stringify());
 });
+
+function initMetadata() {
+    let innerDiv = document.querySelector("#editorMetadata > div") as HTMLElement;
+    innerDiv.innerHTML = "";
+
+    let metadata = gameState.currentMap.rawData.metadata;
+
+    for (let key in metadata) {
+        let element = createInputElement(key, (val: any) => {
+            let value: any;
+
+            if (val === "true" || val === "false") {
+                value = val === "true";
+            } else if (String(Number(val)) === val) {
+                value = Number(val);
+            } else {
+                value = val;
+            }
+
+            metadata[key] = value;
+
+            if (key === "wallHeight") {
+                updateWallNShit();
+            }
+        }, metadata[key].toString());
+
+        innerDiv.appendChild(element);
+    }
+}
+
+const SPAWN_POINT_MATERIAL = new THREE.MeshBasicMaterial({
+    color: 0xff00ff,
+    transparent: true,
+    opacity: 0.15
+});
+
+let drawableSpawnPoints: THREE.Mesh[] = [];
+function initSpawnPoints() {
+    let currentMap = gameState.currentMap;
+
+    drawableSpawnPoints = [];
+
+    for (let a of currentMap.rawData.spawnPoints) {
+        let mesh = new THREE.Mesh(
+            new THREE.ConeBufferGeometry(0.5, 1.5, 4),
+            SPAWN_POINT_MATERIAL
+        );
+
+        mesh.position.set(a.x, a.y, a.z);
+        mesh.rotateOnAxis(zAxis, a.yaw);
+
+        drawableSpawnPoints.push(mesh);
+        currentMap.scene.add(mesh);
+    }
+}

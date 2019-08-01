@@ -66,7 +66,6 @@ let init = async () => {
 
     if (isEditor) {
         await loadLevel("static/platforms.smf");
-        initEditor();
         return;
     }
 
