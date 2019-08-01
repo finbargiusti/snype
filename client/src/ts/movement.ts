@@ -1,14 +1,41 @@
 import { gameState } from "./game_state";
 import { inputState, inputEventDispatcher } from "./input";
 import * as THREE from "three";
-import { zAxis, xAxis } from "./rendering";
+import { zAxis, xAxis, camera } from "./rendering";
 import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
 import { socketSend } from "./net";
 import { Vector3 } from "three";
+import { Interpolator, EaseType } from "./animate";
 
 const JUMP_INTENSITY = 8;
 
 let jumpVelocity = new THREE.Vector3(0, 0, 0);
+
+export let isZoom = false;
+
+export let zoomInterpolator = new Interpolator({
+    ease: EaseType.EaseInOutExpo,
+    duration: 200,
+    from: 0,
+    to: 1
+});
+
+let zoom = () => {
+    isZoom = !isZoom;
+    if (zoomInterpolator.isVirgin) {
+        zoomInterpolator.start();
+    } else {
+        zoomInterpolator.reverse();
+    }
+};
+
+inputEventDispatcher.addEventListener("canvasmousedown", e => {
+    let mousevent = e as MouseEvent;
+
+    if (mousevent.button == 2) {
+        zoom();
+    }
+});
 
 export function updateLocalPlayerMovement(dif: number) {
     let { currentMap, localPlayer, isEditor } = gameState;
@@ -22,7 +49,14 @@ export function updateLocalPlayerMovement(dif: number) {
 
     let posCopy = localPlayer.position.clone();
     let velCopy = localPlayer.velocity.clone();
-    let actualSpeed = inputState.shift ? PLAYER_SPEED_SPRINTING : PLAYER_SPEED; // Determine speed based on sprinting status
+
+    let actualSpeed: number;
+
+    if (isZoom) {
+        actualSpeed = PLAYER_SPEED / 2;
+    } else {
+        actualSpeed = inputState.shift ? PLAYER_SPEED_SPRINTING : PLAYER_SPEED; // Determine speed based on sprinting status
+    }
 
     // Build a vector coplanar to the x-y axis based on current player movement input:
 
@@ -561,8 +595,10 @@ inputEventDispatcher.addEventListener("mousemove", e => {
 
     let localPlayer = gameState.localPlayer;
 
-    let yaw = localPlayer.yaw + -x / 1000;
-    let pitch = localPlayer.pitch + -y / 1000;
+    let factor = isZoom ? 3000 : 1000;
+
+    let yaw = localPlayer.yaw + -x / factor;
+    let pitch = localPlayer.pitch + -y / factor;
     pitch = clamp(pitch, -Math.PI / 2, Math.PI / 2);
 
     localPlayer.update({ yaw, pitch });
