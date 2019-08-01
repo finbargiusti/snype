@@ -3,7 +3,7 @@ import { mainCanvas, camera, zAxis, yAxis, xAxis } from "./rendering";
 import * as THREE from "three";
 import { gameState } from "./game_state";
 import { createBoxGeometry, createRampGeometry } from "./map";
-import { copyTextToClipboard, degToRad, radToDeg } from "./misc";
+import { copyTextToClipboard, degToRad, radToDeg, removeItemFromArray } from "./misc";
 
 const DIRECTION_ARROW_LENGTH = 1;
 const DIRECTION_ARROW_THICKNESS = 0.05;
@@ -814,6 +814,7 @@ inputEventDispatcher.addEventListener('keypress', (e) => {
                     gameState.currentMap.rawData.objects.splice(index, 1);
                     gameState.currentMap.scene.remove(selectedDrawable);
                     gameState.currentMap.drawableObjects.splice(gameState.currentMap.drawableObjects.indexOf(selectedDrawable), 1);
+                    removeItemFromArray(allSelectables, selectedDrawable);
 
                     deselectCurrentlySelected();
                 }
@@ -844,6 +845,8 @@ addBoxButton.addEventListener('click', () => {
 
     gameState.currentMap.rawData.objects.push(obj);
     let { drawable } = gameState.currentMap.createBox(obj);
+    allSelectables.push(drawable);
+    selectableDataConnection.set(drawable, obj);
     gameState.currentMap.scene.add(drawable);
 
     selectThing(drawable);
@@ -869,6 +872,8 @@ addRampButton.addEventListener('click', () => {
 
     gameState.currentMap.rawData.objects.push(obj);
     let { drawable } = gameState.currentMap.createRamp(obj);
+    allSelectables.push(drawable);
+    selectableDataConnection.set(drawable, obj);
     gameState.currentMap.scene.add(drawable);
 
     selectThing(drawable);
