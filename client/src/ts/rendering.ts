@@ -10,14 +10,15 @@ import {
 import { setCameraToLocalPlayer, useWeapon } from "./player";
 import { initCanvasListeners } from "./input";
 import { gameState } from "./game_state";
-import { updateLocalPlayerMovement } from "./movement";
+import { updateLocalPlayerMovement, zoomInterpolator } from "./movement";
 import { Howl, Howler } from "howler";
 import { playPop } from "./sound";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
 
-const FOV = 70;
+export const FOV = 70;
+export const ZOOM_FOV = 30;
 
 export let xAxis = new THREE.Vector3(1, 0, 0);
 export let yAxis = new THREE.Vector3(0, 1, 0);
@@ -59,6 +60,8 @@ window.addEventListener("resize", () => {
     camera.updateProjectionMatrix();
 });
 
+const crosshair = document.getElementById("crosshair");
+
 let lastRenderTime: number = null;
 let render = () => {
     let now = performance.now();
@@ -71,11 +74,18 @@ let render = () => {
         useWeapon();
     }
 
+    let zoomVal = zoomInterpolator.getCurrentValue();
+
+    camera.fov = FOV - zoomVal * (FOV - ZOOM_FOV);
+    camera.updateProjectionMatrix();
+    crosshair.style.transform = `translateX(-50%) translateY(-50%) scale(${zoomVal +
+        1})`;
+
     let currentMap = gameState.currentMap;
     if (currentMap) {
         currentMap.update(timeDif);
         renderer.render(currentMap.scene, camera);
-    }    
+    }
 
     requestAnimationFrame(render);
     lastRenderTime = now;

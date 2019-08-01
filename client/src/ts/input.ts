@@ -18,7 +18,6 @@ export let inputState = {
 
 export let inputEventDispatcher = new EventTarget();
 
-
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
     //console.log(keyCode);
@@ -99,7 +98,7 @@ window.addEventListener("keyup", e => {
     }
 });
 
-window.addEventListener('keydown', (e) => {
+window.addEventListener("keydown", e => {
     inputEventDispatcher.dispatchEvent(new KeyboardEvent("keypress", e));
 });
 
@@ -144,8 +143,14 @@ export function initCanvasListeners() {
         inputEventDispatcher.dispatchEvent(new MouseEvent(e.type, e));
     });
 
-    mainCanvas.addEventListener('mousedown', (e) => {
-        inputEventDispatcher.dispatchEvent(new MouseEvent("canvasmousedown", e));
+    mainCanvas.addEventListener("mousedown", e => {
+        inputEventDispatcher.dispatchEvent(
+            new MouseEvent("canvasmousedown", e)
+        );
+    });
+
+    mainCanvas.addEventListener("mouseup", e => {
+        inputEventDispatcher.dispatchEvent(new MouseEvent("canvasmouseup", e));
     });
 
     document.addEventListener("pointerlockchange", lockChangeAlert, false);
@@ -153,7 +158,9 @@ export function initCanvasListeners() {
     function lockChangeAlert() {
         if (document.pointerLockElement === mainCanvas) {
             //console.log("The pointer lock status is now locked");
-            document.getElementsByClassName("pause")[0].classList.remove("active");
+            document
+                .getElementsByClassName("pause")[0]
+                .classList.remove("active");
             inputState.pointerLocked = true;
             //document.addEventListener("mousemove", updatePosition, false);
         } else {

@@ -5,6 +5,7 @@ import { socketSend, handlers } from "./net";
 import { zAxis, xAxis } from "./rendering";
 import { Howl } from "howler";
 import { playPop } from "./sound";
+import { isZoom } from "./movement";
 
 interface WeaponSpecifications {
     id: number;
@@ -52,8 +53,11 @@ export class WeaponInstance {
                 let raw = new THREE.Vector3(0, 1, 0);
 
                 // Left and right inaccuracy
-                let yawInaccuracy =
-                    (Math.random() * 2 - 1) * this.weapon.spec.inaccuracy;
+                let inacc = isZoom
+                    ? this.weapon.spec.inaccuracy / 2
+                    : this.weapon.spec.inaccuracy;
+
+                let yawInaccuracy = (Math.random() * 2 - 1) * inacc;
 
                 direction.applyAxisAngle(
                     zAxis,
@@ -127,7 +131,7 @@ export const SNIPER = new Weapon({
     id: 2,
     name: "SNIPER",
     pitch: 3,
-    rateOfFire: 0.75,
+    rateOfFire: 1,
     inaccuracy: 0.002,
     projectilesPerShot: 1,
     projectileOptions: {

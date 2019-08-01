@@ -80,12 +80,33 @@ export class Player {
         currentMap.scene.add(this.hitbox);
     }
 
+    private bestSpawn() {
+        let fav = this.currentMap.spawnPoints[
+            Math.floor(Math.random() * this.currentMap.spawnPoints.length)
+        ];
+        let dist = 0;
+
+        this.currentMap.spawnPoints.forEach(spawn => {
+            let spawnVec = new THREE.Vector3(spawn.x, spawn.y, spawn.z);
+            let totDist = 0;
+            players.forEach(player => {
+                if (player === localPlayer) return;
+                totDist += spawnVec.distanceTo(player.position);
+            });
+
+            if (totDist > dist) {
+                dist = totDist;
+                fav = spawn;
+            }
+        });
+
+        return fav;
+    }
+
     spawn() {
         goSound.play();
         if (this.currentMap.spawnPoints.length > 0) {
-            let spawn = this.currentMap.spawnPoints[
-                Math.floor(Math.random() * this.currentMap.spawnPoints.length)
-            ];
+            let spawn = this.bestSpawn();
             this.position.set(spawn.x, spawn.y, spawn.z);
             this.yaw = spawn.yaw;
         } else {
