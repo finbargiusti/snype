@@ -64,13 +64,8 @@ let init = async () => {
     let isEditor = urlParams.get("editor") === "true";
     gameState.isEditor = isEditor;
 
-    if (isEditor) {
-        await loadLevel("static/platforms.smf");
-        return;
-    }
-
     listMaps("/defaultmaps");
-    openSocket();
+    if (!isEditor) openSocket();
 };
 
 let leaveLobby = async () => {

@@ -17,6 +17,7 @@ export function initEditor() {
     gameState.localPlayer.object3D.visible = false;
 
     (document.querySelector('#editorOverlay') as HTMLElement).style.display = "block";
+    (document.querySelector('.pause') as HTMLElement).style.display = "none";
 
     initGridContainer();
     updateArrowAction(currentArrowAction);

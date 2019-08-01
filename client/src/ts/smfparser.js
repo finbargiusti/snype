@@ -232,7 +232,7 @@ const parse = (file) => {
             minX: wallMinX,
             maxX: wallMaxX,
             minY: wallMinY,
-            maxY: wallMi
+            maxY: wallMaxY
         };
     }
 
