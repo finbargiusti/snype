@@ -9,14 +9,19 @@
     />
     <title>Snype</title>
     <link rel="shortcut icon" href="./media/18554.png" />
-    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/editor.css" />
   </head>
   <body>
     <script src="./ts/index.ts" defer></script>
-    <canvas id="root"></canvas>
-    <h2 id="health">100</h2>
-    <h2 id="weapon">SMG</h2>
-    <img src="media/crosshair.png" id="crosshair" />
+    <div class="game">
+      <canvas id="root"></canvas>
+      <h2 id="health">100</h2>
+      <h2 id="weapon">SMG</h2>
+      <img src="media/crosshair.png" id="crosshair" />
+      <div class="pause active">
+        <h2 id="leave">LEAVE LOBBY</h2>
+      </div>
+    </div>
     <div id="maps">
       <h1>Snype</h1>
     </div>
@@ -41,13 +46,13 @@
           <button id="addSpawn">Spawn</button>
         </div>
       </div>
-      
+
       <div class="editorContainer">
         <h3>Grid</h3>
-        <input type="checkbox" id="snapToGrid">Snap to grid
+        <input type="checkbox" id="snapToGrid" />Snap to grid
         <div class="editorProperty">
           <h4>Grid size</h4>
-          <input type="text" value="1.0" id="gridSize">
+          <input type="text" value="1.0" id="gridSize" />
         </div>
       </div>
       <div class="editorContainer" id="objectProperties">
@@ -57,6 +62,13 @@
     </div>
   </body>
   <style>
+    .game {
+      width: 100%;
+      height: 100%;
+    }
+    #root {
+      z-index: 1 !important;
+    }
     #maps {
       display: none;
       background-color: rgba(0, 0, 0, 0.5);
@@ -97,8 +109,12 @@
     body {
       margin: 0px;
       padding: 0px;
+      background-color: black;
       overflow: hidden;
       font-family: "Orbitron", sans-serif;
+    }
+    body * {
+      z-index: 5;
     }
     #crosshair {
       width: 60px;
@@ -108,13 +124,20 @@
       transform: translateX(-50%) translateY(-50%);
       pointer-events: none;
     }
+    #leave {
+      color: white;
+      text-shadow: black 0px 0px 5px;
+      font-size: 20px;
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
     #health {
       color: white;
       position: absolute;
-      margin-left: 10px;
       text-shadow: black 0px 0px 5px;
       transform-origin: 0px 0px;
-      margin: 0;
       font-size: 35px;
       left: 20px;
       top: 20px;
@@ -132,6 +155,21 @@
       right: 10px;
       pointer-events: none;
       text-shadow: black 0px 0px 5px;
+    }
+    .pause {
+      width: 100%;
+      height: 100px;
+      display: flex;
+      position: absolute;
+      left: 0;
+      top: -100px;
+      transition: top 0.4s;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .pause.active {
+      top: 0;
     }
   </style>
 </html>

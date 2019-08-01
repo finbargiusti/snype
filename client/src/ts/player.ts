@@ -294,7 +294,9 @@ export function removePlayer(obj: any) {
     }
 }
 
-inputEventDispatcher.addEventListener("mousedown", e => {
+inputEventDispatcher.addEventListener("canvasmousedown", e => {
+    if (!inputState.pointerLocked) return;
+
     let mouseEvent = e as MouseEvent;
 
     if (mouseEvent.button === 0) {

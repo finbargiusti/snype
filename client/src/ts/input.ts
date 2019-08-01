@@ -12,11 +12,12 @@ export let inputState = {
     spacebar: false,
     primaryMb: false,
     secondaryMb: false,
-    mouseX: window.innerWidth/2,
-    mouseY: window.innerHeight/2,
+    mouseX: window.innerWidth / 2,
+    mouseY: window.innerHeight / 2
 };
 
 export let inputEventDispatcher = new EventTarget();
+
 
 window.addEventListener("keydown", e => {
     let keyCode = e.keyCode;
@@ -56,7 +57,6 @@ window.addEventListener("keydown", e => {
             }
             break;
         case 81: {
-            
         }
     }
 });
@@ -149,9 +149,11 @@ export function initCanvasListeners() {
     function lockChangeAlert() {
         if (document.pointerLockElement === mainCanvas) {
             //console.log("The pointer lock status is now locked");
+            document.getElementsByClassName("pause")[0].classList.remove("active");
             inputState.pointerLocked = true;
             //document.addEventListener("mousemove", updatePosition, false);
         } else {
+            document.getElementsByClassName("pause")[0].classList.add("active");
             //console.log("The pointer lock status is now unlocked");
             inputState.pointerLocked = false;
             //document.removeEventListener("mousemove", updatePosition, false);

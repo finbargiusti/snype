@@ -138,21 +138,29 @@ function createWebSocketServer(httpServer) {
         function close() {
             sockets.delete(socket);
 
-            let player = socketPlayerAssociation.get(socket);
-            if (player) {
-                players.delete(player);
-
-                sockets.forEach(socket2 => {
-                    socketSend(socket2, "removePlayer", {
-                        id: player.id
-                    });
-                });
-            }
+            removePlayer(socket);
         }
     });
 
     console.log("Fired up the WS server.");
 }
+
+let removePlayer = socket => {
+    let player = socketPlayerAssociation.get(socket);
+    if (player) {
+        players.delete(player);
+
+        sockets.forEach(socket2 => {
+            socketSend(socket2, "removePlayer", {
+                id: player.id
+            });
+        });
+    }
+};
+
+socketMessageHandlers["leave"] = function(socket, data) {
+    removePlayer(socket);
+};
 
 socketMessageHandlers["connect"] = function(socket, data) {
     let newPlayer = new Player(data.playerId);
