@@ -32,7 +32,7 @@ let zoom = () => {
 inputEventDispatcher.addEventListener("canvasmousedown", e => {
     let mousevent = e as MouseEvent;
 
-    if (mousevent.button == 2) {
+    if (mousevent.button == 2 && !gameState.isEditor) {
         zoom();
     }
 });

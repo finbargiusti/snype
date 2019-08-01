@@ -43,6 +43,28 @@ routes["/defaultmaps"] = (request, response) => {
     response.end(JSON.stringify(defaultMaps));
 };
 
+routes["/templatemaps"] = (request, response) => {
+    let templateMaps = fs.readdirSync(
+        pather.resolve(__dirname + "/maps/templates")
+    );
+
+    templateMaps = templateMaps.map(path => {
+        return {
+            metadata: parse(
+                fs
+                    .readFileSync(
+                        pather.resolve(__dirname + `/maps/templates/${path}`)
+                    )
+                    .toString()
+            ).metadata,
+            path: "/maps/templates/" + path
+        };
+    });
+
+    response.writeHead(200);
+    response.end(JSON.stringify(templateMaps));
+};
+
 const PORT = 20003;
 function createHTTPServer() {
     let httpServer = http.createServer();

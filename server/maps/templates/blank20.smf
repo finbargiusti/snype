@@ -1,0 +1,9 @@
+#! v2
+
+---
+name: "Blank 20x20"
+author: "Finbar Giusti"
+wallHeight: 4
+---
+
+Wall -10 10 -10 10

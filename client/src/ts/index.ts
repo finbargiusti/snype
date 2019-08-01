@@ -64,7 +64,11 @@ let init = async () => {
     let isEditor = urlParams.get("editor") === "true";
     gameState.isEditor = isEditor;
 
-    listMaps("/defaultmaps");
+    if (isEditor) {
+        listMaps("/templatemaps");
+    } else {
+        listMaps("/defaultmaps");
+    }
     if (!isEditor) openSocket();
 };
 
