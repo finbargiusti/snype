@@ -261,7 +261,7 @@ export class Projectile {
                     player = a;
                 }
             });
-            outer: if (player && !this.hitPlayers.has(player)) {
+            if (player && !this.hitPlayers.has(player)) {
                 this.hitPlayers.add(player);
 
                 // We shot a player!

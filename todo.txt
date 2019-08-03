@@ -1,6 +1,4 @@
 == David ==
-- Add editor
-- Rework movement speed code
 - Add more animations
 - Add Binarify to server
 - Add low-poly gun models

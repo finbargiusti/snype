@@ -297,7 +297,7 @@ export function updateLocalPlayerMovement(dif: number) {
             // Get a vector coplanar to the x-y axis, describing horizontal movement:
             let horizontalMovement = velCopy.clone();
             horizontalMovement.z = 0;
-            if (horizontalMovement.x === 0 || horizontalMovement.y === 0)
+            if (horizontalMovement.x === 0 && horizontalMovement.y === 0)
                 return;
             horizontalMovement.normalize();
 
