@@ -484,9 +484,9 @@ export function updateLocalPlayerMovement(dif: number) {
 
             // Create a vector from the beginning of the player's legs last frame to the beginning of the player's legs this frame. That'll be the path we'll check via raycasting.
             let bodyStart = localPlayer.position.clone();
-            bodyStart.z += legHeight;
+            //bodyStart.z += legHeight;
             let endPoint = posCopy.clone();
-            endPoint.z += legHeight;
+            //endPoint.z += legHeight;
             let direction = endPoint.sub(bodyStart);
 
             let rayDoubleCheck = new THREE.Raycaster(

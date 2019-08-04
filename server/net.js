@@ -7,6 +7,10 @@ const { parse } = require("../client/src/ts/smfparser");
 const fs = require("fs");
 const { performance } = require("perf_hooks");
 
+function numInRange(low, high) {
+    return Math.random() * (high - low) + low;
+}
+
 const serve = serveStatic(__dirname + "/../client/dist", {
     setHeaders(res) {
         // For now. Caching is evil!
@@ -208,6 +212,7 @@ socketMessageHandlers["connect"] = function(socket, data) {
 };
 
 let loadedMaps = {};
+let powerUpTypes = ["speedBuff", "rofBuff"];
 
 class Map {
     constructor(url) {
@@ -218,8 +223,9 @@ class Map {
         for (let p of this.rawData.powerUps) {
             this.powerUps.push({
                 data: p,
-                appearanceTime: performance.now() + 5000,
-                currentId: null
+                appearanceTime: performance.now() + numInRange(0, 30000),
+                currentId: null,
+                type: null
             });
         }
     }
@@ -250,12 +256,15 @@ function periodicMapUpdater() {
         for (let p of map.powerUps) {
             if (now >= p.appearanceTime && p.currentId === null) {
                 p.currentId = Math.random().toString();
+                p.type = powerUpTypes[(Math.random() * powerUpTypes.length) | 0];
 
                 players.forEach(player => {
                     if (player.mapUrl !== map.url) return;
+
                     socketSend(player.socket, "spawnPowerUp", {
                         position: p.data.position,
-                        id: p.currentId
+                        id: p.currentId,
+                        type: p.type
                     }); 
                 });
             }
@@ -437,7 +446,7 @@ socketMessageHandlers["collectPowerUp"] = function(socket, data) {
 
     let p = map.powerUps[index];
     p.currentId = null;
-    p.appearanceTime = performance.now() + 10000;
+    p.appearanceTime = performance.now() + numInRange(10000, 25000);
 
     players.forEach((player) => {
         if (player.mapUrl !== map.url) return;
@@ -448,8 +457,11 @@ socketMessageHandlers["collectPowerUp"] = function(socket, data) {
     });
 
     socketSend(socket, "pickupPowerUp", {
-        id: data.id
+        id: data.id,
+        type: p.type
     });
+
+    p.type = null;
 };
 
 exports.createHTTPServer = createHTTPServer;

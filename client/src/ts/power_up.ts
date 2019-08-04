@@ -4,11 +4,13 @@ import { playerRadius, playerHeight, setMovementSpeedFactor } from "./movement";
 import { socketSend, handlers } from "./net";
 import { setRofFactor } from "./weapon";
 
+const powerUpContainer = document.querySelector("#powerUpContainer") as HTMLElement;
 const powerUpSound = new Howl({ src: ["/static/powerup.mp3"], volume: 0.6, rate: 1 });
 
 interface PowerUpOptions {
     position: THREE.Vector3,
-    id: string
+    id: string,
+    type: string
 }
 
 const POWER_UP_RADIUS = 0.4;
@@ -16,17 +18,21 @@ const POWER_UP_RADIUS = 0.4;
 export class PowerUp {
     public position: THREE.Vector3;
     public id: string;
+    public type: string;
     public creationTime: number;
     public mesh: THREE.Mesh;
 
     constructor(options: PowerUpOptions) {
         this.position = options.position;
         this.id = options.id;
+        this.type = options.type;
         this.creationTime = performance.now();
 
+        let emissiveColor = new THREE.Color(powerUpTypes[this.type].color);
+        emissiveColor.multiplyScalar(0.333);
         let mesh = new THREE.Mesh(
             new THREE.IcosahedronBufferGeometry(POWER_UP_RADIUS, 0),
-            new THREE.MeshLambertMaterial({color: 0x00ff00, wireframe: true, emissive: 0x004400})
+            new THREE.MeshLambertMaterial({color: powerUpTypes[this.type].color, wireframe: true, emissive: emissiveColor})
         );
         mesh.geometry.computeBoundingBox();
         this.mesh = mesh;
@@ -79,6 +85,7 @@ export class PowerUp {
 interface PowerUpTypeInfo {
     name: string,
     duration: number,
+    color: number,
     onStart: Function,
     onEnd: Function
 }
@@ -86,7 +93,8 @@ interface PowerUpTypeInfo {
 let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
     "speedBuff": {
         name: "Rush",
-        duration: 10000,
+        duration: 15000,
+        color: 0x0080ff,
         onStart() {
             setMovementSpeedFactor(2);
         },
@@ -96,7 +104,8 @@ let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
     },
     "rofBuff": {
         name: "Overheat",
-        duration: 10000,
+        duration: 12000,
+        color: 0xff3300,
         onStart() {
             setRofFactor(2);
         },
@@ -108,13 +117,35 @@ let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
 
 let currentPowerUps: any[] = [];
 
+function createPowerUpPopup(name: string) {
+    let div = document.createElement("div");
+    let p1 = document.createElement("p");
+    let p2 = document.createElement("p");
+
+    div.appendChild(p1);
+    div.appendChild(p2);
+
+    p1.textContent = name;
+
+    return { div, p1, p2 };
+}
+
 function applyPowerUp(obj: any) {
     let existing = currentPowerUps.find((a) => a.key === obj.key);
     if (existing) {
         existing.start = performance.now(); // Extend its duration
     } else {
+        let elements = createPowerUpPopup(obj.type.name);
+        obj.elements = elements;
+        obj.elements.p1.style.color = "#" + ("000000" + obj.type.color.toString(16)).slice(-6);
+
         currentPowerUps.push(obj);
         obj.type.onStart();
+
+        powerUpContainer.appendChild(obj.elements.div);
+
+        obj.elements.div.clientWidth;
+        obj.elements.div.classList.add("shown");
     }
 }
 
@@ -124,9 +155,17 @@ export function updateEquippedPowerUps() {
     for (let i = 0; i < currentPowerUps.length; i++) {
         let p = currentPowerUps[i];
 
-        if (now >= p.start + p.type.duration) {
+        let elapsed = (now - p.start);
+        p.elements.p2.textContent = Math.abs((p.type.duration - elapsed) / 1000).toFixed(1) + 's';
+
+        if (elapsed >= p.type.duration) {
             p.type.onEnd();
             currentPowerUps.splice(i--, 1);
+
+            p.elements.div.classList.remove("shown");
+            setTimeout(() => {
+                powerUpContainer.removeChild(p.elements.div);
+            }, 1000);
         }
     }
 }
@@ -137,7 +176,8 @@ handlers["spawnPowerUp"] = function(data: any) {
 
     let options = {
         position: new THREE.Vector3(data.position.x, data.position.y, data.position.z),
-        id: data.id
+        id: data.id,
+        type: data.type
     };
 
     currentMap.addPowerUp(new PowerUp(options));
@@ -160,8 +200,7 @@ handlers["removePowerUp"] = function(data: any) {
 handlers["pickupPowerUp"] = function(data: any) {
     powerUpSound.play();
 
-    // Temp:
-    let key = "rofBuff";
+    let key = data.type;
 
     let type = powerUpTypes[key];
     let obj = {
