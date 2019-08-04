@@ -209,6 +209,17 @@ socketMessageHandlers["connect"] = function(socket, data) {
         if (playa === newPlayer || playa.mapUrl !== newPlayer.mapUrl) return;
         socketSend(socket, "addPlayer", formatPlayer(playa));
     });
+
+    // Send all currently existing power-ups
+    for (let p of loadedMaps[data.mapUrl].powerUps) {
+        if (p.currentId !== null) {
+            socketSend(socket, "spawnPowerUp", {
+                position: p.data.position,
+                id: p.currentId,
+                type: p.type
+            }); 
+        }
+    }
 };
 
 let loadedMaps = {};
