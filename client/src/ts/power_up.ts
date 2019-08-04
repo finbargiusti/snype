@@ -129,10 +129,10 @@ let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
         duration: 10000,
         color: 0x66bb6a,
         onStart() {
-            setJumpFactor(2.1);
+            setJumpFactor(1.8);
         },
         onEnd() {
-            setJumpFactor(3);
+            setJumpFactor(1);
         }
     },
 };
