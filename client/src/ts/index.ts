@@ -7,6 +7,7 @@ import { createLocalPlayer, players } from "./player";
 import { openSocket, socketSend, socket } from "./net";
 import { initEditor } from "./editor";
 import { mainCanvas } from "./rendering";
+import { currentPowerUps } from "./power_up";
 
 let gameEl = document.querySelector(".game") as HTMLElement;
 
@@ -73,6 +74,10 @@ let init = async () => {
 };
 
 let leaveLobby = async () => {
+    for (let a of currentPowerUps) {
+        a.start = -Infinity; // Force a remove
+    }
+
     gameState.currentMap = null;
     players.clear();
     gameState.localPlayer = null;

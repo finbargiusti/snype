@@ -212,7 +212,7 @@ socketMessageHandlers["connect"] = function(socket, data) {
 };
 
 let loadedMaps = {};
-let powerUpTypes = ["speedBuff", "rofBuff"];
+let powerUpTypes = ["speedBuff", "rofBuff", "lessGravity", "jumpBoost"];
 
 class Map {
     constructor(url) {
@@ -223,7 +223,7 @@ class Map {
         for (let p of this.rawData.powerUps) {
             this.powerUps.push({
                 data: p,
-                appearanceTime: performance.now() + numInRange(0, 30000),
+                appearanceTime: performance.now() + numInRange(0, 0),
                 currentId: null,
                 type: null
             });

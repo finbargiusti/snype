@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { gameState } from "./game_state";
-import { playerRadius, playerHeight, setMovementSpeedFactor } from "./movement";
+import { playerRadius, playerHeight, setMovementSpeedFactor, setGravityFactor, setJumpFactor } from "./movement";
 import { socketSend, handlers } from "./net";
 import { setRofFactor } from "./weapon";
 
@@ -107,15 +107,37 @@ let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
         duration: 12000,
         color: 0xff3300,
         onStart() {
-            setRofFactor(2);
+            setRofFactor(2.5);
         },
         onEnd() {
             setRofFactor(1);
         }
     },
+    "lessGravity": {
+        name: "Moonwalk",
+        duration: 15000,
+        color: 0xf8f8ff,
+        onStart() {
+            setGravityFactor(0.333)
+        },
+        onEnd() {
+            setGravityFactor(1)
+        }
+    },
+    "jumpBoost": {
+        name: "Leap",
+        duration: 10000,
+        color: 0x66bb6a,
+        onStart() {
+            setJumpFactor(2.1);
+        },
+        onEnd() {
+            setJumpFactor(3);
+        }
+    },
 };
 
-let currentPowerUps: any[] = [];
+export let currentPowerUps: any[] = [];
 
 function createPowerUpPopup(name: string) {
     let div = document.createElement("div");

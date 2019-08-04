@@ -16,6 +16,16 @@ export function setMovementSpeedFactor(num: number) {
     movementSpeedFactor = num;
 }
 
+let gravityFactor = 1;
+export function setGravityFactor(num: number) {
+    gravityFactor = num;
+}
+
+let jumpFactor = 1;
+export function setJumpFactor(num: number) {
+    jumpFactor = num;
+}
+
 export let isZoom = false;
 
 export let zoomInterpolator = new Interpolator({
@@ -96,9 +106,14 @@ export function updateLocalPlayerMovement(dif: number) {
         velCopy.y = movementVec.y * actualSpeed;
 
         if (inputState.spacebar) {
-            velCopy.z = JUMP_INTENSITY;
+            velCopy.z = JUMP_INTENSITY * jumpFactor;
         }
     } else {
+        velCopy.x = movementVec.x * actualSpeed;
+        velCopy.y = movementVec.y * actualSpeed;
+
+        // TEMP: Fix this:
+        /*
         let scaledX = movementVec.x * actualSpeed,
             scaledY = movementVec.y * actualSpeed;
 
@@ -119,10 +134,10 @@ export function updateLocalPlayerMovement(dif: number) {
             velCopy.y = jumpVelocity.y * 0.3 + scaledY * 0.7;
         } else {
             velCopy.y = jumpVelocity.y * 0.6 + newJump.y * 0.4;
-        }
+        }*/
     }
 
-    velCopy.add(GRAVITY.clone().multiplyScalar(dif / 1000));
+    velCopy.add(GRAVITY.clone().multiplyScalar(gravityFactor * dif / 1000));
     posCopy.add(velCopy.clone().multiplyScalar(dif / 1000));
 
     if (velCopy.length() > 0.0001) {
@@ -484,9 +499,9 @@ export function updateLocalPlayerMovement(dif: number) {
 
             // Create a vector from the beginning of the player's legs last frame to the beginning of the player's legs this frame. That'll be the path we'll check via raycasting.
             let bodyStart = localPlayer.position.clone();
-            //bodyStart.z += legHeight;
+            bodyStart.z += legHeight / 3;
             let endPoint = posCopy.clone();
-            //endPoint.z += legHeight;
+            endPoint.z += legHeight / 3;
             let direction = endPoint.sub(bodyStart);
 
             let rayDoubleCheck = new THREE.Raycaster(
@@ -524,6 +539,20 @@ export function updateLocalPlayerMovement(dif: number) {
                 break;
             }
         }
+    }
+
+    // Make sure the player can't glitch outta walls:
+    while (posCopy.x < currentMap.rawData.wall.minX) {
+        posCopy.x += 1;
+    }
+    while (posCopy.x > currentMap.rawData.wall.maxX) {
+        posCopy.x -= 1;
+    }
+    while (posCopy.y < currentMap.rawData.wall.minY) {
+        posCopy.y += 1;
+    }
+    while (posCopy.y > currentMap.rawData.wall.maxY) {
+        posCopy.y -= 1;
     }
 
     // Last security check: Don't ever glitch through the ground:
