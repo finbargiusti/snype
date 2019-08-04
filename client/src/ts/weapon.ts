@@ -7,6 +7,11 @@ import { Howl } from "howler";
 import { playPop } from "./sound";
 import { isZoom } from "./movement";
 
+let rofFactor = 1;
+export function setRofFactor(num: number) {
+    rofFactor = num;
+}
+
 interface WeaponSpecifications {
     id: number;
     name: string;
@@ -42,7 +47,7 @@ export class WeaponInstance {
         if (!this.wielder) return;
 
         let now = performance.now();
-        if (now - this.lastShotTime >= this.weapon.timeBetweenShots) {
+        if (now - this.lastShotTime >= (this.weapon.timeBetweenShots / rofFactor)) {
             playPop(undefined, this.weapon.spec.pitch);
 
             let origin = this.wielder.getHeadPosition();

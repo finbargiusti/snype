@@ -11,6 +11,11 @@ const JUMP_INTENSITY = 8;
 
 let jumpVelocity = new THREE.Vector3(0, 0, 0);
 
+let movementSpeedFactor = 1;
+export function setMovementSpeedFactor(num: number) {
+    movementSpeedFactor = num;
+}
+
 export let isZoom = false;
 
 export let zoomInterpolator = new Interpolator({
@@ -62,6 +67,7 @@ export function updateLocalPlayerMovement(dif: number) {
     } else {
         actualSpeed = inputState.shift ? PLAYER_SPEED_SPRINTING : PLAYER_SPEED; // Determine speed based on sprinting status
     }
+    actualSpeed *= movementSpeedFactor;
 
     // Build a vector coplanar to the x-y axis based on current player movement input:
 

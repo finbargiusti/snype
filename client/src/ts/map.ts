@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Projectile } from "./weapon";
 import { renderer } from "./rendering";
 import { radToDeg, removeItemFromArray } from "./misc";
+import "./power_up";
 import { PowerUp } from "./power_up";
 import { handlers } from "./net";
 import { gameState } from "./game_state";
@@ -539,29 +540,3 @@ export class SnypeMap {
         return output;
     }
 }
-
-handlers["spawnPowerUp"] = function(data: any) {
-    let { currentMap } = gameState;
-    if (!currentMap) return;
-
-    let options = {
-        position: new THREE.Vector3(data.position.x, data.position.y, data.position.z),
-        id: data.id
-    };
-
-    currentMap.addPowerUp(new PowerUp(options));
-};
-
-handlers["removePowerUp"] = function(data: any) {
-    let { currentMap } = gameState;
-    if (!currentMap) return;
-
-    let index = currentMap.powerUps.findIndex((a) => a.id === data.id);
-    if (index === -1) return;
-
-    let powerUp = currentMap.powerUps[index];
-
-    currentMap.scene.remove(powerUp.mesh);
-    currentMap.powerUps.splice(index, 1);
-    powerUp.mesh.geometry.dispose();
-};

@@ -13,6 +13,7 @@ import { gameState } from "./game_state";
 import { updateLocalPlayerMovement, zoomInterpolator } from "./movement";
 import { Howl, Howler } from "howler";
 import { playPop } from "./sound";
+import { updateEquippedPowerUps } from "./power_up";
 
 var OBJLoader = require("three-obj-loader");
 OBJLoader(THREE);
@@ -72,6 +73,7 @@ let render = () => {
         updateLocalPlayerMovement(timeDif);
         setCameraToLocalPlayer();
         useWeapon();
+        updateEquippedPowerUps();
     }
 
     let zoomVal = zoomInterpolator.getCurrentValue();
