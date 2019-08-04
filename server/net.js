@@ -234,7 +234,7 @@ class Map {
         for (let p of this.rawData.powerUps) {
             this.powerUps.push({
                 data: p,
-                appearanceTime: performance.now() + numInRange(0, 0),
+                appearanceTime: performance.now() + numInRange(0, 30000),
                 currentId: null,
                 type: null
             });
