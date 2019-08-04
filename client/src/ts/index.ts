@@ -11,11 +11,8 @@ import { currentPowerUps } from "./power_up";
 
 let gameEl = document.querySelector(".game") as HTMLElement;
 
-let loadLevel = async (url: any) => {
+let loadLevel = async (text: string, url: string) => {
     gameEl.style.filter = "";
-
-    let response = await fetch(url);
-    let text = await response.text();
 
     let rawSMFData = parse(text);
 
@@ -52,12 +49,27 @@ let listMaps = async (url: any) => {
         let button = document.createElement("p");
         button.innerText = `${map.metadata.name} by ${map.metadata.author ||
             "anon"}`;
-        button.onclick = () => {
+        button.onclick = async () => {
             mapEl.style.display = "none";
-            loadLevel(map.path);
+            let response = await fetch(map.path);
+            let text = await response.text();
+            loadLevel(text, map.path);
         };
         mapEl.appendChild(button);
     });
+
+    if (gameState.isEditor) {
+        let textarea = document.getElementById("smf-clipboard");
+        let pasteButton = document.createElement("p");
+        (pasteButton.innerText = "Load from Clipboard"),
+            (pasteButton.onclick = async () => {
+                mapEl.style.display = "none";
+                textarea.focus();
+                let text = await navigator.clipboard.readText();
+                loadLevel(text, "/clipboard");
+            });
+        mapEl.appendChild(pasteButton);
+    }
 };
 
 let init = async () => {
