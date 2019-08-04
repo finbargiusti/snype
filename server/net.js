@@ -5,6 +5,7 @@ const pather = require("path");
 const ws = require("ws");
 const { parse } = require("../client/src/ts/smfparser");
 const fs = require("fs");
+const { performance } = require("perf_hooks");
 
 const serve = serveStatic(__dirname + "/../client/dist", {
     setHeaders(res) {
@@ -158,9 +159,8 @@ function createWebSocketServer(httpServer) {
         });
 
         function close() {
-            sockets.delete(socket);
-
             removePlayer(socket);
+            sockets.delete(socket);
         }
     });
 
@@ -172,8 +172,10 @@ let removePlayer = socket => {
     if (player) {
         players.delete(player);
 
-        sockets.forEach(socket2 => {
-            socketSend(socket2, "removePlayer", {
+        players.forEach(targetPlayer => {
+            if (player.mapUrl !== targetPlayer.mapUrl) return;
+    
+            socketSend(targetPlayer.socket, "removePlayer", {
                 id: player.id
             });
         });
@@ -193,11 +195,74 @@ socketMessageHandlers["connect"] = function(socket, data) {
     players.add(newPlayer);
     socketPlayerAssociation.set(socket, newPlayer);
 
+    if (!loadedMaps[data.mapUrl]) {
+        let map = new Map(data.mapUrl);
+
+        loadedMaps[data.mapUrl] = map;
+    }
+
     players.forEach(playa => {
         if (playa === newPlayer || playa.mapUrl !== newPlayer.mapUrl) return;
         socketSend(socket, "addPlayer", formatPlayer(playa));
     });
 };
+
+let loadedMaps = {};
+
+class Map {
+    constructor(url) {
+        this.url = url;
+        this.rawData = parse(fs.readFileSync(__dirname + this.url).toString());
+        this.powerUps = [];
+
+        for (let p of this.rawData.powerUps) {
+            this.powerUps.push({
+                data: p,
+                appearanceTime: performance.now() + 5000,
+                currentId: null
+            });
+        }
+    }
+
+    getPlayers() {
+        let arr = [];
+
+        players.forEach((player) => {
+            if (player.mapUrl === this.url) arr.push(player);
+        });
+
+        return arr;
+    }
+}
+
+function periodicMapUpdater() {
+    let now = performance.now();
+
+    for (let key in loadedMaps) {
+        let map = loadedMaps[key];
+        let mapPlayers = map.getPlayers();
+
+        if (mapPlayers.length === 0) {
+            delete loadedMaps[key];
+            return;
+        }
+
+        for (let p of map.powerUps) {
+            if (now >= p.appearanceTime && p.currentId === null) {
+                p.currentId = Math.random().toString();
+
+                players.forEach(player => {
+                    if (player.mapUrl !== map.url) return;
+                    socketSend(player.socket, "spawnPowerUp", {
+                        position: p.data.position,
+                        id: p.currentId
+                    }); 
+                });
+            }
+        }
+    }
+}
+setInterval(periodicMapUpdater, 500);
 
 class Player {
     constructor(id) {
@@ -358,6 +423,33 @@ socketMessageHandlers["playerHit"] = function(socket, data) {
 
         player.dealDamage(data.damage, culprit);
     }
+};
+
+socketMessageHandlers["collectPowerUp"] = function(socket, data) {
+    let player = socketPlayerAssociation.get(socket);
+    if (!player) return;
+
+    let map = loadedMaps[player.mapUrl];
+    if (!map) return;
+
+    let index = map.powerUps.findIndex((a) => a.currentId === data.id);
+    if (index === -1) return;
+
+    let p = map.powerUps[index];
+    p.currentId = null;
+    p.appearanceTime = performance.now() + 10000;
+
+    players.forEach((player) => {
+        if (player.mapUrl !== map.url) return;
+
+        socketSend(player.socket, "removePowerUp", {
+            id: data.id
+        });
+    });
+
+    socketSend(socket, "pickupPowerUp", {
+        id: data.id
+    });
 };
 
 exports.createHTTPServer = createHTTPServer;

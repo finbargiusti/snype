@@ -66,8 +66,8 @@ const parse = (file) => {
     let sun = { direction: { x: -40, y: -40, z: -50 }, color: 0xffffff, intensity: 1 };
     let ambience = { color: 0xffffff, intensity: 0.3 };
 
-    let spawnPoints = [];
-
+    let spawnPoints = []
+    let powerUps = [];
     let objects = [];
 
     let wall = null;
@@ -221,6 +221,19 @@ const parse = (file) => {
                         objects.push(obj);
                     }
                     break;
+                case "PowerUp":
+                    {
+                        obj = {
+                            type: "powerUp",
+                            position: {
+                                x: lp(items[1]),
+                                y: lp(items[2]),
+                                z: lp(items[3])
+                            },
+                        };
+                        powerUps.push(obj);
+                    }
+                    break;
             }
 
             obj.options = parseOptions(items);
@@ -239,6 +252,7 @@ const parse = (file) => {
     return {
         metadata,
         spawnPoints,
+        powerUps,
         objects,
         sky,
         sun,

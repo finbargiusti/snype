@@ -23,6 +23,7 @@ export function initEditor() {
     updateArrowAction(currentArrowAction);
     initMetadata();
     initSpawnPoints();
+    initPowerUps();
     initSelectables();
 }
 
@@ -228,12 +229,16 @@ function initSelectables() {
 
     allSelectables.push(...currentMap.drawableObjects);
     allSelectables.push(...drawableSpawnPoints);
+    allSelectables.push(...drawablePowerUps);
 
     currentMap.objectDataConnection.forEach((value, key) => {
         selectableDataConnection.set(key, value);
     });
     for (let i = 0; i < currentMap.rawData.spawnPoints.length; i++) {
         selectableDataConnection.set(drawableSpawnPoints[i], currentMap.rawData.spawnPoints[i]);
+    }
+    for (let i = 0; i < currentMap.rawData.powerUps.length; i++) {
+        selectableDataConnection.set(drawablePowerUps[i], currentMap.rawData.powerUps[i]);
     }
 }
 
@@ -411,7 +416,13 @@ function changeSelectionPosition(v: THREE.Vector3) {
     
     selectedDataObj.position = {x: v.x, y: v.y, z: v.z};
 
-    let visualCenter = getVisualCenterForObj(selectedDataObj);
+    let visualCenter: THREE.Vector3;
+    if (selectedDataObj.type === "powerUp") {
+        visualCenter = v;
+    } else {
+        visualCenter = getVisualCenterForObj(selectedDataObj);
+    }
+
     selectedDrawable.position.copy(visualCenter);
     wireframeOverlay.position.copy(visualCenter);
     directionArrows.group.position.copy(visualCenter);
@@ -604,7 +615,7 @@ function showObjectProperties(obj: any) {
     let innerDiv = objectPropertiesContainer.querySelector(':scope > div') as HTMLElement;
     innerDiv.innerHTML = "";
 
-    if (obj.type === "box" || obj.type === "ramp") {
+    if (obj.type === "box" || obj.type === "ramp" || obj.type === "powerUp") {
         let x = createInputElement("Position x", (val: any) => {
             if (!selectedDataObj) return;
             obj.position.x = Number(val);
@@ -621,51 +632,54 @@ function showObjectProperties(obj: any) {
             changeSelectionPosition(new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z));
         }, obj.position.z);
 
-        let dx = createInputElement("Size x", (val: any) => {
-            if (!selectedDataObj) return;
-            obj.size.x = Number(val);
-            changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
-        }, obj.size.x);
-        let dy = createInputElement("Size y", (val: any) => {
-            if (!selectedDataObj) return;
-            obj.size.y = Number(val);
-            changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
-        }, obj.size.y);
-        let dz = createInputElement("Size z", (val: any) => {
-            if (!selectedDataObj) return;
-            obj.size.z = Number(val);
-            changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
-        }, obj.size.z);
-
         innerDiv.appendChild(x);
         innerDiv.appendChild(y);
         innerDiv.appendChild(z);
-        innerDiv.appendChild(dx);
-        innerDiv.appendChild(dy);
-        innerDiv.appendChild(dz);
 
-        let color = createInputElement("Color", (val: any) => {
-            if (!selectedDataObj) return;
-            obj.options.color = Number(val);
-            selectedDrawable.material.color = new THREE.Color(obj.options.color);
-        }, obj.options.color && "0x" + obj.options.color.toString(16));
-
-        innerDiv.appendChild(color);
-
-        if (obj.type === "ramp") {
-            let rotateBtn = createButtonElement("Reorient", () => {
-                switch (obj.orientation) {
-                    case "+x": { obj.orientation = "-y"; }; break;
-                    case "-y": { obj.orientation = "-x"; }; break;
-                    case "-x": { obj.orientation = "+y"; }; break;
-                    case "+y": { obj.orientation = "+x"; }; break;
-                }
-
-                selectedDrawable.geometry = createRampGeometry(obj);
-                wireframeOverlay.geometry = selectedDrawable.geometry;
-            });
-
-            innerDiv.appendChild(rotateBtn);
+        if (obj.type === "box" || obj.type === "ramp") {
+            let dx = createInputElement("Size x", (val: any) => {
+                if (!selectedDataObj) return;
+                obj.size.x = Number(val);
+                changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
+            }, obj.size.x);
+            let dy = createInputElement("Size y", (val: any) => {
+                if (!selectedDataObj) return;
+                obj.size.y = Number(val);
+                changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
+            }, obj.size.y);
+            let dz = createInputElement("Size z", (val: any) => {
+                if (!selectedDataObj) return;
+                obj.size.z = Number(val);
+                changeSelectionSize(obj.size.x, obj.size.y, obj.size.z);
+            }, obj.size.z);
+    
+            innerDiv.appendChild(dx);
+            innerDiv.appendChild(dy);
+            innerDiv.appendChild(dz);
+    
+            let color = createInputElement("Color", (val: any) => {
+                if (!selectedDataObj) return;
+                obj.options.color = Number(val);
+                selectedDrawable.material.color = new THREE.Color(obj.options.color);
+            }, obj.options.color && "0x" + obj.options.color.toString(16));
+    
+            innerDiv.appendChild(color);
+    
+            if (obj.type === "ramp") {
+                let rotateBtn = createButtonElement("Reorient", () => {
+                    switch (obj.orientation) {
+                        case "+x": { obj.orientation = "-y"; }; break;
+                        case "-y": { obj.orientation = "-x"; }; break;
+                        case "-x": { obj.orientation = "+y"; }; break;
+                        case "+y": { obj.orientation = "+x"; }; break;
+                    }
+    
+                    selectedDrawable.geometry = createRampGeometry(obj);
+                    wireframeOverlay.geometry = selectedDrawable.geometry;
+                });
+    
+                innerDiv.appendChild(rotateBtn);
+            }
         }
     } else if (obj === gameState.currentMap.rawData.wall) {
         let minX = createInputElement("Wall min x", (val: any) => {
@@ -833,6 +847,16 @@ inputEventDispatcher.addEventListener('keypress', (e) => {
 
                     deselectCurrentlySelected();
                 }
+
+                index = gameState.currentMap.rawData.powerUps.indexOf(selectedDataObj);
+
+                if (index !== -1) {
+                    gameState.currentMap.rawData.powerUps.splice(index, 1);
+                    gameState.currentMap.scene.remove(selectedDrawable);
+                    removeItemFromArray(allSelectables, selectedDrawable);
+
+                    deselectCurrentlySelected();
+                }
             }
         }
     } else if (keyEvent.keyCode === 67) {
@@ -851,6 +875,8 @@ inputEventDispatcher.addEventListener('keypress', (e) => {
 let addBoxButton = document.querySelector('#addBox') as HTMLElement;
 let addRampButton = document.querySelector('#addRamp') as HTMLElement;
 let addSpawnButton = document.querySelector('#addSpawn') as HTMLElement;
+let addPowerUpButton = document.querySelector('#addPowerUp') as HTMLElement;
+
 addBoxButton.addEventListener('click', createBox);
 function createBox(override: any = {}) {
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
@@ -922,11 +948,38 @@ function createSpawn(override: any = {}) {
         x: newPos.x,
         y: newPos.y,
         z: newPos.z,
-        yaw: override.yaw || 0
+        yaw: override.yaw || 0,
+        options: override.options || {}
     };
 
     gameState.currentMap.rawData.spawnPoints.push(obj);
     let { drawable } = createDrawableSpawnPoint(obj);
+    allSelectables.push(drawable);
+    selectableDataConnection.set(drawable, obj);
+    gameState.currentMap.scene.add(drawable);
+
+    selectThing(drawable);
+}
+addPowerUpButton.addEventListener('click', createPowerUp);
+function createPowerUp(override: any = {}) {
+    let lookyLookyVector = gameState.localPlayer.getOrientationVector();
+    let newPos = gameState.localPlayer.getHeadPosition().clone();
+    newPos.add(lookyLookyVector.multiplyScalar(2));
+
+    if (snapToGrid) {
+        newPos.x = newPos.x - newPos.x % gridSize;
+        newPos.y = newPos.y - newPos.y % gridSize;
+        newPos.z = newPos.z - newPos.z % gridSize;
+    }
+
+    let obj = {
+        type: "powerUp",
+        position: {x: newPos.x, y: newPos.y, z: newPos.z},
+        options: override.options || {}
+    };
+
+    gameState.currentMap.rawData.powerUps.push(obj);
+    let { drawable } = createDrawablePowerUp(obj);
     allSelectables.push(drawable);
     selectableDataConnection.set(drawable, obj);
     gameState.currentMap.scene.add(drawable);
@@ -1002,6 +1055,38 @@ function createDrawableSpawnPoint(obj: any) {
     mesh.rotateOnAxis(zAxis, obj.yaw);
 
     drawableSpawnPoints.push(mesh);
+    currentMap.scene.add(mesh);
+
+    return { drawable: mesh };
+}
+
+const POWER_UP_MATERIAL = new THREE.MeshBasicMaterial({
+    color: 0xba55d3,
+    wireframe: true
+});
+
+let drawablePowerUps: THREE.Mesh[] = [];
+function initPowerUps() {
+    let currentMap = gameState.currentMap;
+
+    drawablePowerUps = [];
+
+    for (let a of currentMap.rawData.powerUps) {
+        createDrawablePowerUp(a);
+    }
+}
+
+function createDrawablePowerUp(obj: any) {
+    let currentMap = gameState.currentMap;
+
+    let mesh = new THREE.Mesh(
+        new THREE.IcosahedronBufferGeometry(0.4, 0),
+        POWER_UP_MATERIAL
+    );
+
+    mesh.position.set(obj.position.x, obj.position.y, obj.position.z);
+
+    drawablePowerUps.push(mesh);
     currentMap.scene.add(mesh);
 
     return { drawable: mesh };

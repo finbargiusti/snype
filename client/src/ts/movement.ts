@@ -37,6 +37,11 @@ inputEventDispatcher.addEventListener("canvasmousedown", e => {
     }
 });
 
+// These values describe the player's collision model:
+export let playerRadius = 0.225;
+export let playerHeight = 1.8;
+export let legHeight = 0.3;
+
 export function updateLocalPlayerMovement(dif: number) {
     let { currentMap, localPlayer, isEditor } = gameState;
 
@@ -113,11 +118,6 @@ export function updateLocalPlayerMovement(dif: number) {
 
     velCopy.add(GRAVITY.clone().multiplyScalar(dif / 1000));
     posCopy.add(velCopy.clone().multiplyScalar(dif / 1000));
-
-    // These values describe the player's collision model:
-    let playerRadius = 0.225;
-    let playerHeight = 1.8;
-    let legHeight = 0.3;
 
     if (velCopy.length() > 0.0001) {
         // If we're moving

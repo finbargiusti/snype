@@ -49,7 +49,7 @@ function createPlayerObject3D() {
     group.add(sphere);
     group.add(pupil);
 
-    return group;
+    return { group, pupil };
 }
 
 const goSound = new Howl({ src: ["/static/go.ogg"] });
@@ -61,6 +61,7 @@ export class Player {
     public yaw: number = 0;
     public pitch: number = 0;
     public object3D: THREE.Object3D;
+    public pupil: THREE.Mesh;
     public hitbox: THREE.Object3D;
     public weapon = new WeaponInstance(SMG, this);
     public health: number = 100;
@@ -76,7 +77,10 @@ export class Player {
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.setWeapon(SMG);
 
-        this.object3D = createPlayerObject3D();
+        let stuff = createPlayerObject3D();
+
+        this.object3D = stuff.group;
+        this.pupil = stuff.pupil;
         currentMap.scene.add(this.object3D);
 
         let hitboxGeometry = new THREE.BoxBufferGeometry(0.8, 0.8, 0.8);
@@ -241,12 +245,9 @@ export function createLocalPlayer() {
         let mesh = child as THREE.Mesh;
         mesh.receiveShadow = false;
         mesh.material = mat;
-
-        // Cheeky! This catches the pupil.
-        if (mesh.geometry instanceof THREE.IcosahedronBufferGeometry) {
-            mesh.material.visible = false;
-        }
     }
+
+    localPlayer.pupil.visible = false;
 
     //(localPlayer.object3D as THREE.Mesh).material = new THREE.ShadowMaterial();
 

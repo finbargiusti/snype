@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { Projectile } from "./weapon";
 import { renderer } from "./rendering";
 import { radToDeg, removeItemFromArray } from "./misc";
+import { PowerUp } from "./power_up";
+import { handlers } from "./net";
+import { gameState } from "./game_state";
 
 const SUN_DIRECTION = new THREE.Vector3(-40, -40, -50);
 SUN_DIRECTION.normalize();
@@ -153,6 +156,7 @@ export class SnypeMap {
     public scene: THREE.Scene;
     public drawableObjects: any[];
     public projectiles: Projectile[];
+    public powerUps: PowerUp[];
     public colliders: THREE.Mesh[];
 
     public objectDataConnection: Map<THREE.Object3D, any>;
@@ -170,6 +174,7 @@ export class SnypeMap {
         this.scene = new THREE.Scene();
         this.drawableObjects = [];
         this.projectiles = [];
+        this.powerUps = [];
         this.colliders = [];
 
         this.objectDataConnection = new Map();
@@ -379,8 +384,6 @@ export class SnypeMap {
     }
 
     buildScene() {
-        // TODO: Add lights and floor
-
         this.drawableObjects.forEach(obj => {
             this.scene.add(obj);
         });
@@ -425,6 +428,11 @@ export class SnypeMap {
         this.scene.add(proj.object3D);
     }
 
+    addPowerUp(p: PowerUp) {
+        this.powerUps.push(p);
+        this.scene.add(p.mesh);
+    }
+
     update(timeDif: number) {
         for (let projectile of this.projectiles) {
             if (projectile.shouldRemove) {
@@ -437,6 +445,10 @@ export class SnypeMap {
             }
 
             projectile.update(timeDif);
+        }
+
+        for (let powerUp of this.powerUps) {
+            powerUp.update();
         }
     }
 
@@ -518,7 +530,38 @@ export class SnypeMap {
                 }; break;
             }
         }
+        for (let powerUp of this.rawData.powerUps) {
+            let line = `PowerUp ${powerUp.position.x} ${powerUp.position.y} ${powerUp.position.z}`;
+            line += formatOptions(powerUp);
+            addLine(line);
+        }
 
         return output;
     }
 }
+
+handlers["spawnPowerUp"] = function(data: any) {
+    let { currentMap } = gameState;
+    if (!currentMap) return;
+
+    let options = {
+        position: new THREE.Vector3(data.position.x, data.position.y, data.position.z),
+        id: data.id
+    };
+
+    currentMap.addPowerUp(new PowerUp(options));
+};
+
+handlers["removePowerUp"] = function(data: any) {
+    let { currentMap } = gameState;
+    if (!currentMap) return;
+
+    let index = currentMap.powerUps.findIndex((a) => a.id === data.id);
+    if (index === -1) return;
+
+    let powerUp = currentMap.powerUps[index];
+
+    currentMap.scene.remove(powerUp.mesh);
+    currentMap.powerUps.splice(index, 1);
+    powerUp.mesh.geometry.dispose();
+};
