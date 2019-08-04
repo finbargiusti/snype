@@ -879,6 +879,8 @@ let addPowerUpButton = document.querySelector('#addPowerUp') as HTMLElement;
 
 addBoxButton.addEventListener('click', createBox);
 function createBox(override: any = {}) {
+    override = JSON.parse(JSON.stringify(override));
+
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
@@ -906,6 +908,8 @@ function createBox(override: any = {}) {
 }
 addRampButton.addEventListener('click', createRamp);
 function createRamp(override: any = {}) {
+    override = JSON.parse(JSON.stringify(override));
+
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
@@ -934,6 +938,8 @@ function createRamp(override: any = {}) {
 }
 addSpawnButton.addEventListener('click', createSpawn);
 function createSpawn(override: any = {}) {
+    override = JSON.parse(JSON.stringify(override));
+
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
@@ -962,6 +968,8 @@ function createSpawn(override: any = {}) {
 }
 addPowerUpButton.addEventListener('click', createPowerUp);
 function createPowerUp(override: any = {}) {
+    override = JSON.parse(JSON.stringify(override));
+
     let lookyLookyVector = gameState.localPlayer.getOrientationVector();
     let newPos = gameState.localPlayer.getHeadPosition().clone();
     newPos.add(lookyLookyVector.multiplyScalar(2));
