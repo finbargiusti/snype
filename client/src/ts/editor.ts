@@ -351,19 +351,21 @@ function getPositionOnDirectionArrow() {
 
     let secondPlane: THREE.Plane;
 
-    if (directionArrows.hovered === "z") {
+    if (directionArrows.hovered === "x") {
+        firstPlane = new THREE.Plane(yAxis, -directionArrows.group.position.y);
+    } else if (directionArrows.hovered === "y") {
+        firstPlane = new THREE.Plane(xAxis, -directionArrows.group.position.x);
+    } else if (directionArrows.hovered === "z") {
         let helper = new THREE.Plane(horizontalLookVector, 0);
         let dist = helper.distanceToPoint(directionArrows.group.position);
 
         firstPlane = new THREE.Plane(horizontalLookVector, -dist); // The z axis arrow now lies within this plane
-    } else {
-        firstPlane = new THREE.Plane(zAxis, -directionArrows.group.position.z);
     }
 
     if (directionArrows.hovered === "x") {
-        secondPlane = new THREE.Plane(yAxis, -directionArrows.group.position.y);
+        secondPlane = new THREE.Plane(zAxis, -directionArrows.group.position.z);
     } else if (directionArrows.hovered === "y") {
-        secondPlane = new THREE.Plane(xAxis, -directionArrows.group.position.x);
+        secondPlane = new THREE.Plane(zAxis, -directionArrows.group.position.z);
     } else if (directionArrows.hovered === "z") {
         let newNormal = firstPlane.normal.clone().applyAxisAngle(zAxis, Math.PI/2);
         let helper = new THREE.Plane(newNormal, 0);
