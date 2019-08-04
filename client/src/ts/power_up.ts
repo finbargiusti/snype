@@ -85,7 +85,7 @@ interface PowerUpTypeInfo {
 
 let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
     "speedBuff": {
-        name: "Speed",
+        name: "Rush",
         duration: 10000,
         onStart() {
             setMovementSpeedFactor(2);
@@ -95,7 +95,7 @@ let powerUpTypes: { [index: string]: PowerUpTypeInfo } = {
         }
     },
     "rofBuff": {
-        name: "ROF Buff",
+        name: "Overheat",
         duration: 10000,
         onStart() {
             setRofFactor(2);

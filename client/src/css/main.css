@@ -1,0 +1,148 @@
+.game {
+  width: 100%;
+  height: 100%;
+}
+#root {
+  z-index: 1 !important;
+}
+#maps {
+  display: none;
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  color: white;
+  padding-top: 50px;
+  overflow: scroll;
+  padding-bottom: 50px;
+  text-align: center;
+}
+h1 {
+  font-size: 48px;
+}
+#maps p {
+  font-size: 30px;
+  padding: 20px;
+  width: 700px;
+  margin: auto;
+}
+#maps p:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+}
+@keyframes hit {
+  from {
+    color: #ff2222;
+    transform: scale(2);
+  }
+  to {
+    color: white;
+    transform: scale(1);
+  }
+}
+body {
+  margin: 0px;
+  padding: 0px;
+  background-color: black;
+  overflow: hidden;
+  font-family: "Orbitron", sans-serif;
+}
+body * {
+  z-index: 5;
+}
+#crosshair {
+  width: 60px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+}
+#leave {
+  color: white;
+  text-shadow: black 0px 0px 5px;
+  font-size: 20px;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+#health {
+  color: white;
+  position: absolute;
+  text-shadow: black 0px 0px 5px;
+  transform-origin: 0px 0px;
+  font-size: 35px;
+  left: 0px;
+  top: 0px;
+  margin: 20px;
+  line-height: 100%;
+  pointer-events: none;
+}
+#health.hit {
+  animation: hit 0.3s;
+}
+#weapon {
+  font-size: 35px;
+  color: white;
+  position: absolute;
+  margin: 20px;
+  bottom: 0;
+  right: 0;
+  pointer-events: none;
+  text-shadow: black 0px 0px 5px;
+}
+.pause {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  position: absolute;
+  left: 0;
+  top: -100px;
+  transition: top 0.4s;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+.pause.active {
+  top: 0;
+}
+#powerUpContainer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 20px;
+}
+#powerUpContainer > div {
+  padding: 10px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 5px;
+  width: 200px;
+  margin-bottom: 10px;
+  position: relative;
+  height: 40px;
+  box-sizing: border-box;
+}
+#powerUpContainer > div > p:first-child {
+  margin: 0;
+  color: #e63d3d;
+  font-weight: bold;
+  /* text-shadow: 1px 1px 10px white; */
+}
+#powerUpContainer > div > p:first-child {
+  margin: 0;
+  color: #e63d3d;
+  font-weight: bold;
+  /* text-shadow: 1px 1px 10px white; */
+}
+#powerUpContainer > div > p:last-child {
+  margin: 0;
+  /* float: right; */
+  vertical-align: top;
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: white;
+  padding: 10px;
+}
