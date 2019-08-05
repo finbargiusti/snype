@@ -140,6 +140,8 @@ class DirectionArrows {
         this.heads = [arrowHeadX, arrowHeadY, arrowHeadZ];
         this.hitboxes = [xHitbox, yHitbox, zHitbox];
 
+        group.renderOrder = 1e6;
+
         this.group = group;
         this.hide();
     }
@@ -296,6 +298,7 @@ function selectThing(drawable: THREE.Mesh) {
     let dataObject = selectableDataConnection.get(drawable);
 
     let wf = new THREE.Mesh(drawable.geometry, selectedMaterial);
+    wf.renderOrder = 1e5;
     drawable.updateMatrixWorld();
     wf.applyMatrix(drawable.matrixWorld);
 
