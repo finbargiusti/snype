@@ -1,4 +1,5 @@
 == David ==
+
 - Add more animations
 - Add Binarify to server
 - Add low-poly gun models
@@ -6,4 +7,5 @@
 - keepAlive
 
 == Finbar ==
-- N/A
+
+- [ ] Make movement in air good
