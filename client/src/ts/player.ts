@@ -33,7 +33,7 @@ function createPlayerObject3D() {
 
     let sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.4, 32, 32),
-        new THREE.MeshPhongMaterial({ color: 0x00ffff })
+        new THREE.MeshPhongMaterial({ color: 0xed2939, shininess: 100 })
     );
     sphere.castShadow = true;
     sphere.receiveShadow = true;
