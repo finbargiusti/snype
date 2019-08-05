@@ -23,7 +23,7 @@ export function getNonLocalPlayerHitboxes() {
     let arr: THREE.Object3D[] = [];
 
     players.forEach(a => {
-        if (a !== localPlayer) arr.push(a.hitbox);
+        if (a !== localPlayer && a.object3D.visible !== false) arr.push(a.hitbox);
     });
 
     return arr;
