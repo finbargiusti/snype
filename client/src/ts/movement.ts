@@ -27,29 +27,16 @@ export function setJumpFactor(num: number) {
     jumpFactor = num;
 }
 
-export let isZoom = false;
-
-export let zoomInterpolator = new Interpolator({
-    ease: EaseType.EaseInOutExpo,
-    duration: 200,
-    from: 0,
-    to: 1
-});
-
-let zoom = () => {
-    isZoom = !isZoom;
-    if (zoomInterpolator.isVirgin) {
-        zoomInterpolator.start();
-    } else {
-        zoomInterpolator.reverse();
-    }
-};
-
 inputEventDispatcher.addEventListener("canvasmousedown", e => {
+    let localPlayer = gameState.localPlayer;
+    if (!localPlayer) return;
+
     let mousevent = e as MouseEvent;
 
     if (mousevent.button == 2 && !gameState.isEditor) {
-        zoom();
+        localPlayer.setScopeState(!localPlayer.isScoped);
+
+        socketSend("setScopeState", localPlayer.isScoped);
     }
 });
 
@@ -77,7 +64,7 @@ export function updateLocalPlayerMovement(dif: number) {
 
     let actualSpeed: number;
 
-    if (isZoom) {
+    if (localPlayer.isScoped) {
         actualSpeed = PLAYER_SPEED / 2;
     } else {
         actualSpeed = inputState.shift ? PLAYER_SPEED_SPRINTING : PLAYER_SPEED; // Determine speed based on sprinting status
@@ -636,10 +623,10 @@ inputEventDispatcher.addEventListener("mousemove", e => {
 
     let localPlayer = gameState.localPlayer;
 
-    let factor = isZoom ? 3000 : 1000;
+    let denom = localPlayer.isScoped ? 3000 : 1000;
 
-    let yaw = localPlayer.yaw + -x / factor;
-    let pitch = localPlayer.pitch + -y / factor;
+    let yaw = localPlayer.yaw + -x / denom;
+    let pitch = localPlayer.pitch + -y / denom;
     pitch = clamp(pitch, -Math.PI / 2, Math.PI / 2);
 
     localPlayer.update({ yaw, pitch });

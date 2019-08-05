@@ -293,6 +293,7 @@ class Player {
         this.health = 100;
         this.yaw = 0;
         this.pitch = 0;
+        this.scoped = false;
     }
 
     init() {
@@ -359,6 +360,7 @@ function formatPlayer(obj) {
 
     if (obj.id) result.id = obj.id;
     if (obj.position) result.position = obj.position;
+    if (obj.scoped !== undefined) result.scoped = obj.scoped;
 
     return result;
 }
@@ -394,6 +396,24 @@ socketMessageHandlers["updateOrientation"] = function(socket, data) {
     player.pitch = data.pitch;
 
     let playerUpdateData = { id: player.id, yaw: player.yaw, pitch: player.pitch };
+    players.forEach(targetPlayer => {
+        if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
+            return;
+
+        socketSend(targetPlayer.socket, "updatePlayer", playerUpdateData);
+    });
+};
+
+socketMessageHandlers["setScopeState"] = function(socket, data) {
+    let player = socketPlayerAssociation.get(socket);
+    if (!player) {
+        console.error("You are big gay.");
+        return;
+    }
+
+    player.scoped = data;
+
+    let playerUpdateData = { id: player.id, scoped: data };
     players.forEach(targetPlayer => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
