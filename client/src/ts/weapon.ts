@@ -1,11 +1,10 @@
-import { Player, getNonLocalPlayerHitboxes, players } from "./player";
+import { Player, getNonLocalPlayerHitboxes, players, gunRightOffset, gunLength, gunDownOffset } from "./player";
 import * as THREE from "three";
 import { gameState } from "./game_state";
 import { socketSend, handlers } from "./net";
 import { zAxis, xAxis } from "./rendering";
 import { Howl } from "howler";
 import { playPop } from "./sound";
-import { isZoom } from "./movement";
 
 let rofFactor = 1;
 export function setRofFactor(num: number) {
@@ -50,15 +49,21 @@ export class WeaponInstance {
         if (now - this.lastShotTime >= (this.weapon.timeBetweenShots / rofFactor)) {
             playPop(undefined, this.weapon.spec.pitch);
 
-            let origin = this.wielder.getHeadPosition();
-            origin.z -= 0.2;
+            let origin = new THREE.Vector3();
+            origin.x = this.wielder.gunRight;
+            origin.y = gunLength/2;
+            origin.z = -this.wielder.gunDown;
+            origin.applyAxisAngle(xAxis, this.wielder.pitch);
+            origin.applyAxisAngle(zAxis, this.wielder.yaw);
+            origin.add(this.wielder.getHeadPosition());
+
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
                 let direction = new THREE.Vector3(0, 1, 0);
                 let perp = new THREE.Vector3(1, 0, 0);
                 let raw = new THREE.Vector3(0, 1, 0);
 
                 // Left and right inaccuracy
-                let inacc = isZoom
+                let inacc = this.wielder.isScoped
                     ? this.weapon.spec.inaccuracy / 2
                     : this.weapon.spec.inaccuracy;
 

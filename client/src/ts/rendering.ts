@@ -7,10 +7,10 @@ import {
     EffectPass,
     RenderPass
 } from "postprocessing";*/
-import { setCameraToLocalPlayer, useWeapon } from "./player";
+import { setCameraToLocalPlayer, useWeapon, players } from "./player";
 import { initCanvasListeners } from "./input";
 import { gameState } from "./game_state";
-import { updateLocalPlayerMovement, zoomInterpolator } from "./movement";
+import { updateLocalPlayerMovement } from "./movement";
 import { Howl, Howler } from "howler";
 import { playPop } from "./sound";
 import { updateEquippedPowerUps } from "./power_up";
@@ -69,14 +69,17 @@ let render = () => {
     let timeDif = 1000 / 60; // estimate for first frame
     if (lastRenderTime !== null) timeDif = now - lastRenderTime;
 
+    players.forEach((player) => player.tick());
+    let zoomVal = 0;
+
     if (gameState.localPlayer) {
         updateLocalPlayerMovement(timeDif);
         setCameraToLocalPlayer();
         useWeapon();
         updateEquippedPowerUps();
-    }
 
-    let zoomVal = zoomInterpolator.getCurrentValue();
+        zoomVal = gameState.localPlayer.scopeCompletion;
+    }
 
     camera.fov = FOV - zoomVal * (FOV - ZOOM_FOV);
     camera.updateProjectionMatrix();

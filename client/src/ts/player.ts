@@ -14,6 +14,7 @@ import {
     weapons
 } from "./weapon";
 import { SnypeMap } from "./map";
+import { Interpolator, EaseType } from "./animate";
 
 export let players = new Map<string, Player>();
 
@@ -27,6 +28,13 @@ export function getNonLocalPlayerHitboxes() {
 
     return arr;
 }
+
+export let gunLength = 0.75;
+
+export let gunRightOffset = 0.3;
+export let gunDownOffset = 0.18;
+export let scopedGunRightOffset = 0;
+export let scopedGunDownOffset = 0.15;
 
 function createPlayerObject3D() {
     let group = new THREE.Group();
@@ -46,10 +54,21 @@ function createPlayerObject3D() {
     pupil.receiveShadow = true;
     pupil.position.y += 0.25;
 
+    let gun = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry(0.05, 0.05, gunLength, 32),
+        new THREE.MeshPhongMaterial({color: 0x444444, shininess: 95})
+    );
+    gun.castShadow = true;
+    gun.receiveShadow = true;
+    gun.position.x += gunRightOffset;
+    gun.position.y += gunLength/2;
+    gun.position.z -= gunDownOffset;
+
     group.add(sphere);
     group.add(pupil);
+    group.add(gun);
 
-    return { group, pupil };
+    return { group, pupil, gun };
 }
 
 const goSound = new Howl({ src: ["/static/go.ogg"] });
@@ -62,11 +81,17 @@ export class Player {
     public pitch: number = 0;
     public object3D: THREE.Object3D;
     public pupil: THREE.Mesh;
+    public gun: THREE.Mesh;
     public hitbox: THREE.Object3D;
     public weapon = new WeaponInstance(SMG, this);
     public health: number = 100;
     public currentMap: SnypeMap;
     public isGrounded: boolean = false;
+    public isScoped: boolean = false;
+    public scopeInterpolator: Interpolator;
+    public scopeCompletion: number = 0;
+    public gunRight: number = 0;
+    public gunDown: number = 0;
 
     constructor(obj: any) {
         let { currentMap } = gameState;
@@ -81,6 +106,7 @@ export class Player {
 
         this.object3D = stuff.group;
         this.pupil = stuff.pupil;
+        this.gun = stuff.gun;
         currentMap.scene.add(this.object3D);
 
         let hitboxGeometry = new THREE.BoxBufferGeometry(0.8, 0.8, 0.8);
@@ -95,6 +121,38 @@ export class Player {
         this.hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
 
         currentMap.scene.add(this.hitbox);
+        
+        this.scopeInterpolator = new Interpolator({
+            ease: EaseType.EaseInOutExpo,
+            duration: 200,
+            from: 0,
+            to: 1
+        });
+    }
+
+    setScopeState(state: boolean) {
+        if (state !== this.isScoped) {
+            if (this.scopeInterpolator.isVirgin) {
+                this.scopeInterpolator.start();
+            } else {
+                this.scopeInterpolator.reverse();
+            }
+
+            this.isScoped = state;
+        }
+    }
+
+    tick() {
+        let scopeVal = this.scopeInterpolator.getCurrentValue();
+
+        this.scopeCompletion = scopeVal;
+
+        this.gunRight = (1-scopeVal) * gunRightOffset + scopeVal * scopedGunRightOffset;
+        this.gunDown = (1-scopeVal) * gunDownOffset + scopeVal * scopedGunDownOffset;
+
+        this.gun.position.x = this.gunRight;
+        //this.gun.position.y += gunLength/2;
+        this.gun.position.z = -this.gunDown;
     }
 
     private bestSpawn() {
@@ -212,7 +270,7 @@ export class Player {
                     obj.velocity.z
                 );
             }
-            if (obj.yaw && obj.pitch) {
+            if (obj.yaw !== undefined && obj.pitch !== undefined) {
                 this.yaw = obj.yaw;
                 this.pitch = obj.pitch;
 
@@ -221,6 +279,9 @@ export class Player {
                 this.object3D.rotation.z = 0;
                 this.object3D.rotateOnWorldAxis(xAxis, this.pitch);
                 this.object3D.rotateOnWorldAxis(zAxis, this.yaw);
+            }
+            if (obj.scoped !== undefined) {
+                this.setScopeState(obj.scoped);
             }
         }
     }
@@ -243,6 +304,8 @@ export function createLocalPlayer() {
     let mat = new THREE.ShadowMaterial();
     for (let child of localPlayer.object3D.children) {
         let mesh = child as THREE.Mesh;
+        if (mesh === localPlayer.gun) continue;
+
         mesh.receiveShadow = false;
         mesh.material = mat;
     }
