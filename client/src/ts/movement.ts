@@ -506,7 +506,7 @@ export function updateLocalPlayerMovement(dif: number) {
 
             let rayDoubleCheck = new THREE.Raycaster(
                 bodyStart,
-                direction,
+                direction.clone().normalize(),
                 0,
                 direction.length()
             );
@@ -516,13 +516,15 @@ export function updateLocalPlayerMovement(dif: number) {
             for (let i = 0; i < intersections.length; i++) {
                 let intersection = intersections[0];
 
+                // TOTAL BUNGUS! Ignoring not-really-horizontal surfaces means ignoring almost all slopes, and we don't wanna be glitching through those.
+                /*
                 // Again, ignore any not-really-horizontal surfaces.
                 let isMostlyHorizontal =
                     Math.abs(intersection.face.normal.z) >
                         Math.abs(intersection.face.normal.x) &&
                     Math.abs(intersection.face.normal.z) >
                         Math.abs(intersection.face.normal.y);
-                if (isMostlyHorizontal) continue;
+                if (isMostlyHorizontal) continue;*/
 
                 // If we arrive here, that's bad. We probably glitched through something. Fix the incorrect position:
 
