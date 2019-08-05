@@ -172,7 +172,7 @@ export const SMG = new Weapon({
 
 export const weapons: Weapon[] = [ASSAULT_RIFLE, SHOTGUN, SNIPER, SMG];
 
-const MAX_PROJECTILE_LIFETIME = 1000; // Kill it after this many milliseconds. Always.
+const MAX_PROJECTILE_LIFETIME = 1500; // Kill it after this many milliseconds. Always.
 const TIME_FRAG = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and TIME_FRAG is 1/2, then the projectile is 2.5 units long.
 
 interface ProjectileOptions {
