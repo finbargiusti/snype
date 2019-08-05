@@ -6,6 +6,7 @@ import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
 import { socketSend } from "./net";
 import { Vector3 } from "three";
 import { Interpolator, EaseType } from "./animate";
+import { SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER } from "constants";
 
 const JUMP_INTENSITY = 8;
 
@@ -57,6 +58,10 @@ export let playerRadius = 0.225;
 export let playerHeight = 1.8;
 export let legHeight = 0.3;
 
+let airMoment = new Vector3(0, 0, 0);
+
+const AIR_MOVE_FAC = 0.8;
+
 export function updateLocalPlayerMovement(dif: number) {
     let { currentMap, localPlayer, isEditor } = gameState;
 
@@ -95,49 +100,48 @@ export function updateLocalPlayerMovement(dif: number) {
         movementVec.x += 1;
     }
     movementVec.normalize();
-    movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
     // Apply that movement vector based on if the player is grounded or not:
 
     if (localPlayer.isGrounded) {
-        jumpVelocity.set(0, 0, 0);
+        airMoment.x = 0;
+        airMoment.y = 0;
 
-        velCopy.x = movementVec.x * actualSpeed;
-        velCopy.y = movementVec.y * actualSpeed;
+        jumpVelocity.set(0, 0, 0);
 
         if (inputState.spacebar) {
             velCopy.z = JUMP_INTENSITY * jumpFactor;
         }
-    } else {
+
+        airMoment.x = movementVec.x * actualSpeed;
+        airMoment.y = movementVec.y * actualSpeed;
+
+        movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
+
         velCopy.x = movementVec.x * actualSpeed;
         velCopy.y = movementVec.y * actualSpeed;
+    } else {
+        movementVec.x = clamp(
+            airMoment.x + movementVec.x * AIR_MOVE_FAC,
+            -1 * actualSpeed,
+            1 * actualSpeed
+        );
+        movementVec.y = clamp(
+            airMoment.y + movementVec.y * AIR_MOVE_FAC,
+            -1 * actualSpeed,
+            1 * actualSpeed
+        );
 
-        // TEMP: Fix this:
-        /*
-        let scaledX = movementVec.x * actualSpeed,
-            scaledY = movementVec.y * actualSpeed;
+        airMoment.x = movementVec.x;
+        airMoment.y = movementVec.y;
 
-        if (jumpVelocity.x == 0 && jumpVelocity.y == 0) {
-            jumpVelocity.set(scaledX, scaledY, 0);
-        }
+        movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
-        let newJump = jumpVelocity.clone();
-        newJump.set(0, Math.hypot(newJump.x, newJump.y), 0);
-        newJump.applyAxisAngle(zAxis, localPlayer.yaw);
-
-        if (scaledX) {
-            velCopy.x = jumpVelocity.x * 0.3 + scaledX * 0.7;
-        } else {
-            velCopy.x = jumpVelocity.x * 0.6 + newJump.x * 0.4;
-        }
-        if (scaledY) {
-            velCopy.y = jumpVelocity.y * 0.3 + scaledY * 0.7;
-        } else {
-            velCopy.y = jumpVelocity.y * 0.6 + newJump.y * 0.4;
-        }*/
+        velCopy.x = movementVec.x;
+        velCopy.y = movementVec.y;
     }
 
-    velCopy.add(GRAVITY.clone().multiplyScalar(gravityFactor * dif / 1000));
+    velCopy.add(GRAVITY.clone().multiplyScalar((gravityFactor * dif) / 1000));
     posCopy.add(velCopy.clone().multiplyScalar(dif / 1000));
 
     if (velCopy.length() > 0.0001) {
