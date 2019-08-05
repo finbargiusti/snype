@@ -46,7 +46,10 @@ export class WeaponInstance {
         if (!this.wielder) return;
 
         let now = performance.now();
-        if (now - this.lastShotTime >= (this.weapon.timeBetweenShots / rofFactor)) {
+        if (
+            now - this.lastShotTime >=
+            this.weapon.timeBetweenShots / rofFactor
+        ) {
             playPop(undefined, this.weapon.spec.pitch);
 
             let origin = new THREE.Vector3();
@@ -120,7 +123,8 @@ export const ASSAULT_RIFLE = new Weapon({
     projectilesPerShot: 1,
     projectileOptions: {
         speed: 100,
-        damage: 10
+        damage: 10,
+        color: 0xff003f
     }
 });
 
@@ -133,7 +137,8 @@ export const SHOTGUN = new Weapon({
     projectilesPerShot: 7,
     projectileOptions: {
         speed: 75,
-        damage: 10
+        damage: 10,
+        color: 0x006b3c
     }
 });
 
@@ -146,7 +151,8 @@ export const SNIPER = new Weapon({
     projectilesPerShot: 1,
     projectileOptions: {
         speed: 200,
-        damage: 80
+        damage: 80,
+        color: 0x04d9ff
     }
 });
 
@@ -159,21 +165,20 @@ export const SMG = new Weapon({
     projectilesPerShot: 1,
     projectileOptions: {
         speed: 75,
-        damage: 8
+        damage: 8,
+        color: 0xfc8327
     }
 });
 
 export const weapons: Weapon[] = [ASSAULT_RIFLE, SHOTGUN, SNIPER, SMG];
 
-const PROJECTILE_TRAJECTORY_MATERIAL = new THREE.MeshBasicMaterial({
-    color: 0xff004c
-});
 const MAX_PROJECTILE_LIFETIME = 1000; // Kill it after this many milliseconds. Always.
 const TIME_FRAG = 1 / 50; // How "long" the projectile is, relative to its speed. If it moves 5 units per second, and TIME_FRAG is 1/2, then the projectile is 2.5 units long.
 
 interface ProjectileOptions {
     speed: number; // units per second
     damage: number;
+    color: number;
 }
 
 let ping = new Howl({ src: ["/static/ping.wav"], volume: 0.4, rate: 0.5 });
@@ -220,10 +225,10 @@ export class Projectile {
             6,
             true
         );
-        this.object3D = new THREE.Mesh(
-            tubeGeometry,
-            PROJECTILE_TRAJECTORY_MATERIAL
-        );
+        let projMaterial = new THREE.MeshBasicMaterial({
+            color: this.options.color
+        });
+        this.object3D = new THREE.Mesh(tubeGeometry, projMaterial);
         this.object3D.castShadow = true;
 
         this.object3D.position.copy(this.lastEndPoint);
