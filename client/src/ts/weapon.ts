@@ -142,7 +142,7 @@ export const ASSAULT_RIFLE = new Weapon({
     inaccuracy: 0.015,
     projectilesPerShot: 1,
     projectileOptions: {
-        speed: 100,
+        speed: 175,
         damage: 10,
         color: 0xff003f
     }
@@ -156,7 +156,7 @@ export const SHOTGUN = new Weapon({
     inaccuracy: 0.15,
     projectilesPerShot: 7,
     projectileOptions: {
-        speed: 75,
+        speed: 125,
         damage: 10,
         color: 0x006b3c
     }
@@ -170,7 +170,7 @@ export const SNIPER = new Weapon({
     inaccuracy: 0.002,
     projectilesPerShot: 1,
     projectileOptions: {
-        speed: 200,
+        speed: 250,
         damage: 80,
         color: 0x048eff
     }
@@ -184,7 +184,7 @@ export const SMG = new Weapon({
     inaccuracy: 0.12,
     projectilesPerShot: 1,
     projectileOptions: {
-        speed: 75,
+        speed: 125,
         damage: 8,
         color: 0xfc8327
     }
