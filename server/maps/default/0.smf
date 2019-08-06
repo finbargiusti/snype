@@ -1,0 +1,28 @@
+#! v2
+---
+name: "[0]"
+author: "Finbar Giusti"
+wallHeight: 5
+objectColor: 1114112
+---
+Sky 8306926
+Sun -40 -40 -50 16777215 1
+Ambience 16777215 0.3
+Wall 0 15 0 17
+Spawn 5 2 0 0
+Spawn 14 3 0 0
+Spawn 2 10 0 0
+Spawn 11 10 0 0
+Box 2 3 0 3 1 2
+Box 2 4 0 1 1 2
+Box 10 2 0 3 1 2
+Box 12 4 0 1 1 2
+Box 9 5 0 4 1 2
+Box 10 4 0 1 1 1 --color 16776960
+Box 5 9 0 2 1 2
+Box 3 10 0 4 1 2
+Box 13 9 0 1 3 2
+Ramp 5 4 0 1 3 1 "-y" --color 255
+Box 9 13 0 1 3 2
+Box 7 14 0 2 1 2
+PowerUp 3.5 10.5 3.5
