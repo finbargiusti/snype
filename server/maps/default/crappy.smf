@@ -1,0 +1,29 @@
+#! v2
+---
+name: "crappYMap"
+author: "lilbrooffinbar"
+wallHeight: 6
+---
+Sky 8306926
+Sun -40 -40 -50 16777215 1
+Ambience 16777215 0.3
+Wall -10 20 -10 10
+Spawn 13 6 2 90
+Spawn -7 -5 0 270
+Spawn 15 -7 2 180
+Spawn -10 4 0 0
+Box 10 2.5 0 10 2 3 --color 16777215
+Box -4 -10 0 2 9 2.5 --color 16777215
+Box 10 4 0 2 6 2.5 --color 16777215
+Ramp 15 4.52 0 1.5 4 3 "-y" --color 16776960
+Ramp 14 -1 0 1.5 3 2.88 "+y" --color 16776960
+Box -10 -1 0 8 1.5 2.5 --color 16777215
+Ramp -2 -6 0 6 1 2.5 "-x" --color 16777215
+Ramp -8 -8 0 4 1 2.5 "+x" --color 16776960
+Box 12 -10 0 8 1 2.5 --color 16777215
+Ramp 12 -10 2.5 8 6 1 "+y" --color 16777215
+Ramp -10 0 2.5 8 10 1 "+y" --color 16777215
+PowerUp 16 9 2
+PowerUp -6 -6 2
+PowerUp 6 -5 2
+PowerUp 12 -2 2

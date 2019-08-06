@@ -83,6 +83,13 @@ let init = async () => {
         listMaps("/defaultmaps");
     }
     if (!isEditor) openSocket();
+
+    window.addEventListener("beforeunload", e => {
+        let confirm = "Are you sure you want to leave?";
+
+        e.returnValue = confirm;
+        return confirm;
+    });
 };
 
 let leaveLobby = async () => {

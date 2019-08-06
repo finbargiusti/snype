@@ -1,5 +1,12 @@
 import * as THREE from "three";
-import { xAxis, zAxis, camera, mainCanvas, killMessage } from "./rendering";
+import {
+    xAxis,
+    zAxis,
+    camera,
+    mainCanvas,
+    killMessage,
+    overlayAdd
+} from "./rendering";
 import { GRAVITY } from "./misc";
 import { inputState, inputEventDispatcher } from "./input";
 import { socketSend, handlers } from "./net";
@@ -23,7 +30,8 @@ export function getNonLocalPlayerHitboxes() {
     let arr: THREE.Object3D[] = [];
 
     players.forEach(a => {
-        if (a !== localPlayer && a.object3D.visible !== false) arr.push(a.hitbox);
+        if (a !== localPlayer && a.object3D.visible !== false)
+            arr.push(a.hitbox);
     });
 
     return arr;
@@ -48,7 +56,7 @@ function createPlayerObject3D() {
 
     let pupil = new THREE.Mesh(
         new THREE.IcosahedronBufferGeometry(0.2, 2),
-        new THREE.MeshPhongMaterial({color: 0x000000})
+        new THREE.MeshPhongMaterial({ color: 0x000000 })
     );
     pupil.castShadow = true;
     pupil.receiveShadow = true;
@@ -56,12 +64,12 @@ function createPlayerObject3D() {
 
     let gun = new THREE.Mesh(
         new THREE.CylinderBufferGeometry(0.05, 0.05, gunLength, 32),
-        new THREE.MeshPhongMaterial({color: 0x444444, shininess: 95})
+        new THREE.MeshPhongMaterial({ color: 0x444444, shininess: 95 })
     );
     gun.castShadow = true;
     gun.receiveShadow = true;
     gun.position.x += gunRightOffset;
-    gun.position.y += gunLength/2;
+    gun.position.y += gunLength / 2;
     gun.position.z -= gunDownOffset;
 
     group.add(sphere);
@@ -121,7 +129,7 @@ export class Player {
         this.hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
 
         currentMap.scene.add(this.hitbox);
-        
+
         this.scopeInterpolator = new Interpolator({
             ease: EaseType.EaseInOutExpo,
             duration: 200,
@@ -147,8 +155,10 @@ export class Player {
 
         this.scopeCompletion = scopeVal;
 
-        this.gunRight = (1-scopeVal) * gunRightOffset + scopeVal * scopedGunRightOffset;
-        this.gunDown = (1-scopeVal) * gunDownOffset + scopeVal * scopedGunDownOffset;
+        this.gunRight =
+            (1 - scopeVal) * gunRightOffset + scopeVal * scopedGunRightOffset;
+        this.gunDown =
+            (1 - scopeVal) * gunDownOffset + scopeVal * scopedGunDownOffset;
 
         this.gun.position.x = this.gunRight;
         //this.gun.position.y += gunLength/2;
@@ -199,7 +209,9 @@ export class Player {
     }
 
     setHealth(health: number) {
+        let healthDiff = this.health - health;
         this.health = health;
+        overlayAdd(healthDiff / 40);
         let healthEl = document.getElementById("health");
         healthEl.innerText = String(Math.floor(localPlayer.health));
         healthEl.classList.remove("hit");
