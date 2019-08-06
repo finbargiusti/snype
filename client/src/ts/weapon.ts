@@ -51,14 +51,36 @@ export class WeaponInstance {
             this.weapon.timeBetweenShots / rofFactor
         ) {
             playPop(undefined, this.weapon.spec.pitch);
+            this.lastShotTime = now;
+
+            let headPos = this.wielder.getHeadPosition();
 
             let origin = new THREE.Vector3();
             origin.x = this.wielder.gunRight;
-            origin.y = gunLength/2;
+            origin.y = gunLength;
             origin.z = -this.wielder.gunDown;
             origin.applyAxisAngle(xAxis, this.wielder.pitch);
             origin.applyAxisAngle(zAxis, this.wielder.yaw);
-            origin.add(this.wielder.getHeadPosition());
+            origin.add(headPos);
+
+            let barrelStart = new THREE.Vector3();
+            barrelStart.x = this.wielder.gunRight;
+            //origin.y = gunLength;
+            barrelStart.z = -this.wielder.gunDown;
+            barrelStart.applyAxisAngle(xAxis, this.wielder.pitch);
+            barrelStart.applyAxisAngle(zAxis, this.wielder.yaw);
+            barrelStart.add(headPos);
+
+            // Check if there is something inbetween the start and the end of the gun's barrel. If so, the gun is likely sticking through something, and shouldn't be able to shoot.
+            let raytraceDirec = origin.clone();
+            raytraceDirec.sub(barrelStart);
+            let raytraceLen = raytraceDirec.length();
+            raytraceDirec.normalize();
+            let raytracer = new THREE.Raycaster(barrelStart, raytraceDirec, 0, raytraceLen);
+            let intersections = raytracer.intersectObjects(gameState.currentMap.colliders);
+            if (intersections.length > 0) {
+                return;
+            }
 
             for (let i = 0; i < this.weapon.spec.projectilesPerShot; i++) {
                 let direction = new THREE.Vector3(0, 1, 0);
@@ -106,8 +128,6 @@ export class WeaponInstance {
                     weaponId: this.weapon.spec.id
                 });
             }
-
-            this.lastShotTime = now;
         } else {
             // Nada!
         }
@@ -152,7 +172,7 @@ export const SNIPER = new Weapon({
     projectileOptions: {
         speed: 200,
         damage: 80,
-        color: 0x04d9ff
+        color: 0x048eff
     }
 });
 
