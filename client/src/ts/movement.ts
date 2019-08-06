@@ -47,7 +47,9 @@ export let legHeight = 0.3;
 
 let airMoment = new Vector3(0, 0, 0);
 
-const AIR_MOVE_FAC = 0.8;
+const AIR_MOVE_FAC = 1;
+
+const AIR_SPEED = 0.4;
 
 export function updateLocalPlayerMovement(dif: number) {
     let { currentMap, localPlayer, isEditor } = gameState;
@@ -87,27 +89,48 @@ export function updateLocalPlayerMovement(dif: number) {
         movementVec.x += 1;
     }
     movementVec.normalize();
+    movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
     // Apply that movement vector based on if the player is grounded or not:
 
     if (localPlayer.isGrounded) {
+        /*
         airMoment.x = 0;
-        airMoment.y = 0;
+        airMoment.y = 0;*/
 
-        jumpVelocity.set(0, 0, 0);
+        //jumpVelocity.set(0, 0, 0);
 
         if (inputState.spacebar) {
             velCopy.z = JUMP_INTENSITY * jumpFactor;
         }
 
+        /*
         airMoment.x = movementVec.x * actualSpeed;
-        airMoment.y = movementVec.y * actualSpeed;
-
-        movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
+        airMoment.y = movementVec.y * actualSpeed;*/
 
         velCopy.x = movementVec.x * actualSpeed;
         velCopy.y = movementVec.y * actualSpeed;
     } else {
+        let fac = Math.pow(0.996, dif)
+
+        let newVec = new THREE.Vector3();
+        newVec.add(movementVec.clone().multiplyScalar(actualSpeed * (1 - fac)));
+        newVec.add(velCopy.clone().multiplyScalar(fac));
+
+        velCopy.x = newVec.x;
+        velCopy.y = newVec.y;
+
+
+        /*
+        let dampening = Math.pow(0.999, dif);
+        velCopy.x *= dampening;
+        velCopy.y *= dampening;
+
+        let vec = movementVec.clone().multiplyScalar(AIR_MOVE_FAC * actualSpeed);*/
+
+        //velCopy.add(vec);
+
+        /*
         movementVec.x = clamp(
             airMoment.x + movementVec.x * AIR_MOVE_FAC,
             -1 * actualSpeed,
@@ -125,7 +148,7 @@ export function updateLocalPlayerMovement(dif: number) {
         movementVec.applyAxisAngle(zAxis, localPlayer.yaw);
 
         velCopy.x = movementVec.x;
-        velCopy.y = movementVec.y;
+        velCopy.y = movementVec.y;*/
     }
 
     velCopy.add(GRAVITY.clone().multiplyScalar((gravityFactor * dif) / 1000));

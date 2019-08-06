@@ -21,6 +21,11 @@ OBJLoader(THREE);
 export const FOV = 70;
 export const ZOOM_FOV = 30;
 
+let fovFactor = 1;
+export function setFovFactor(num: number) {
+    fovFactor = num;
+}
+
 export let xAxis = new THREE.Vector3(1, 0, 0);
 export let yAxis = new THREE.Vector3(0, 1, 0);
 export let zAxis = new THREE.Vector3(0, 0, 1);
@@ -82,6 +87,7 @@ let render = () => {
     }
 
     camera.fov = FOV - zoomVal * (FOV - ZOOM_FOV);
+    camera.fov *= fovFactor;
     camera.updateProjectionMatrix();
     crosshair.style.transform = `translateX(-50%) translateY(-50%) scale(${zoomVal +
         1})`;
