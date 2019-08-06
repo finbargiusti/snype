@@ -443,6 +443,8 @@ export class SnypeMap {
                     1
                 );
                 projectile.object3D.geometry.dispose();
+
+                continue;
             }
 
             projectile.update(timeDif);

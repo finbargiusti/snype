@@ -1,0 +1,81 @@
+#! v2
+---
+name: "Shanghai"
+author: "David Payr"
+wallHeight: 20
+---
+Sky 8306926
+Sun -40 -40 -50 16777215 1
+Ambience 16777215 0.3
+Wall -18.8 20.4 -19.099999999999998 18.3
+Spawn -16 -16 0 -45
+Spawn 19 -1 0 90
+Spawn -9 5 0 -135
+Box -3 -3 0 6 6 1 --color 2236962
+Ramp -5 -3 0 2 6 1 "+x" --color 2236962
+Ramp 3 -3 0 2 6 1 "-x" --color 2236962
+Ramp -3 -5 0 6 2 1 "+y" --color 2236962
+Ramp -3 3 0 6 2 1 "-y" --color 2236962
+Box -3 -3 4 6 6 1 --color 2236962
+Ramp -5 -3 4 2 6 1 "+x" --color 2236962
+Ramp -3 3 4 6 2 1 "-y" --color 2236962
+Ramp 3 -3 4 2 6 1 "-x" --color 2236962
+Ramp -3 -5 4 6 2 1 "+y" --color 2236962
+Box -2 -2 8 4 4 1 --color 2236962
+Ramp -4 -2 8 2 4 1 "+x" --color 2236962
+Ramp 2 -2 8 2 4 1 "-x" --color 2236962
+Ramp -2 2 8 4 2 1 "-y" --color 2236962
+Ramp -2 -4 8 4 2 1 "+y" --color 2236962
+Box -1 -1 12 2 2 1 --color 2236962
+Ramp -1 -2 12 2 1 1 "+y" --color 2236962
+Ramp -1 1 12 2 1 1 "-y" --color 2236962
+Ramp 1 -1 12 1 2 1 "-x" --color 2236962
+Ramp -2 -1 12 1 2 1 "+x" --color 2236962
+Box -0.1 -0.1 0.5 0.2 0.2 19 --color 1440916
+Box -15 -15 0 5 5 2 --color 16729156
+Ramp -8 -13 0 2 1 1 "-x" --color 16729156
+Ramp -13 -8 0 1 2 1 "-y" --color 16777215
+Box -11 -11 2 1 1 2 --color 2236962
+Box -15 9 0 5 5 2 --color 16729156
+Box -11 9 2 1 1 2 --color 2236962
+Ramp -13 5 0 1 2 1 "+y" --color 16729156
+Ramp -8 11 0 2 1 1 "-x" --color 16729156
+Box 11 9 0 5 5 2 --color 16729156
+Box 11 9 2 1 1 2 --color 2236962
+Ramp 7 11 0 2 1 1 "+x" --color 16729156
+Ramp 13 5 0 1 2 1 "+y" --color 16729156
+Box 11 -15 0 5 5 2 --color 16729156
+Box 11 -11 2 1 1 2 --color 2236962
+Ramp 13 -8 0 1 2 1 "-y" --color 16729156
+Ramp 7 -13 0 2 1 1 "+x" --color 16729156
+Box 7 -15 2 1 1 1 --color 4474111
+Box -7 -15 2 1 1 1 --color 4474111
+Box -3 -15 3 7 1 1 --color 4474111
+Box 0 -14.25 4 1 0.25 2 --color 2236962
+Box -7 13 2 1 1 1 --color 4474111
+Box -3 13 3 7 1 1 --color 4474111
+Box 7 13 2 1 1 1 --color 4474111
+Box 0 13 4 1 0.25 2 --color 2236962
+Box 8 -7 0 1 2 2 --color 16776960
+Box 10 1 0 1 2 2 --color 16776960
+Box 3 8 0 1 2 2 --color 16776960
+Box -8 4 0 1 2 2 --color 16776960
+Box -16 -3 0 1 2 2 --color 16776960
+Box -6 -9 0 1 2 2 --color 16776960
+Box 17 -2 0 1 2 2 --color 16776960
+Box -2 1 9 0.1 1 1.5 --color 1440916
+Box -2 1.9000000000000001 9 1 0.1 1.5 --color 1440916
+Box 1.9000000000000001 -2 9 0.1 1 1.5 --color 1440916
+Box 1 -2 9 1 0.1 1.5 --color 1440916
+Box 2.9000000000000004 2 5 0.1 1 1.5 --color 1440916
+Box 2 2.9000000000000004 5 1 0.1 1.5 --color 1440916
+Box -3 -3 5 0.1 1 1.5 --color 1440916
+Box -3 -3 5 1 0.1 1.5 --color 1440916
+Box -1 0.9 13 2 0.1 1.5 --color 1440916
+Box -1 -1 13 2 0.1 1.5 --color 1440916
+PowerUp 15 -14 3.5
+PowerUp -14 13 3.5
+PowerUp -2 -2 2.5
+PowerUp 2 2 2.5
+PowerUp 0 0 15
+PowerUp 0 0 20

@@ -15,12 +15,17 @@
   left: 0;
   color: white;
   padding-top: 50px;
-  overflow: scroll;
+  overflow: auto;
   padding-bottom: 50px;
   text-align: center;
+  box-sizing: border-box;
 }
 h1 {
   font-size: 48px;
+  margin-bottom: 60px;
+  color: #ec3a6c;
+  font-weight: normal;
+  text-decoration: none;
 }
 .overlay {
   position: absolute;
@@ -39,6 +44,7 @@ h1 {
   padding: 20px;
   width: 700px;
   margin: auto;
+  border-radius: 10px;
 }
 #maps p:hover {
   background-color: rgba(255, 255, 255, 0.3);
