@@ -93,7 +93,7 @@ body * {
   transform-origin: 0px 0px;
   font-size: 35px;
   left: 0px;
-  top: 0px;
+  bottom: 0px;
   margin: 20px;
   line-height: 100%;
   pointer-events: none;
@@ -172,3 +172,34 @@ body * {
   height: 40px;
   line-height: 40px;
 }
+
+
+
+
+
+#killfeed {
+	position: absolute;
+	top: 0px;
+	left: 0;
+	margin: 20px;
+  }
+  #killfeed > div {
+	background: rgba(0, 0, 0, 0.7);
+	border-radius: 5px;
+	/*width: 400px;*/
+	margin-bottom: 0px;
+	font-size: 12px;
+	position: relative;
+	height: 0px;
+	overflow: hidden;
+	transition: height 0.25s, margin-bottom 0.25s, padding 0.25s;
+	box-sizing: border-box;
+	color: white;
+	padding: 0px 15px;
+
+  }
+  #killfeed > div.shown {
+	height: 28px;
+	margin-bottom: 10px;
+	padding: 5px 15px;
+  }

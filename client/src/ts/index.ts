@@ -12,6 +12,11 @@ import { currentPowerUps } from "./power_up";
 let gameEl = document.querySelector(".game") as HTMLElement;
 
 let loadLevel = async (text: string, url: string) => {
+	if (socket && socket.readyState !== 1) {
+		alert("No connection to the server (yet).");
+		return;
+	}
+
     gameEl.style.filter = "";
 
     let rawSMFData = parse(text);
@@ -24,7 +29,8 @@ let loadLevel = async (text: string, url: string) => {
     if (!gameState.isEditor) {
         socketSend("connect", {
             playerId: gameState.localPlayer.id,
-            mapUrl: url
+			mapUrl: url,
+			name: localStorage.getItem('displayName') || ''
         });
         gameState.localPlayer.spawn();
     } else {
@@ -80,7 +86,16 @@ let init = async () => {
     if (isEditor) {
         listMaps("/templatemaps");
     } else {
-        listMaps("/defaultmaps");
+		listMaps("/defaultmaps");
+		
+		do {
+			let oldValue = localStorage.getItem('displayName') || '';
+			let newValue = prompt("Choose your name:", oldValue);
+			if (newValue) {
+				if (newValue.length > 24) newValue = '';
+				localStorage.setItem('displayName', newValue);
+			}
+		} while (!localStorage.getItem('displayName'));
     }
     if (!isEditor) openSocket();
 
@@ -89,7 +104,7 @@ let init = async () => {
 
         e.returnValue = confirm;
         return confirm;
-    });
+	});
 };
 
 let leaveLobby = async () => {

@@ -7,7 +7,7 @@ import {
     killMessage,
     overlayAdd
 } from "./rendering";
-import { GRAVITY } from "./misc";
+import { GRAVITY, stringToRandomNumber, hsvToRgb } from "./misc";
 import { inputState, inputEventDispatcher } from "./input";
 import { socketSend, handlers } from "./net";
 import { gameState } from "./game_state";
@@ -22,6 +22,7 @@ import {
 } from "./weapon";
 import { SnypeMap } from "./map";
 import { Interpolator, EaseType } from "./animate";
+import { createKillfeedPopup } from "./killfeed";
 
 export let players = new Map<string, Player>();
 
@@ -44,12 +45,16 @@ export let gunDownOffset = 0.18;
 export let scopedGunRightOffset = 0;
 export let scopedGunDownOffset = 0.15;
 
-function createPlayerObject3D() {
-    let group = new THREE.Group();
+function createPlayerObject3D(player: Player) {
+	let group = new THREE.Group();
+	
+	let hue = stringToRandomNumber(player.name);
+	let rgb = hsvToRgb(hue, 0.8, 1.0);
+	let number = ((rgb[0] | 0) << 16) + ((rgb[1] | 0) << 8) + (rgb[2] | 0);
 
     let sphere = new THREE.Mesh(
         new THREE.SphereGeometry(0.4, 32, 32),
-        new THREE.MeshPhongMaterial({ color: 0xed2939, shininess: 100 })
+        new THREE.MeshPhongMaterial({ color: number /*0xed2939*/, shininess: 100 })
     );
     sphere.castShadow = true;
     sphere.receiveShadow = true;
@@ -82,7 +87,8 @@ function createPlayerObject3D() {
 const goSound = new Howl({ src: ["/static/go.ogg"] });
 
 export class Player {
-    public id: string;
+	public id: string;
+	public name: string;
     public position: THREE.Vector3;
     public velocity: THREE.Vector3;
     public yaw: number = 0;
@@ -105,12 +111,13 @@ export class Player {
         let { currentMap } = gameState;
         this.currentMap = currentMap;
 
-        this.id = obj.id;
+		this.id = obj.id;
+		this.name = obj.name;
         this.position = new THREE.Vector3(0, 0, 0);
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.setWeapon(SMG);
 
-        let stuff = createPlayerObject3D();
+        let stuff = createPlayerObject3D(this);
 
         this.object3D = stuff.group;
         this.pupil = stuff.pupil;
@@ -136,7 +143,13 @@ export class Player {
             from: 0,
             to: 1
         });
-    }
+	}
+	
+	getRgbString() {
+		let hue = stringToRandomNumber(this.name);
+		let rgb = hsvToRgb(hue, 0.8, 1.0);
+		return `rgb(${rgb[0] | 0}, ${rgb[1] | 0}, ${rgb[2] | 0})`;
+	}
 
     setScopeState(state: boolean) {
         if (state !== this.isScoped) {
@@ -310,7 +323,8 @@ let localPlayer: Player = null;
 
 export function createLocalPlayer() {
     localPlayer = new Player({
-        id: localPlayerId
+		id: localPlayerId,
+		name: localStorage.getItem('displayName') || ''
     });
 
     let mat = new THREE.ShadowMaterial();
@@ -396,11 +410,17 @@ handlers["updateHealth"] = (data: any) => {
 
 handlers["death"] = (data: any) => {
     let player = players.get(data.playerId);
-    if (player) player.die();
+	if (player) player.die();
+	
+	let source = players.get(data.source.id);
 
-    if (localPlayer === players.get(data.source.id)) {
+    if (localPlayer === source) {
         killMessage();
-    }
+	}
+
+	if (source && player) {
+		createKillfeedPopup(source, player);
+	}
 };
 
 handlers["respawn"] = (data: any) => {
@@ -416,9 +436,9 @@ export function updatePlayer(obj: any) {
 }
 
 export function addPlayer(obj: any) {
-    let newPlayer = new Player({ id: obj.id });
+    let newPlayer = new Player({ id: obj.id, name: obj.name });
     players.set(obj.id, newPlayer);
-    updatePlayer(obj);
+	updatePlayer(obj);
 }
 
 export function removePlayer(obj: any) {
@@ -431,8 +451,6 @@ export function removePlayer(obj: any) {
 }
 
 inputEventDispatcher.addEventListener("canvasmousedown", e => {
-    if (!inputState.pointerLocked) return;
-
     let mouseEvent = e as MouseEvent;
 
     if (mouseEvent.button === 0) {
@@ -441,7 +459,8 @@ inputEventDispatcher.addEventListener("canvasmousedown", e => {
 });
 
 export function useWeapon() {
-    let { localPlayer } = gameState;
+	let { localPlayer } = gameState;
+	if (!inputState.pointerLocked) return;
 
     if (gameState.isEditor) return;
 

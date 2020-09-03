@@ -8,6 +8,8 @@ import { Vector3 } from "three";
 import { Interpolator, EaseType } from "./animate";
 import { SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER } from "constants";
 
+const sensitivitySlider = document.querySelector('#sensitivitySlider') as HTMLInputElement;
+
 const JUMP_INTENSITY = 8;
 
 let jumpVelocity = new THREE.Vector3(0, 0, 0);
@@ -59,7 +61,7 @@ export function updateLocalPlayerMovement(dif: number) {
     if (isEditor) {
         updateEditorMovement(dif);
         return;
-    }
+	}
 
     let posCopy = localPlayer.position.clone();
     let velCopy = localPlayer.velocity.clone();
@@ -646,7 +648,8 @@ inputEventDispatcher.addEventListener("mousemove", e => {
 
     let localPlayer = gameState.localPlayer;
 
-    let denom = localPlayer.isScoped ? 3000 : 1000;
+	let denom = localPlayer.isScoped ? 3000 : 1000;
+	denom /= Number(sensitivitySlider.value);
 
     let yaw = localPlayer.yaw + -x / denom;
     let pitch = localPlayer.pitch + -y / denom;
@@ -661,3 +664,11 @@ inputEventDispatcher.addEventListener("mousemove", e => {
         });
     }
 });
+
+sensitivitySlider.addEventListener('change', () => {
+	localStorage.setItem('sensitivity', sensitivitySlider.value);
+});
+
+if (localStorage.getItem('sensitivity')) {
+	sensitivitySlider.value = localStorage.getItem('sensitivity');
+}

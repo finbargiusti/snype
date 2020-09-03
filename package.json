@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "parcel watch -d client/dist client/src/index.html",
+	"watch": "parcel watch -d client/dist client/src/index.html",
+	"build": "parcel build -d client/dist client/src/index.html",
     "server": "nodemon server/index.js"
   },
   "repository": {

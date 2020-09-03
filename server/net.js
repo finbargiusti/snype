@@ -174,7 +174,8 @@ function createWebSocketServer(httpServer) {
 let removePlayer = socket => {
     let player = socketPlayerAssociation.get(socket);
     if (player) {
-        players.delete(player);
+		players.delete(player);
+		socketPlayerAssociation.delete(socket);
 
         players.forEach(targetPlayer => {
             if (player.mapUrl !== targetPlayer.mapUrl) return;
@@ -193,7 +194,8 @@ socketMessageHandlers["leave"] = function(socket, data) {
 socketMessageHandlers["connect"] = function(socket, data) {
     let newPlayer = new Player(data.playerId);
     newPlayer.mapUrl = data.mapUrl;
-    newPlayer.socket = socket;
+	newPlayer.socket = socket;
+	newPlayer.name = data.name;
     newPlayer.init();
 
     players.add(newPlayer);
@@ -293,7 +295,8 @@ class Player {
         this.health = 100;
         this.yaw = 0;
         this.pitch = 0;
-        this.scoped = false;
+		this.scoped = false;
+		this.name = "";
     }
 
     init() {
@@ -358,8 +361,10 @@ function socketSend(socket, command, data) {
 function formatPlayer(obj) {
     let result = {};
 
-    if (obj.id) result.id = obj.id;
-    if (obj.position) result.position = obj.position;
+	if (obj.id) result.id = obj.id;
+	if (obj.name) result.name = obj.name;
+	if (obj.position) result.position = obj.position;
+	if (obj.orientation) result.orientation = obj.orientation;
     if (obj.scoped !== undefined) result.scoped = obj.scoped;
 
     return result;
@@ -423,7 +428,11 @@ socketMessageHandlers["setScopeState"] = function(socket, data) {
 };
 
 socketMessageHandlers["createProjectile"] = function(socket, data) {
-    let player = socketPlayerAssociation.get(socket);
+	let player = socketPlayerAssociation.get(socket);
+	if (!player) {
+        console.error("You are big gay.");
+        return;
+    }
     // Simply relay to all other players.
 
     players.forEach(targetPlayer => {
@@ -437,7 +446,11 @@ socketMessageHandlers["createProjectile"] = function(socket, data) {
 };
 
 socketMessageHandlers["removeProjectile"] = function(socket, data) {
-    let player = socketPlayerAssociation.get(socket);
+	let player = socketPlayerAssociation.get(socket);
+	if (!player) {
+        console.error("You are big gay.");
+        return;
+    }
     // Simply relay to all other players.
 
     players.forEach(targetPlayer => {

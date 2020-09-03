@@ -1,6 +1,6 @@
 import { gameState } from "./game_state";
 
-const WEBSOCKET_URL = "ws://" + location.host;
+const WEBSOCKET_URL = (location.protocol.startsWith('https')? "wss" : "ws") + "://" + location.host;
 
 export function openSocket() {
     socket = new WebSocket(WEBSOCKET_URL);
