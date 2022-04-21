@@ -15,13 +15,13 @@ const serve = serveStatic(__dirname + "/../client/dist", {
     setHeaders(res) {
         // For now. Caching is evil!
         res.setHeader("Cache-Control", "no-cache");
-    }
+    },
 });
 
 const localServe = serveStatic(__dirname, {
     setHeaders(res) {
         res.setHeader("Cache-Control", "no-cache");
-    }
+    },
 });
 
 let routes = {};
@@ -31,7 +31,7 @@ routes["/defaultmaps"] = (request, response) => {
         pather.resolve(__dirname + "/maps/default")
     );
 
-    defaultMaps = defaultMaps.map(path => {
+    defaultMaps = defaultMaps.map((path) => {
         return {
             metadata: parse(
                 fs
@@ -40,7 +40,7 @@ routes["/defaultmaps"] = (request, response) => {
                     )
                     .toString()
             ).metadata,
-            path: "/maps/default/" + path
+            path: "/maps/default/" + path,
         };
     });
 
@@ -53,7 +53,7 @@ routes["/templatemaps"] = (request, response) => {
         pather.resolve(__dirname + "/maps/templates")
     );
 
-    templateMaps = templateMaps.map(path => {
+    templateMaps = templateMaps.map((path) => {
         return {
             metadata: parse(
                 fs
@@ -62,7 +62,7 @@ routes["/templatemaps"] = (request, response) => {
                     )
                     .toString()
             ).metadata,
-            path: "/maps/templates/" + path
+            path: "/maps/templates/" + path,
         };
     });
 
@@ -70,8 +70,9 @@ routes["/templatemaps"] = (request, response) => {
     response.end(JSON.stringify(templateMaps));
 };
 
-const PORT = 20003;
+const FALLBACK_PORT = 20003;
 function createHTTPServer() {
+    const PORT = process.env.PORT ?? FALLBACK_PORT;
     let httpServer = http.createServer();
     httpServer.listen(PORT);
 
@@ -108,7 +109,7 @@ let socketPlayerAssociation = new WeakMap();
 function getPlayerById(id) {
     let player = null;
 
-    players.forEach(a => {
+    players.forEach((a) => {
         if (a.id === id) player = a;
     });
 
@@ -118,12 +119,12 @@ function getPlayerById(id) {
 function createWebSocketServer(httpServer) {
     let socketServer = new ws.Server({ server: httpServer });
 
-    socketServer.on("connection", socket => {
+    socketServer.on("connection", (socket) => {
         console.log("Socket connected.");
 
         sockets.add(socket);
 
-        socket.on("message", msg => {
+        socket.on("message", (msg) => {
             let json;
 
             try {
@@ -151,13 +152,13 @@ function createWebSocketServer(httpServer) {
             close();
         });
 
-        socket.on("error", e => {
+        socket.on("error", (e) => {
             console.log("Socket error.", e);
             close();
         });
 
         // Catch the deep error
-        socket._socket.on("error", e => {
+        socket._socket.on("error", (e) => {
             //console.log("Socket deep error.", e);
             close();
         });
@@ -171,31 +172,31 @@ function createWebSocketServer(httpServer) {
     console.log("Fired up the WS server.");
 }
 
-let removePlayer = socket => {
+let removePlayer = (socket) => {
     let player = socketPlayerAssociation.get(socket);
     if (player) {
-		players.delete(player);
-		socketPlayerAssociation.delete(socket);
+        players.delete(player);
+        socketPlayerAssociation.delete(socket);
 
-        players.forEach(targetPlayer => {
+        players.forEach((targetPlayer) => {
             if (player.mapUrl !== targetPlayer.mapUrl) return;
-    
+
             socketSend(targetPlayer.socket, "removePlayer", {
-                id: player.id
+                id: player.id,
             });
         });
     }
 };
 
-socketMessageHandlers["leave"] = function(socket, data) {
+socketMessageHandlers["leave"] = function (socket, data) {
     removePlayer(socket);
 };
 
-socketMessageHandlers["connect"] = function(socket, data) {
+socketMessageHandlers["connect"] = function (socket, data) {
     let newPlayer = new Player(data.playerId);
     newPlayer.mapUrl = data.mapUrl;
-	newPlayer.socket = socket;
-	newPlayer.name = data.name;
+    newPlayer.socket = socket;
+    newPlayer.name = data.name;
     newPlayer.init();
 
     players.add(newPlayer);
@@ -207,7 +208,7 @@ socketMessageHandlers["connect"] = function(socket, data) {
         loadedMaps[data.mapUrl] = map;
     }
 
-    players.forEach(playa => {
+    players.forEach((playa) => {
         if (playa === newPlayer || playa.mapUrl !== newPlayer.mapUrl) return;
         socketSend(socket, "addPlayer", formatPlayer(playa));
     });
@@ -218,8 +219,8 @@ socketMessageHandlers["connect"] = function(socket, data) {
             socketSend(socket, "spawnPowerUp", {
                 position: p.data.position,
                 id: p.currentId,
-                type: p.type
-            }); 
+                type: p.type,
+            });
         }
     }
 };
@@ -238,7 +239,7 @@ class Map {
                 data: p,
                 appearanceTime: performance.now() + numInRange(0, 30000),
                 currentId: null,
-                type: null
+                type: null,
             });
         }
     }
@@ -269,16 +270,17 @@ function periodicMapUpdater() {
         for (let p of map.powerUps) {
             if (now >= p.appearanceTime && p.currentId === null) {
                 p.currentId = Math.random().toString();
-                p.type = powerUpTypes[(Math.random() * powerUpTypes.length) | 0];
+                p.type =
+                    powerUpTypes[(Math.random() * powerUpTypes.length) | 0];
 
-                players.forEach(player => {
+                players.forEach((player) => {
                     if (player.mapUrl !== map.url) return;
 
                     socketSend(player.socket, "spawnPowerUp", {
                         position: p.data.position,
                         id: p.currentId,
-                        type: p.type
-                    }); 
+                        type: p.type,
+                    });
                 });
             }
         }
@@ -295,8 +297,8 @@ class Player {
         this.health = 100;
         this.yaw = 0;
         this.pitch = 0;
-		this.scoped = false;
-		this.name = "";
+        this.scoped = false;
+        this.name = "";
     }
 
     init() {
@@ -306,7 +308,7 @@ class Player {
     }
 
     broadcastAll() {
-        players.forEach(player => {
+        players.forEach((player) => {
             if (this === player || this.mapUrl !== player.mapUrl) return;
 
             socketSend(player.socket, "addPlayer", formatPlayer(this));
@@ -325,26 +327,26 @@ class Player {
         if (this.health < 0) this.health = 0;
 
         socketSend(this.socket, "updateHealth", {
-            health: this.health
+            health: this.health,
         });
 
         if (this.isDead()) {
-            sockets.forEach(socket => {
+            sockets.forEach((socket) => {
                 socketSend(socket, "death", {
                     playerId: this.id,
                     source: {
                         type: "player",
-                        id: source.id
-                    }
+                        id: source.id,
+                    },
                 });
             });
 
             setTimeout(() => {
                 this.health = 100;
 
-                sockets.forEach(socket => {
+                sockets.forEach((socket) => {
                     socketSend(socket, "respawn", {
-                        playerId: this.id
+                        playerId: this.id,
                     });
                 });
             }, 2000);
@@ -361,16 +363,16 @@ function socketSend(socket, command, data) {
 function formatPlayer(obj) {
     let result = {};
 
-	if (obj.id) result.id = obj.id;
-	if (obj.name) result.name = obj.name;
-	if (obj.position) result.position = obj.position;
-	if (obj.orientation) result.orientation = obj.orientation;
+    if (obj.id) result.id = obj.id;
+    if (obj.name) result.name = obj.name;
+    if (obj.position) result.position = obj.position;
+    if (obj.orientation) result.orientation = obj.orientation;
     if (obj.scoped !== undefined) result.scoped = obj.scoped;
 
     return result;
 }
 
-socketMessageHandlers["updatePosition"] = function(socket, data) {
+socketMessageHandlers["updatePosition"] = function (socket, data) {
     let player = socketPlayerAssociation.get(socket);
     if (!player) {
         console.error("You are big gay.");
@@ -382,7 +384,7 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
     player.position.z = data.position.z;
 
     let playerUpdateData = { id: player.id, position: player.position };
-    players.forEach(targetPlayer => {
+    players.forEach((targetPlayer) => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
 
@@ -390,7 +392,7 @@ socketMessageHandlers["updatePosition"] = function(socket, data) {
     });
 };
 
-socketMessageHandlers["updateOrientation"] = function(socket, data) {
+socketMessageHandlers["updateOrientation"] = function (socket, data) {
     let player = socketPlayerAssociation.get(socket);
     if (!player) {
         console.error("You are big gay.");
@@ -400,8 +402,12 @@ socketMessageHandlers["updateOrientation"] = function(socket, data) {
     player.yaw = data.yaw;
     player.pitch = data.pitch;
 
-    let playerUpdateData = { id: player.id, yaw: player.yaw, pitch: player.pitch };
-    players.forEach(targetPlayer => {
+    let playerUpdateData = {
+        id: player.id,
+        yaw: player.yaw,
+        pitch: player.pitch,
+    };
+    players.forEach((targetPlayer) => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
 
@@ -409,7 +415,7 @@ socketMessageHandlers["updateOrientation"] = function(socket, data) {
     });
 };
 
-socketMessageHandlers["setScopeState"] = function(socket, data) {
+socketMessageHandlers["setScopeState"] = function (socket, data) {
     let player = socketPlayerAssociation.get(socket);
     if (!player) {
         console.error("You are big gay.");
@@ -419,7 +425,7 @@ socketMessageHandlers["setScopeState"] = function(socket, data) {
     player.scoped = data;
 
     let playerUpdateData = { id: player.id, scoped: data };
-    players.forEach(targetPlayer => {
+    players.forEach((targetPlayer) => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
 
@@ -427,15 +433,15 @@ socketMessageHandlers["setScopeState"] = function(socket, data) {
     });
 };
 
-socketMessageHandlers["createProjectile"] = function(socket, data) {
-	let player = socketPlayerAssociation.get(socket);
-	if (!player) {
+socketMessageHandlers["createProjectile"] = function (socket, data) {
+    let player = socketPlayerAssociation.get(socket);
+    if (!player) {
         console.error("You are big gay.");
         return;
     }
     // Simply relay to all other players.
 
-    players.forEach(targetPlayer => {
+    players.forEach((targetPlayer) => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
 
@@ -445,15 +451,15 @@ socketMessageHandlers["createProjectile"] = function(socket, data) {
     });
 };
 
-socketMessageHandlers["removeProjectile"] = function(socket, data) {
-	let player = socketPlayerAssociation.get(socket);
-	if (!player) {
+socketMessageHandlers["removeProjectile"] = function (socket, data) {
+    let player = socketPlayerAssociation.get(socket);
+    if (!player) {
         console.error("You are big gay.");
         return;
     }
     // Simply relay to all other players.
 
-    players.forEach(targetPlayer => {
+    players.forEach((targetPlayer) => {
         if (targetPlayer === player || player.mapUrl !== targetPlayer.mapUrl)
             return;
 
@@ -461,7 +467,7 @@ socketMessageHandlers["removeProjectile"] = function(socket, data) {
     });
 };
 
-socketMessageHandlers["playerHit"] = function(socket, data) {
+socketMessageHandlers["playerHit"] = function (socket, data) {
     let player = getPlayerById(data.id);
     if (player) {
         // We assume here they didn't shoot themselves.
@@ -471,14 +477,14 @@ socketMessageHandlers["playerHit"] = function(socket, data) {
 
         socketSend(player.socket, "hit", {
             damage: data.damage,
-            culprit: culprit.id
+            culprit: culprit.id,
         });
 
         player.dealDamage(data.damage, culprit);
     }
 };
 
-socketMessageHandlers["collectPowerUp"] = function(socket, data) {
+socketMessageHandlers["collectPowerUp"] = function (socket, data) {
     let player = socketPlayerAssociation.get(socket);
     if (!player) return;
 
@@ -496,13 +502,13 @@ socketMessageHandlers["collectPowerUp"] = function(socket, data) {
         if (player.mapUrl !== map.url) return;
 
         socketSend(player.socket, "removePowerUp", {
-            id: data.id
+            id: data.id,
         });
     });
 
     socketSend(socket, "pickupPowerUp", {
         id: data.id,
-        type: p.type
+        type: p.type,
     });
 
     p.type = null;

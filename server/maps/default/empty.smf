@@ -1,0 +1,13 @@
+#! v2
+---
+name: "Blank 20x20"
+author: "Finbar Giusti"
+wallHeight: 4
+---
+Sky 8306926
+Sun -40 -40 -50 16777215 1
+Ambience 16777215 0.3
+Wall -10 10 -10 10
+Box 1 -4 0 1 1 1 --color 16777215
+Box -5 -4 0 1 1 1 --color 16777215
+
