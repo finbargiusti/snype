@@ -12,7 +12,7 @@ import { initCanvasListeners } from "./input";
 import { gameState } from "./game_state";
 import { updateLocalPlayerMovement } from "./movement";
 import { Howl, Howler } from "howler";
-import { playPop } from "./sound";
+// import { playPop } from "./sound";
 import { updateEquippedPowerUps } from "./power_up";
 
 var OBJLoader = require("three-obj-loader");
@@ -36,7 +36,7 @@ export let xAxis = new THREE.Vector3(1, 0, 0);
 export let yAxis = new THREE.Vector3(0, 1, 0);
 export let zAxis = new THREE.Vector3(0, 0, 1);
 
-export let mainCanvas = document.querySelector("#root") as HTMLCanvasElement;
+export let mainCanvas: HTMLCanvasElement = document.querySelector("#root");
 initCanvasListeners();
 
 export let camera = new THREE.PerspectiveCamera(
@@ -74,7 +74,7 @@ window.addEventListener("resize", () => {
 
 const crosshair = document.getElementById("crosshair");
 
-const overlayEl = document.querySelector(".overlay") as HTMLElement;
+const overlayEl: HTMLElement = document.querySelector(".overlay");
 
 let lastRenderTime: number = null;
 let render = () => {

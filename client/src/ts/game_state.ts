@@ -1,8 +1,13 @@
-import { SnypeMap } from "./map";
-import { Player } from "./player";
+import type { SnypeMap } from "./map";
+import type { Player } from "./player";
 
-export const gameState = {
-    currentMap: <SnypeMap>null,
-    localPlayer: <Player>null,
+export const gameState: 
+    {
+    currentMap: SnypeMap,
+    localPlayer: Player,
+    isEditor: boolean
+    } = {
+    currentMap: null,
+    localPlayer: null,
     isEditor: false
 };

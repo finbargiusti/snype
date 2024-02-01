@@ -6,8 +6,11 @@ Snype is a work in progress sniper game where two random anonymous players can t
 
 To build client side code and run server:
 
+> Note: current version only tested with bun
+
 ```
-PORT=[PORT] yarn build; yarn server
+bun run build;
+PORT=[PORT] bun run server;
 ```
 
 Made by:
