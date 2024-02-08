@@ -22,7 +22,7 @@ import {
 } from "./weapon";
 import { SnypeMap } from "./map";
 import { Interpolator, EaseType } from "./animate";
-import { createKillfeedPopup } from "./killfeed";
+import { createKillfeedPopup, createJoinedPopup } from "./announce";
 
 export let players = new Map<string, Player>();
 
@@ -143,6 +143,8 @@ export class Player {
             from: 0,
             to: 1
         });
+
+        createJoinedPopup(this);
     }
 
     getRgbString() {
