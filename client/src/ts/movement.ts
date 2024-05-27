@@ -5,12 +5,12 @@ import { zAxis, xAxis, camera } from "./rendering";
 import { PLAYER_SPEED_SPRINTING, PLAYER_SPEED, GRAVITY, clamp } from "./misc";
 import { socketSend } from "./net";
 import { Vector3 } from "three";
-import { Interpolator, EaseType } from "./animate";
-import { SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER } from "constants";
+// import { Interpolator, EaseType } from "./animate";
+// import { SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER } from "constants";
 
 const sensitivitySlider = document.querySelector('#sensitivitySlider') as HTMLInputElement;
 
-const JUMP_INTENSITY = 8;
+const JUMP_INTENSITY = 12;
 
 let jumpVelocity = new THREE.Vector3(0, 0, 0);
 
@@ -29,7 +29,7 @@ export function setJumpFactor(num: number) {
     jumpFactor = num;
 }
 
-inputEventDispatcher.addEventListener("canvasmousedown", e => {
+inputEventDispatcher.addEventListener("canvasmousedown", (e: MouseEvent) => {
     let localPlayer = gameState.localPlayer;
     if (!localPlayer) return;
 

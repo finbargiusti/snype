@@ -177,13 +177,13 @@ body * {
 
 
 
-#killfeed {
+#announce {
 	position: absolute;
 	top: 0px;
 	left: 0;
 	margin: 20px;
   }
-  #killfeed > div {
+  #announce > div {
 	background: rgba(0, 0, 0, 0.7);
 	border-radius: 5px;
 	/*width: 400px;*/
@@ -198,7 +198,7 @@ body * {
 	padding: 0px 15px;
 
   }
-  #killfeed > div.shown {
+  #announce > div.shown {
 	height: 28px;
 	margin-bottom: 10px;
 	padding: 5px 15px;

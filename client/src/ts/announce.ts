@@ -1,7 +1,7 @@
 import { Player } from "./player";
 import { escapeHtml } from "./misc";
 
-const killfeedContainer = document.querySelector("#killfeed") as HTMLElement;
+const announceContainer = document.querySelector("#announce") as HTMLElement;
 
 let popups: any[] = [];
 
@@ -9,7 +9,7 @@ function createPopup(text: string) {
 	let div = document.createElement("div");
 	div.innerHTML = text;
 
-	killfeedContainer.appendChild(div);
+	announceContainer.appendChild(div);
 	popups.push({ div, time: performance.now() });
 
 	div.clientWidth;
@@ -31,7 +31,7 @@ setInterval(() => {
 			popup.div.classList.remove('shown');
 
 			setTimeout(() => {
-				killfeedContainer.removeChild(popup.div);
+				announceContainer.removeChild(popup.div);
 			}, 1000);
 
 			popups.splice(popups.indexOf(popup), 1);

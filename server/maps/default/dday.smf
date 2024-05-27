@@ -1,0 +1,14 @@
+#! v2
+---
+name: "Dday"
+author: "Finbar Giusti"
+wallHeight: "8wa"
+---
+Sky 8306926
+Sun -40 -40 -50 16777215 1
+Ambience 16777215 0.3
+Wall -39 10 -29 49
+Ramp -39 17 0 49 35 5 "+y" --color 7842338
+Ramp -39 0 0 49 27 1 "+y" --color 15658666
+Box -39 -29 0 49 29 0.01 --color 255
+

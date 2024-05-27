@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "parcel watch --dist-dir client/dist client/src/index.html",
     "build": "parcel build --dist-dir client/dist client/src/index.html",
-    "server": "nodemon server/index.js"
+    "server-watch": "bun --hot server/index.js",
+    "server": "bun server/index.js"
   },
   "repository": {
     "type": "git",
